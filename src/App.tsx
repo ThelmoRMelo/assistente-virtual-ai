@@ -4,10 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/contexts/AppContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import Index from "./pages/Index";
 import Training from "./pages/Training";
 import Products from "./pages/Products";
@@ -30,30 +26,23 @@ const App = () => (
         <Sonner position="top-center" />
         <BrowserRouter>
           <Routes>
-            {/* Rota pública - Landing page */}
-            <Route path="/" element={<Landing />} />
+            {/* Home principal do app (sem autenticação) */}
+            <Route path="/" element={<Index />} />
+            <Route path="/treinar" element={<Training />} />
+            <Route path="/produtos" element={<Products />} />
+            <Route path="/simular" element={<Simulate />} />
+            <Route path="/negocio" element={<Business />} />
+            <Route path="/ajustes" element={<Settings />} />
+            <Route path="/conversas" element={<Conversations />} />
+            <Route path="/conversas/:id" element={<ConversationDetail />} />
             
-            {/* Autenticação */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            
-            {/* Rotas protegidas do painel admin (/app) */}
-            <Route path="/app" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/app/treinar" element={<ProtectedRoute><Training /></ProtectedRoute>} />
-            <Route path="/app/produtos" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-            <Route path="/app/simular" element={<ProtectedRoute><Simulate /></ProtectedRoute>} />
-            <Route path="/app/negocio" element={<ProtectedRoute><Business /></ProtectedRoute>} />
-            <Route path="/app/ajustes" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/app/conversas" element={<ProtectedRoute><Conversations /></ProtectedRoute>} />
-            <Route path="/app/conversas/:id" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
-            
-            {/* Vitrine pública - sem autenticação */}
+            {/* Vitrine pública */}
             <Route path="/vitrine" element={<Vitrine />} />
             <Route path="/loja/:slug" element={<Vitrine />} />
             <Route path="/loja/:slug/chat" element={<Chat />} />
             <Route path="/loja/:slug/chat/:productId" element={<Chat />} />
             
-            {/* Chat público legado - sem autenticação */}
+            {/* Chat público */}
             <Route path="/chat" element={<Chat />} />
             <Route path="/chat/:productId" element={<Chat />} />
             <Route path="/c/:productId" element={<Chat />} />

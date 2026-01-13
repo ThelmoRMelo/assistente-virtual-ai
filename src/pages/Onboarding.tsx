@@ -36,7 +36,7 @@ export default function Onboarding() {
     updateBusiness({ nome: businessName, categoria: businessCategory });
     updateAISettings({ estilo: aiStyle });
     setOnboarded(true);
-    navigate('/app');
+    navigate('/');
   };
 
   const canProceed = () => {

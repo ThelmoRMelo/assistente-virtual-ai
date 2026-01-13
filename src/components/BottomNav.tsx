@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Menu } from 'lucide-react';
+import { Home, Package, MessageSquare, Settings } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export function BottomNav() {
@@ -6,9 +6,10 @@ export function BottomNav() {
   const location = useLocation();
 
   const navItems = [
-    { icon: Home, label: 'Início', path: '/app' },
-    { icon: MessageCircle, label: 'Chat', path: '/app/simular' },
-    { icon: Menu, label: 'Menu', path: '/app' },
+    { icon: Home, label: 'Início', path: '/' },
+    { icon: Package, label: 'Produtos', path: '/produtos' },
+    { icon: MessageSquare, label: 'Conversas', path: '/conversas' },
+    { icon: Settings, label: 'Ajustes', path: '/ajustes' },
   ];
 
   return (
@@ -16,7 +17,7 @@ export function BottomNav() {
       <div className="flex items-center justify-around py-2 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || 
-            (item.path === '/app' && location.pathname === '/app');
+            (item.path === '/' && location.pathname === '/');
           
           return (
             <button
