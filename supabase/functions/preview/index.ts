@@ -35,7 +35,16 @@ Deno.serve(async (req) => {
 
     const siteUrl = Deno.env.get("SITE_URL") || "https://assistente-virtual-ai.lovable.app";
     const chatUrl = `${siteUrl}/chat/${productId}`;
-    
+
+    // IMPORTANTE:
+    // - Bots (ex: facebookexternalhit) precisam receber HTML com OG tags para gerar o banner.
+    // - Pessoas clicando no link devem ser redirecionadas via HTTP (não depende de JS/CSP).
+    const userAgent = req.headers.get("user-agent") ?? "";
+    const isCrawler = /facebookexternalhit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Googlebot|Bingbot/i.test(userAgent);
+    if (!isCrawler) {
+      return Response.redirect(chatUrl, 302);
+    }
+
     const ogTitle = product.name || "Produto";
     const ogDescription = product.short_description || "Confira este produto incrível!";
     const ogImage = product.image_url || "";
@@ -45,24 +54,29 @@ Deno.serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Redirect sem depender de JavaScript (CSP pode bloquear scripts) -->
+  <meta http-equiv="refresh" content="0; url=${escapeHtml(chatUrl)}">
+  <link rel="canonical" href="${escapeHtml(chatUrl)}">
+
   <title>${escapeHtml(ogTitle)}</title>
-  
+
   <!-- Open Graph Meta Tags -->
   <meta property="og:title" content="${escapeHtml(ogTitle)}">
   <meta property="og:description" content="${escapeHtml(ogDescription)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
   <meta property="og:url" content="${escapeHtml(chatUrl)}">
   <meta property="og:type" content="website">
-  
+
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
   <meta name="twitter:description" content="${escapeHtml(ogDescription)}">
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
-  
+
   <!-- WhatsApp specific -->
   <meta property="og:site_name" content="${escapeHtml(ogTitle)}">
-  
+
   <style>
     * {
       margin: 0;
@@ -89,6 +103,7 @@ Deno.serve(async (req) => {
       border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       margin-bottom: 24px;
+      display: block;
     }
     .product-name {
       color: white;
@@ -119,34 +134,40 @@ Deno.serve(async (req) => {
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .fallback-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: rgba(255,255,255,0.95);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    ${ogImage ? `<img src="${escapeHtml(ogImage)}" alt="${escapeHtml(ogTitle)}" class="product-image">` : ''}
+    ${ogImage ? `<a href="${escapeHtml(chatUrl)}"><img src="${escapeHtml(ogImage)}" alt="${escapeHtml(ogTitle)}" class="product-image"></a>` : ''}
     <h1 class="product-name">${escapeHtml(ogTitle)}</h1>
     <p class="product-description">${escapeHtml(ogDescription)}</p>
     <div class="loading">
       <div class="spinner"></div>
-      Redirecionando...
+      Abrindo o chat do produto...
+      <div>
+        <a class="fallback-link" href="${escapeHtml(chatUrl)}">Clique aqui se não redirecionar</a>
+      </div>
     </div>
   </div>
-  
-  <script>
-    setTimeout(function() {
-      window.location.href = "${chatUrl}";
-    }, 1500);
-  </script>
 </body>
 </html>`;
 
-    return new Response(html, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-      },
-    });
+    const headers = new Headers(corsHeaders);
+    headers.set("content-type", "text/html; charset=utf-8");
+    headers.set("cache-control", "public, max-age=3600");
+    // Permite renderizar HTML/CSS/imagens sem depender de JavaScript.
+    headers.set(
+      "content-security-policy",
+      "default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    );
+
+    return new Response(html, { headers });
   } catch (error) {
     console.error("Error:", error);
     return new Response("Internal Server Error", { status: 500 });
