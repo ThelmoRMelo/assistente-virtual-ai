@@ -6,9 +6,9 @@ export function BottomNav() {
   const location = useLocation();
 
   const navItems = [
-    { icon: Home, label: 'Início', path: '/' },
-    { icon: MessageCircle, label: 'Chat', path: '/simular' },
-    { icon: Menu, label: 'Menu', path: '/menu' },
+    { icon: Home, label: 'Início', path: '/app' },
+    { icon: MessageCircle, label: 'Chat', path: '/app/simular' },
+    { icon: Menu, label: 'Menu', path: '/app' },
   ];
 
   return (
@@ -16,7 +16,7 @@ export function BottomNav() {
       <div className="flex items-center justify-around py-2 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || 
-            (item.path === '/' && location.pathname === '/');
+            (item.path === '/app' && location.pathname === '/app');
           
           return (
             <button

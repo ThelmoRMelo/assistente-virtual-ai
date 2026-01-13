@@ -165,7 +165,7 @@ export default function Conversations() {
       <header className="p-6 pt-8">
         <div className="max-w-lg mx-auto">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -219,7 +219,7 @@ export default function Conversations() {
             conversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => navigate(`/conversas/${conv.id}`)}
+                onClick={() => navigate(`/app/conversas/${conv.id}`)}
                 className="w-full glass-card rounded-xl p-4 text-left hover:border-primary/50 transition-all group"
               >
                 <div className="flex items-start justify-between gap-3 mb-2">
