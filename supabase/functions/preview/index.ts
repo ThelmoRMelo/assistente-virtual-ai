@@ -33,9 +33,7 @@ Deno.serve(async (req) => {
       return new Response("Product not found", { status: 404 });
     }
 
-    const baseUrl = url.origin.replace("functions/v1/preview", "");
-    const siteUrl = Deno.env.get("SITE_URL") || "https://barivhkrfygqallplqmp.lovableproject.com";
-    const previewUrl = `${siteUrl}/preview/${productId}`;
+    const siteUrl = Deno.env.get("SITE_URL") || "https://assistente-virtual-ai.lovable.app";
     const chatUrl = `${siteUrl}/chat/${productId}`;
     
     const ogTitle = product.name || "Produto";
@@ -53,7 +51,7 @@ Deno.serve(async (req) => {
   <meta property="og:title" content="${escapeHtml(ogTitle)}">
   <meta property="og:description" content="${escapeHtml(ogDescription)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
-  <meta property="og:url" content="${escapeHtml(previewUrl)}">
+  <meta property="og:url" content="${escapeHtml(chatUrl)}">
   <meta property="og:type" content="website">
   
   <!-- Twitter Card Meta Tags -->

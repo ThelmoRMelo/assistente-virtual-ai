@@ -540,12 +540,13 @@ interface ProductCardProps {
 function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const previewUrl = `https://barivhkrfygqallplqmp.supabase.co/functions/v1/preview/${product.id}`;
+    // URL da edge function para preview com Open Graph
+    const shareUrl = `https://barivhkrfygqallplqmp.supabase.co/functions/v1/preview/${product.id}`;
     
     try {
-      await navigator.clipboard.writeText(previewUrl);
+      await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copiado!', {
-        description: 'URL de preview copiada para a área de transferência'
+        description: 'Compartilhe no WhatsApp, Instagram ou Telegram'
       });
     } catch (err) {
       toast.error('Erro ao copiar link');
