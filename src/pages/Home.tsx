@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, LogOut, Store } from 'lucide-react';
+import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, Store } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MenuCard } from '@/components/MenuCard';
 import { BottomNav } from '@/components/BottomNav';
 import { useApp } from '@/contexts/AppContext';
 import { useConversationMetrics } from '@/hooks/useConversationMetrics';
-import { useAuth } from '@/hooks/useAuth';
+import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,20 +15,18 @@ export default function Home() {
   const navigate = useNavigate();
   const { business, aiSettings, updateAISettings } = useApp();
   const { metrics, loading: metricsLoading } = useConversationMetrics();
-  const { signOut, profile } = useAuth();
+  const { config } = useBusinessConfig();
   const [storefrontSlug, setStorefrontSlug] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStorefront = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('storefronts')
-          .select('slug')
-          .eq('tenant_id', user.id)
-          .single();
-        if (data) setStorefrontSlug(data.slug);
-      }
+      // Buscar primeira storefront disponível (modo single-tenant/demo)
+      const { data } = await supabase
+        .from('storefronts')
+        .select('slug')
+        .limit(1)
+        .maybeSingle();
+      if (data) setStorefrontSlug(data.slug);
     };
     fetchStorefront();
   }, []);
@@ -36,11 +34,6 @@ export default function Home() {
   const toggleAI = () => {
     updateAISettings({ isActive: !aiSettings.isActive });
     toast.success(aiSettings.isActive ? 'Assistente pausada' : 'Assistente ativada!');
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
   };
 
   return (
@@ -55,7 +48,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold">
               <span className="gradient-text">Sistema de Vendas</span>
             </h1>
-            <p className="text-sm text-muted-foreground">{business.nome || 'Seu negócio'}</p>
+            <p className="text-sm text-muted-foreground">{config?.business_name || business.nome || 'Seu negócio'}</p>
           </div>
         </div>
       </header>
@@ -92,7 +85,7 @@ export default function Home() {
               variant="gradient" 
               size="sm" 
               className="flex-1"
-              onClick={() => navigate('/app/simular')}
+              onClick={() => navigate('/simular')}
             >
               <MessageCircle className="w-4 h-4" />
               Testar Fluxo
@@ -138,7 +131,7 @@ export default function Home() {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={() => navigate('/app/conversas?filter=all')}
+              onClick={() => navigate('/conversas?filter=all')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -152,7 +145,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/app/conversas?filter=negotiation')}
+              onClick={() => navigate('/conversas?filter=negotiation')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -166,7 +159,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/app/conversas?filter=transferred')}
+              onClick={() => navigate('/conversas?filter=transferred')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -180,7 +173,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/app/conversas?filter=ended')}
+              onClick={() => navigate('/conversas?filter=ended')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -215,7 +208,7 @@ export default function Home() {
             icon={TrendingUp}
             title="Estratégia de Atendimento"
             description="Configurar comportamento de vendas"
-            path="/app/treinar"
+            path="/treinar"
             iconColor="text-purple-400"
             delay={200}
           />
@@ -223,7 +216,7 @@ export default function Home() {
             icon={Package}
             title="Meus Produtos"
             description="Cadastrar produtos à venda"
-            path="/app/produtos"
+            path="/produtos"
             iconColor="text-orange-400"
             delay={250}
           />
@@ -231,7 +224,7 @@ export default function Home() {
             icon={MessageCircle}
             title="Testar Fluxo de Vendas"
             description="Simular conversa com a IA"
-            path="/app/simular"
+            path="/simular"
             iconColor="text-blue-400"
             delay={300}
           />
@@ -239,7 +232,7 @@ export default function Home() {
             icon={Building2}
             title="Meu Negócio"
             description="Dados do estabelecimento"
-            path="/app/negocio"
+            path="/negocio"
             iconColor="text-green-400"
             delay={350}
           />
@@ -247,7 +240,7 @@ export default function Home() {
             icon={Settings}
             title="Ajustes"
             description="Configurações e backup"
-            path="/app/ajustes"
+            path="/ajustes"
             iconColor="text-gray-400"
             delay={400}
           />
