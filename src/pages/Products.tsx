@@ -540,13 +540,14 @@ interface ProductCardProps {
 function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // URL da edge function para preview com Open Graph
-    const shareUrl = `https://barivhkrfygqallplqmp.supabase.co/functions/v1/preview/${product.id}`;
+    // Link de preview (necessário para o WhatsApp gerar o banner com Open Graph)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const shareUrl = `${supabaseUrl}/functions/v1/preview/${product.id}`;
     
     try {
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Link copiado!', {
-        description: 'Compartilhe no WhatsApp, Instagram ou Telegram'
+        description: 'Ao abrir, o cliente cai direto no chat deste produto'
       });
     } catch (err) {
       toast.error('Erro ao copiar link');
