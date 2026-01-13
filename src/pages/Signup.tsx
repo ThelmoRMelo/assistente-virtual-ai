@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Bot, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type AuthMode = 'login' | 'signup';
-
-export default function Auth() {
+export default function Signup() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   
@@ -19,12 +15,11 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
 
-  // Verificar se já está logado
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/');
+        navigate('/app');
       }
       setCheckingAuth(false);
     };
@@ -33,7 +28,7 @@ export default function Auth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && event === 'SIGNED_IN') {
-        navigate('/');
+        navigate('/app');
       }
     });
 
@@ -48,7 +43,7 @@ export default function Auth() {
       return;
     }
 
-    if (mode === 'signup' && !businessName) {
+    if (!businessName) {
       toast.error('Preencha o nome do seu negócio');
       return;
     }
@@ -56,79 +51,60 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              business_name: businessName,
-            }
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/app`,
+          data: {
+            business_name: businessName,
           }
-        });
+        }
+      });
 
-        if (error) {
-          if (error.message.includes('already registered')) {
-            toast.error('Este email já está cadastrado. Tente fazer login.');
-          } else {
-            toast.error(error.message);
-          }
-          return;
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast.error('Este email já está cadastrado. Tente fazer login.');
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+
+      if (data.user) {
+        // Criar perfil do lojista
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: data.user.id,
+            business_name: businessName,
+          });
+
+        if (profileError) {
+          console.error('Erro ao criar perfil:', profileError);
         }
 
-        if (data.user) {
-          // Criar perfil do lojista
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: data.user.id,
-              business_name: businessName,
-            });
+        // Criar storefront com slug baseado no nome do negócio
+        const slug = businessName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
 
-          if (profileError) {
-            console.error('Erro ao criar perfil:', profileError);
-          }
+        const { error: storefrontError } = await supabase
+          .from('storefronts')
+          .insert({
+            tenant_id: data.user.id,
+            slug: `${slug}-${Date.now().toString(36)}`,
+          });
 
-          // Criar storefront com slug baseado no nome do negócio
-          const slug = businessName
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '');
-
-          const { error: storefrontError } = await supabase
-            .from('storefronts')
-            .insert({
-              tenant_id: data.user.id,
-              slug: `${slug}-${Date.now().toString(36)}`,
-            });
-
-          if (storefrontError) {
-            console.error('Erro ao criar vitrine:', storefrontError);
-          }
-
-          toast.success('Conta criada com sucesso!');
-          navigate('/');
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          if (error.message.includes('Invalid login')) {
-            toast.error('Email ou senha incorretos');
-          } else {
-            toast.error(error.message);
-          }
-          return;
+        if (storefrontError) {
+          console.error('Erro ao criar vitrine:', storefrontError);
         }
 
-        toast.success('Login realizado!');
-        navigate('/');
+        toast.success('Conta criada com sucesso!');
+        navigate('/app');
       }
     } catch (err) {
       toast.error('Erro inesperado. Tente novamente.');
@@ -147,33 +123,26 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex flex-col p-6 max-w-md mx-auto">
-      {/* Logo */}
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 animate-float shadow-glow">
           <Bot className="w-12 h-12 text-primary-foreground" />
         </div>
         
-        <h1 className="text-2xl font-bold mb-2 gradient-text">
-          {mode === 'login' ? 'Entrar' : 'Criar Conta'}
-        </h1>
+        <h1 className="text-2xl font-bold mb-2 gradient-text">Criar Conta</h1>
         <p className="text-muted-foreground text-center mb-8">
-          {mode === 'login' 
-            ? 'Acesse seu painel de vendas' 
-            : 'Comece a vender com inteligência artificial'}
+          Comece a vender com inteligência artificial
         </p>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
-          {mode === 'signup' && (
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Nome do seu negócio"
-                className="pl-12"
-              />
-            </div>
-          )}
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Nome do seu negócio"
+              className="pl-12"
+            />
+          </div>
 
           <div className="relative">
             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -211,7 +180,7 @@ export default function Auth() {
               </>
             ) : (
               <>
-                {mode === 'login' ? 'Entrar' : 'Criar conta'}
+                Criar conta
                 <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}
@@ -219,14 +188,12 @@ export default function Auth() {
         </form>
 
         <div className="mt-6 text-center">
-          <button
-            onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+          <Link
+            to="/login"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            {mode === 'login' 
-              ? 'Não tem conta? Criar agora' 
-              : 'Já tem conta? Entrar'}
-          </button>
+            Já tem conta? Entrar
+          </Link>
         </div>
       </div>
     </div>

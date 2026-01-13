@@ -78,7 +78,7 @@ export default function ConversationDetail() {
 
       if (convError) throw convError;
       if (!convData) {
-        navigate('/conversas');
+        navigate('/app/conversas');
         return;
       }
 
@@ -146,7 +146,7 @@ export default function ConversationDetail() {
       <header className="p-4 border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-lg mx-auto">
           <button
-            onClick={() => navigate('/conversas')}
+            onClick={() => navigate('/app/conversas')}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-3"
           >
             <ArrowLeft className="w-4 h-4" />

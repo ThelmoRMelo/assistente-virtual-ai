@@ -40,7 +40,7 @@ export default function Home() {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/auth');
+    navigate('/login');
   };
 
   return (
@@ -92,7 +92,7 @@ export default function Home() {
               variant="gradient" 
               size="sm" 
               className="flex-1"
-              onClick={() => navigate('/simular')}
+              onClick={() => navigate('/app/simular')}
             >
               <MessageCircle className="w-4 h-4" />
               Testar Fluxo
@@ -138,7 +138,7 @@ export default function Home() {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={() => navigate('/conversas?filter=all')}
+              onClick={() => navigate('/app/conversas?filter=all')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -152,7 +152,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/conversas?filter=negotiation')}
+              onClick={() => navigate('/app/conversas?filter=negotiation')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -166,7 +166,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/conversas?filter=transferred')}
+              onClick={() => navigate('/app/conversas?filter=transferred')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -180,7 +180,7 @@ export default function Home() {
               </div>
             </button>
             <button 
-              onClick={() => navigate('/conversas?filter=ended')}
+              onClick={() => navigate('/app/conversas?filter=ended')}
               className="glass-card rounded-xl p-4 text-center hover:border-primary/50 transition-all"
             >
               {metricsLoading ? (
@@ -215,7 +215,7 @@ export default function Home() {
             icon={TrendingUp}
             title="Estratégia de Atendimento"
             description="Configurar comportamento de vendas"
-            path="/treinar"
+            path="/app/treinar"
             iconColor="text-purple-400"
             delay={200}
           />
@@ -223,7 +223,7 @@ export default function Home() {
             icon={Package}
             title="Meus Produtos"
             description="Cadastrar produtos à venda"
-            path="/produtos"
+            path="/app/produtos"
             iconColor="text-orange-400"
             delay={250}
           />
@@ -231,7 +231,7 @@ export default function Home() {
             icon={MessageCircle}
             title="Testar Fluxo de Vendas"
             description="Simular conversa com a IA"
-            path="/simular"
+            path="/app/simular"
             iconColor="text-blue-400"
             delay={300}
           />
@@ -239,7 +239,7 @@ export default function Home() {
             icon={Building2}
             title="Meu Negócio"
             description="Dados do estabelecimento"
-            path="/negocio"
+            path="/app/negocio"
             iconColor="text-green-400"
             delay={350}
           />
@@ -247,7 +247,7 @@ export default function Home() {
             icon={Settings}
             title="Ajustes"
             description="Configurações e backup"
-            path="/ajustes"
+            path="/app/ajustes"
             iconColor="text-gray-400"
             delay={400}
           />
