@@ -11,6 +11,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useConversation } from '@/hooks/useConversation';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { supabase } from '@/integrations/supabase/client';
+import { usePWABlocker } from '@/hooks/usePWABlocker';
 
 interface SupabaseProduct {
   id: string;
@@ -34,6 +35,9 @@ interface StorefrontData {
 }
 
 export default function Chat() {
+  // Block PWA install prompts on this public route
+  usePWABlocker();
+  
   const { productId, slug } = useParams<{ productId?: string; slug?: string }>();
   const { business } = useApp();
   const { config } = useBusinessConfig();

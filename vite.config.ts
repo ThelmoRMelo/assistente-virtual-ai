@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
         short_name: "Assistente IA",
         description: "Configure e treine sua IA de atendimento para WhatsApp",
         start_url: "/",
-        display: "standalone",
+        display: "browser", // Changed from standalone to prevent install prompts
         background_color: "#0a0f1c",
         theme_color: "#0a0f1c",
         orientation: "portrait",
@@ -32,10 +32,17 @@ export default defineConfig(({ mode }) => ({
             type: "image/png",
             purpose: "any maskable"
           }
-        ]
+        ],
+        prefer_related_applications: true // Disable install prompt
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Exclude public routes from service worker caching
+        navigateFallbackDenylist: [
+          /^\/chat/,
+          /^\/vitrine/,
+          /^\/loja/
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

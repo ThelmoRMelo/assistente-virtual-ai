@@ -4,6 +4,7 @@ import { ShoppingBag, MessageCircle, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { themes, getThemeForCategory, generateThemeCSS, type ThemeConfig } from '@/lib/themes';
+import { usePWABlocker } from '@/hooks/usePWABlocker';
 
 interface Product {
   id: string;
@@ -26,6 +27,9 @@ interface BusinessConfig {
 }
 
 export default function Vitrine() {
+  // Block PWA install prompts on this public route
+  usePWABlocker();
+  
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
   
