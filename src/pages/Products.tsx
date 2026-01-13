@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -538,6 +538,20 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: ProductCardProps) {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const previewUrl = `https://barivhkrfygqallplqmp.supabase.co/functions/v1/preview/${product.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(previewUrl);
+      toast.success('Link copiado!', {
+        description: 'URL de preview copiada para a área de transferência'
+      });
+    } catch (err) {
+      toast.error('Erro ao copiar link');
+    }
+  };
+
   return (
     <div className={`glass-card rounded-xl p-4 ${inactive ? 'opacity-60' : ''}`}>
       <div className="flex gap-3">
@@ -578,6 +592,13 @@ function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: Produ
 
         {/* Actions */}
         <div className="flex flex-col gap-1">
+          <button
+            onClick={handleShare}
+            className="p-2 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+            title="Copiar link de compartilhamento"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
           <button
             onClick={onEdit}
             className="p-2 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
