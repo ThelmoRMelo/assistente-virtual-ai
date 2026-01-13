@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 230 35% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 40% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 40% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 190 100% 50%;
+    --primary-foreground: 230 35% 7%;
+
+    --secondary: 270 70% 60%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 230 30% 20%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 270 70% 60%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 230 40% 25%;
+    --input: 230 40% 20%;
+    --ring: 190 100% 50%;
+
+    --radius: 1rem;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(230 40% 10%) 0%, hsl(270 50% 15%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(230 40% 15% / 0.8) 0%, hsl(270 40% 12% / 0.6) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 100% 50%) 0%, hsl(270 70% 60%) 100%);
+    --gradient-button: linear-gradient(135deg, hsl(190 100% 45%) 0%, hsl(210 100% 55%) 100%);
+    --gradient-button-secondary: linear-gradient(135deg, hsl(270 60% 50%) 0%, hsl(290 70% 55%) 100%);
+
+    /* Glass effect */
+    --glass-bg: hsl(230 40% 15% / 0.6);
+    --glass-border: hsl(230 40% 30% / 0.5);
+
+    /* Glow effects */
+    --glow-primary: 0 0 20px hsl(190 100% 50% / 0.4);
+    --glow-secondary: 0 0 20px hsl(270 70% 60% / 0.4);
+  }
+
+  .dark {
+    --background: 230 35% 7%;
+    --foreground: 210 40% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background: var(--gradient-primary);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .gradient-text {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-accent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-secondary {
+    box-shadow: var(--glow-secondary);
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 20px hsl(190 100% 50% / 0.5);
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; box-shadow: var(--glow-primary); }
+  50% { opacity: 0.8; box-shadow: 0 0 30px hsl(190 100% 50% / 0.6); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Mobile-first scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(230 40% 30%);
+  border-radius: 2px;
+}
+
+/* Hide Lovable badge */
+a[href*="lovable.dev"],
+iframe[src*="lovable.dev"],
+div[style*="Edit with Lovable"],
+.lovable-badge {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  z-index: -9999 !important;
+}

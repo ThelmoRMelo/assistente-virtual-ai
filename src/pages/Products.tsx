@@ -1,0 +1,597 @@
+import { useState, useRef } from 'react';
+import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+import { BottomNav } from '@/components/BottomNav';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { useProducts, Product } from '@/hooks/useProducts';
+import { useProductImageUpload } from '@/hooks/useProductImageUpload';
+import { toast } from 'sonner';
+
+const categories = [
+  'Produtos',
+  'Serviços',
+  'Combos',
+  'Promoções',
+  'Outros',
+];
+
+type FormMode = 'closed' | 'add' | 'edit';
+
+interface ProductForm {
+  nome: string;
+  preco: string;
+  categoria: string;
+  descricaoCurta: string;
+  descricaoDetalhada: string;
+  precoMinimoPermitido: string;
+  formasPagamento: string;
+  infoEntrega: string;
+  imagemUrl: string;
+  linkPagamento: string;
+  ativo: boolean;
+}
+
+const emptyForm: ProductForm = {
+  nome: '',
+  preco: '',
+  categoria: 'Produtos',
+  descricaoCurta: '',
+  descricaoDetalhada: '',
+  precoMinimoPermitido: '',
+  formasPagamento: '',
+  infoEntrega: '',
+  imagemUrl: '',
+  linkPagamento: '',
+  ativo: true,
+};
+
+export default function Products() {
+  const { 
+    products, 
+    activeProducts, 
+    inactiveProducts, 
+    loading,
+    addProduct, 
+    updateProduct, 
+    deleteProduct 
+  } = useProducts();
+  
+  const { uploadImage, uploading } = useProductImageUpload();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [formMode, setFormMode] = useState<FormMode>('closed');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  const openAddForm = () => {
+    setForm(emptyForm);
+    setImagePreview('');
+    setEditingId(null);
+    setFormMode('add');
+  };
+
+  const openEditForm = (product: Product) => {
+    setForm({
+      nome: product.nome,
+      preco: product.preco.toString().replace('.', ','),
+      categoria: product.categoria || 'Produtos',
+      descricaoCurta: product.descricaoCurta || '',
+      descricaoDetalhada: product.descricaoDetalhada || '',
+      precoMinimoPermitido: product.precoMinimoPermitido?.toString().replace('.', ',') || '',
+      formasPagamento: product.formasPagamento?.join(', ') || '',
+      infoEntrega: product.infoEntrega || '',
+      imagemUrl: product.imagemUrl || '',
+      linkPagamento: product.linkPagamento || '',
+      ativo: product.ativo,
+    });
+    setImagePreview(product.imagemUrl || '');
+    setEditingId(product.id);
+    setFormMode('edit');
+  };
+
+  const closeForm = () => {
+    setForm(emptyForm);
+    setImagePreview('');
+    setEditingId(null);
+    setFormMode('closed');
+  };
+
+  const handleImageUrlChange = (url: string) => {
+    setForm(prev => ({ ...prev, imagemUrl: url }));
+    setImagePreview(url);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = await uploadImage(file);
+    if (url) {
+      handleImageUrlChange(url);
+      toast.success('Imagem enviada com sucesso!');
+    }
+    
+    // Limpar input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.nome.trim()) {
+      toast.error('Preencha o nome do produto');
+      return;
+    }
+
+    if (!form.preco.trim()) {
+      toast.error('Preencha o preço do produto');
+      return;
+    }
+
+    setSaving(true);
+
+    const precoValue = parseFloat(form.preco.replace(',', '.')) || 0;
+    const precoMinimoValue = form.precoMinimoPermitido 
+      ? parseFloat(form.precoMinimoPermitido.replace(',', '.')) 
+      : null;
+    const formasArray = form.formasPagamento.split(',').map(f => f.trim()).filter(f => f);
+
+    const productData = {
+      nome: form.nome.trim(),
+      preco: precoValue,
+      categoria: form.categoria,
+      descricaoCurta: form.descricaoCurta.trim(),
+      descricaoDetalhada: form.descricaoDetalhada.trim(),
+      precoMinimoPermitido: precoMinimoValue,
+      formasPagamento: formasArray,
+      infoEntrega: form.infoEntrega.trim(),
+      imagemUrl: form.imagemUrl.trim(),
+      linkPagamento: form.linkPagamento.trim(),
+      ativo: form.ativo,
+    };
+
+    try {
+      if (formMode === 'edit' && editingId) {
+        await updateProduct(editingId, productData);
+        toast.success('Produto atualizado!');
+      } else {
+        await addProduct(productData);
+        toast.success('Produto salvo com sucesso!');
+      }
+      closeForm();
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const success = await deleteProduct(id);
+    if (success) {
+      toast.success('Produto removido');
+    }
+  };
+
+  const formatPrice = (value: number) => {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pb-24">
+        <PageHeader title="Meus Produtos" subtitle="Cadastre seus produtos à venda" />
+        <main className="px-6 py-4 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-24">
+      <PageHeader title="Meus Produtos" subtitle="Cadastre seus produtos à venda" />
+
+      <main className="px-6 py-4 space-y-4 max-w-lg mx-auto">
+        {/* Add new product button */}
+        {formMode === 'closed' && (
+          <Button
+            onClick={openAddForm}
+            variant="gradient"
+            className="w-full"
+          >
+            <Plus className="w-5 h-5" />
+            Adicionar novo produto
+          </Button>
+        )}
+
+        {/* Product Form (Add/Edit) */}
+        {formMode !== 'closed' && (
+          <div className="glass-card rounded-2xl p-5 space-y-4 animate-slide-up">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-lg">
+                {formMode === 'edit' ? 'Editar produto' : 'Novo produto'}
+              </h3>
+              <button onClick={closeForm} className="p-2 hover:bg-muted rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Nome */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Nome do produto *
+              </label>
+              <Input
+                value={form.nome}
+                onChange={(e) => setForm(prev => ({ ...prev, nome: e.target.value }))}
+                placeholder="Ex: Pizza Margherita"
+              />
+            </div>
+
+            {/* Preço */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Preço *
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                <Input
+                  value={form.preco}
+                  onChange={(e) => setForm(prev => ({ ...prev, preco: e.target.value }))}
+                  placeholder="0,00"
+                  className="pl-12"
+                  type="text"
+                  inputMode="decimal"
+                />
+              </div>
+            </div>
+
+            {/* Preço mínimo para desconto */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Preço mínimo permitido (desconto)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+                <Input
+                  value={form.precoMinimoPermitido}
+                  onChange={(e) => setForm(prev => ({ ...prev, precoMinimoPermitido: e.target.value }))}
+                  placeholder="Limite mínimo de desconto"
+                  className="pl-12"
+                  type="text"
+                  inputMode="decimal"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                💰 A IA não oferecerá desconto abaixo desse valor
+              </p>
+            </div>
+
+            {/* Categoria */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Categoria
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setForm(prev => ({ ...prev, categoria: cat }))}
+                    className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                      form.categoria === cat
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Descrição curta */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Descrição curta *
+              </label>
+              <Textarea
+                value={form.descricaoCurta}
+                onChange={(e) => setForm(prev => ({ ...prev, descricaoCurta: e.target.value }))}
+                placeholder="Resumo rápido do produto"
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Resumo rápido do produto
+              </p>
+            </div>
+
+            {/* Descrição detalhada */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Descrição detalhada (para IA)
+              </label>
+              <Textarea
+                value={form.descricaoDetalhada}
+                onChange={(e) => setForm(prev => ({ ...prev, descricaoDetalhada: e.target.value }))}
+                placeholder="Explique para que serve o produto, como usar, onde usar e diferenciais..."
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                🤖 Este texto será usado pela IA para responder clientes
+              </p>
+            </div>
+
+            {/* Formas de pagamento */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Formas de pagamento
+              </label>
+              <Input
+                value={form.formasPagamento}
+                onChange={(e) => setForm(prev => ({ ...prev, formasPagamento: e.target.value }))}
+                placeholder="Ex: pix, cartão, boleto"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Separe por vírgulas</p>
+            </div>
+
+            {/* Link de pagamento */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Link de pagamento do produto
+              </label>
+              <Input
+                value={form.linkPagamento}
+                onChange={(e) => setForm(prev => ({ ...prev, linkPagamento: e.target.value }))}
+                placeholder="https://pagamento.seulink.com/..."
+                type="url"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                💳 Link de Pix, Mercado Pago, Stripe ou qualquer meio de pagamento
+              </p>
+            </div>
+
+            {/* Info de entrega */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Informações de entrega
+              </label>
+              <Textarea
+                value={form.infoEntrega}
+                onChange={(e) => setForm(prev => ({ ...prev, infoEntrega: e.target.value }))}
+                placeholder="Prazos, meios de envio, etc."
+                rows={2}
+              />
+            </div>
+
+            {/* Imagem */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Imagem do produto
+              </label>
+              <div className="space-y-3">
+                {/* Upload de arquivo */}
+                <div className="flex gap-2">
+                  <Input
+                    value={form.imagemUrl}
+                    onChange={(e) => handleImageUrlChange(e.target.value)}
+                    placeholder="Cole a URL ou faça upload"
+                    type="url"
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+                
+                {imagePreview && (
+                  <div className="relative rounded-lg overflow-hidden bg-muted/30">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-40 object-cover"
+                      onError={() => setImagePreview('')}
+                    />
+                    <button 
+                      onClick={() => handleImageUrlChange('')}
+                      className="absolute top-2 right-2 p-1.5 bg-background/80 rounded-full hover:bg-background"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                {!imagePreview && (
+                  <div className="flex items-center justify-center h-24 rounded-lg border-2 border-dashed border-muted-foreground/30">
+                    <div className="text-center text-muted-foreground">
+                      <Image className="w-8 h-8 mx-auto mb-1 opacity-50" />
+                      <p className="text-xs">Pré-visualização da imagem</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Produto ativo */}
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div>
+                <p className="font-medium text-sm">Produto ativo</p>
+                <p className="text-xs text-muted-foreground">
+                  Produtos inativos não aparecem para clientes
+                </p>
+              </div>
+              <Switch
+                checked={form.ativo}
+                onCheckedChange={(checked) => setForm(prev => ({ ...prev, ativo: checked }))}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <Button variant="glass" onClick={closeForm} className="flex-1" disabled={saving}>
+                Cancelar
+              </Button>
+              <Button variant="gradient" onClick={handleSave} className="flex-1" disabled={saving}>
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  formMode === 'edit' ? 'Atualizar' : 'Salvar produto'
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {products.length === 0 && formMode === 'closed' && (
+          <div className="glass-card rounded-2xl p-8 text-center">
+            <Package className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">Nenhum produto cadastrado</p>
+            <p className="text-sm text-muted-foreground/70">Adicione produtos para a IA recomendar aos clientes</p>
+          </div>
+        )}
+
+        {/* Active Products list */}
+        {activeProducts.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Eye className="w-4 h-4 text-primary" />
+                Produtos ativos
+              </h3>
+              <span className="text-sm text-muted-foreground">{activeProducts.length} itens</span>
+            </div>
+
+            {activeProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onEdit={() => openEditForm(product)}
+                onDelete={() => handleDelete(product.id)}
+                formatPrice={formatPrice}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Inactive Products list */}
+        {inactiveProducts.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2 text-muted-foreground">
+                <EyeOff className="w-4 h-4" />
+                Produtos inativos
+              </h3>
+              <span className="text-sm text-muted-foreground">{inactiveProducts.length} itens</span>
+            </div>
+
+            {inactiveProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onEdit={() => openEditForm(product)}
+                onDelete={() => handleDelete(product.id)}
+                formatPrice={formatPrice}
+                inactive
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+}
+
+// Product Card Component
+interface ProductCardProps {
+  product: Product;
+  onEdit: () => void;
+  onDelete: () => void;
+  formatPrice: (value: number) => string;
+  inactive?: boolean;
+}
+
+function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: ProductCardProps) {
+  return (
+    <div className={`glass-card rounded-xl p-4 ${inactive ? 'opacity-60' : ''}`}>
+      <div className="flex gap-3">
+        {/* Image */}
+        {product.imagemUrl && (
+          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+            <img 
+              src={product.imagemUrl} 
+              alt={product.nome}
+              className="w-full h-full object-cover"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          </div>
+        )}
+        
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+              {product.categoria || 'Produtos'}
+            </span>
+            {inactive && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                Inativo
+              </span>
+            )}
+          </div>
+          <p className="font-semibold mt-1 truncate">{product.nome}</p>
+          <p className="text-lg font-bold text-primary mt-0.5">
+            {formatPrice(product.preco)}
+          </p>
+          {product.descricaoCurta && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              {product.descricaoCurta}
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={onEdit}
+            className="p-2 rounded-lg hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-2 rounded-lg hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
