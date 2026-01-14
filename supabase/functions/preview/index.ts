@@ -36,38 +36,13 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://assistente-virtual-ai.lovable.app";
     const chatUrl = `${siteUrl}/chat/${productId}`;
 
-    // IMPORTANTE:
-    // - Preview (bots/crawlers) precisa receber HTML com OG tags para gerar o banner.
-    // - Clique humano deve redirecionar via HTTP 302 (sem depender de JS).
-    const userAgent = req.headers.get("user-agent") ?? "";
-    const secFetchMode = req.headers.get("sec-fetch-mode") ?? "";
-    const secFetchDest = req.headers.get("sec-fetch-dest") ?? "";
-    const secFetchUser = req.headers.get("sec-fetch-user") ?? "";
-    const purpose = (req.headers.get("purpose") ?? req.headers.get("x-purpose") ?? "").toLowerCase();
-
-    const isNavigation =
-      secFetchMode.toLowerCase() === "navigate" ||
-      secFetchDest.toLowerCase() === "document" ||
-      secFetchUser === "?1";
-
-    // WhatsApp/Instagram variam bastante no User-Agent; inclua todos para não perder o preview.
-    const isSocialCrawler =
-      /facebookexternalhit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Googlebot|Bingbot|WhatsApp|Instagram|MetaInspector/i.test(
-        userAgent
-      );
-
-    const shouldServeOgHtml =
-      !isNavigation &&
-      (isSocialCrawler || purpose.includes("preview") || purpose.includes("prefetch"));
-
-    if (!shouldServeOgHtml) {
-      return Response.redirect(chatUrl, 302);
-    }
-
+    // OG data - sempre renderizado server-side para garantir preview imediato (inclusive para produtos novos)
+    // Observação: em SPA (React/Vite) crawlers como WhatsApp não executam JS, então o HTML servido por esta função
+    // precisa conter OG tags completas já na primeira resposta.
     const ogTitle = product.name || "Produto";
-    const ogDescription =
-      product.short_description || "Confira este produto incrível!";
+    const ogDescription = product.short_description || "Confira este produto incrível!";
     const ogImage = product.image_url || `${siteUrl}/icon-512.png`;
+    const ogImageType = guessImageMimeType(ogImage);
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -87,7 +62,7 @@ Deno.serve(async (req) => {
   <meta property="og:description" content="${escapeHtml(ogDescription)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
   <meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
-  <meta property="og:image:type" content="image/jpeg">
+  ${ogImageType ? '<meta property="og:image:type" content="' + escapeHtml(ogImageType) + '">' : ''}
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${escapeHtml(ogTitle)}">
@@ -187,7 +162,8 @@ Deno.serve(async (req) => {
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", "text/html; charset=utf-8");
     // WhatsApp não cacheia bem; usar cache curto para permitir atualizações
-    headers.set("Cache-Control", "public, max-age=300, s-maxage=60");
+    // Evita cache agressivo (WhatsApp/Meta podem cachear previews “em branco”)
+    headers.set("Cache-Control", "no-store, max-age=0");
     // Permite renderizar HTML/CSS/imagens sem depender de JavaScript.
     headers.set(
       "Content-Security-Policy",
@@ -207,6 +183,20 @@ function escapeHtml(text: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
+    .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function guessImageMimeType(url: string): string | null {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    if (pathname.endsWith('.png')) return 'image/png';
+    if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) return 'image/jpeg';
+    if (pathname.endsWith('.webp')) return 'image/webp';
+    if (pathname.endsWith('.gif')) return 'image/gif';
+    return null;
+  } catch {
+    // URL inválida ou relativa: não define type
+    return null;
+  }
 }
