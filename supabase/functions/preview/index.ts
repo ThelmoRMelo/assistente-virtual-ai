@@ -37,17 +37,37 @@ Deno.serve(async (req) => {
     const chatUrl = `${siteUrl}/chat/${productId}`;
 
     // IMPORTANTE:
-    // - Bots (ex: facebookexternalhit) precisam receber HTML com OG tags para gerar o banner.
-    // - Pessoas clicando no link devem ser redirecionadas via HTTP (não depende de JS/CSP).
+    // - Preview (bots/crawlers) precisa receber HTML com OG tags para gerar o banner.
+    // - Clique humano deve redirecionar via HTTP 302 (sem depender de JS).
     const userAgent = req.headers.get("user-agent") ?? "";
-    const isCrawler = /facebookexternalhit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Googlebot|Bingbot/i.test(userAgent);
-    if (!isCrawler) {
+    const secFetchMode = req.headers.get("sec-fetch-mode") ?? "";
+    const secFetchDest = req.headers.get("sec-fetch-dest") ?? "";
+    const secFetchUser = req.headers.get("sec-fetch-user") ?? "";
+    const purpose = (req.headers.get("purpose") ?? req.headers.get("x-purpose") ?? "").toLowerCase();
+
+    const isNavigation =
+      secFetchMode.toLowerCase() === "navigate" ||
+      secFetchDest.toLowerCase() === "document" ||
+      secFetchUser === "?1";
+
+    // WhatsApp/Instagram variam bastante no User-Agent; inclua todos para não perder o preview.
+    const isSocialCrawler =
+      /facebookexternalhit|Facebot|Twitterbot|TelegramBot|LinkedInBot|Slackbot|Discordbot|Googlebot|Bingbot|WhatsApp|Instagram|MetaInspector/i.test(
+        userAgent
+      );
+
+    const shouldServeOgHtml =
+      !isNavigation &&
+      (isSocialCrawler || purpose.includes("preview") || purpose.includes("prefetch"));
+
+    if (!shouldServeOgHtml) {
       return Response.redirect(chatUrl, 302);
     }
 
     const ogTitle = product.name || "Produto";
-    const ogDescription = product.short_description || "Confira este produto incrível!";
-    const ogImage = product.image_url || "";
+    const ogDescription =
+      product.short_description || "Confira este produto incrível!";
+    const ogImage = product.image_url || `${siteUrl}/icon-512.png`;
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -65,6 +85,8 @@ Deno.serve(async (req) => {
   <meta property="og:title" content="${escapeHtml(ogTitle)}">
   <meta property="og:description" content="${escapeHtml(ogDescription)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
+  <meta property="og:image:alt" content="${escapeHtml(ogTitle)}">
   <meta property="og:url" content="${escapeHtml(chatUrl)}">
   <meta property="og:type" content="website">
 
@@ -73,6 +95,7 @@ Deno.serve(async (req) => {
   <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
   <meta name="twitter:description" content="${escapeHtml(ogDescription)}">
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
+  <meta name="twitter:image:alt" content="${escapeHtml(ogTitle)}">
 
   <!-- WhatsApp specific -->
   <meta property="og:site_name" content="${escapeHtml(ogTitle)}">
