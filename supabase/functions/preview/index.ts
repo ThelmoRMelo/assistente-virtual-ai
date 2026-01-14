@@ -36,6 +36,34 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://assistente-virtual-ai.lovable.app";
     const chatUrl = `${siteUrl}/chat/${productId}`;
 
+    // IMPORTANTE:
+    // - Crawlers (WhatsApp/Facebook/etc.) precisam receber HTML com OG tags para gerar o banner.
+    // - Cliques humanos devem ir direto para /chat/:productId via redirect HTTP (mais confiável do que meta refresh).
+    const userAgent = req.headers.get("user-agent") ?? "";
+    const purpose = (req.headers.get("purpose") ?? req.headers.get("x-purpose") ?? "").toLowerCase();
+    const secFetchMode = (req.headers.get("sec-fetch-mode") ?? "").toLowerCase();
+    const secFetchDest = (req.headers.get("sec-fetch-dest") ?? "").toLowerCase();
+    const secFetchUser = req.headers.get("sec-fetch-user") ?? "";
+    const hasUpgradeInsecureRequests = req.headers.has("upgrade-insecure-requests");
+
+    const isSocialCrawler =
+      /facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|whatsapp|instagram|metainspector/i.test(
+        userAgent
+      ) || purpose.includes("preview") || purpose.includes("prefetch");
+
+    const isNavigation =
+      secFetchMode === "navigate" ||
+      secFetchDest === "document" ||
+      secFetchUser === "?1" ||
+      hasUpgradeInsecureRequests;
+
+    if (!isSocialCrawler && isNavigation && req.method === "GET") {
+      const headers = new Headers(corsHeaders);
+      headers.set("Location", chatUrl);
+      headers.set("Cache-Control", "no-store, max-age=0");
+      return new Response(null, { status: 302, headers });
+    }
+
     // OG data - sempre renderizado server-side para garantir preview imediato (inclusive para produtos novos)
     // Observação: em SPA (React/Vite) crawlers como WhatsApp não executam JS, então o HTML servido por esta função
     // precisa conter OG tags completas já na primeira resposta.
