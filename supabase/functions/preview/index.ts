@@ -80,15 +80,21 @@ Deno.serve(async (req) => {
   <link rel="canonical" href="${escapeHtml(chatUrl)}">
 
   <title>${escapeHtml(ogTitle)}</title>
+  <meta name="description" content="${escapeHtml(ogDescription)}">
 
-  <!-- Open Graph Meta Tags -->
+  <!-- Open Graph Meta Tags (WhatsApp, Facebook, LinkedIn) -->
   <meta property="og:title" content="${escapeHtml(ogTitle)}">
   <meta property="og:description" content="${escapeHtml(ogDescription)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
   <meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${escapeHtml(ogTitle)}">
   <meta property="og:url" content="${escapeHtml(chatUrl)}">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="${escapeHtml(ogTitle)}">
+  <meta property="og:locale" content="pt_BR">
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image">
@@ -96,9 +102,6 @@ Deno.serve(async (req) => {
   <meta name="twitter:description" content="${escapeHtml(ogDescription)}">
   <meta name="twitter:image" content="${escapeHtml(ogImage)}">
   <meta name="twitter:image:alt" content="${escapeHtml(ogTitle)}">
-
-  <!-- WhatsApp specific -->
-  <meta property="og:site_name" content="${escapeHtml(ogTitle)}">
 
   <style>
     * {
@@ -182,15 +185,16 @@ Deno.serve(async (req) => {
 </html>`;
 
     const headers = new Headers(corsHeaders);
-    headers.set("content-type", "text/html; charset=utf-8");
-    headers.set("cache-control", "public, max-age=3600");
+    headers.set("Content-Type", "text/html; charset=utf-8");
+    // WhatsApp não cacheia bem; usar cache curto para permitir atualizações
+    headers.set("Cache-Control", "public, max-age=300, s-maxage=60");
     // Permite renderizar HTML/CSS/imagens sem depender de JavaScript.
     headers.set(
-      "content-security-policy",
+      "Content-Security-Policy",
       "default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     );
 
-    return new Response(html, { headers });
+    return new Response(html, { status: 200, headers });
   } catch (error) {
     console.error("Error:", error);
     return new Response("Internal Server Error", { status: 500 });
