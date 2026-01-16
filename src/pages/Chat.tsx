@@ -1,9 +1,9 @@
 // Chat.tsx - Página PÚBLICA de chat para clientes finais
 // Suporta vitrine com slug + tenant_id
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Send, MessageCircle, Loader2, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Send, MessageCircle, Loader2, ArrowLeft, ShoppingBag, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MarkdownMessage } from '@/components/MarkdownMessage';
@@ -12,6 +12,7 @@ import { useConversation } from '@/hooks/useConversation';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
+import { toast } from 'sonner';
 
 interface SupabaseProduct {
   id: string;
@@ -50,8 +51,11 @@ export default function Chat() {
     lastBotResponse,
     addMessage,
     updateNegotiation,
-    updateClosing
+    updateClosing,
+    clearConversation
   } = useConversation(productId, false);
+  
+  const [isClearing, setIsClearing] = useState(false);
   
   const [supabaseProducts, setSupabaseProducts] = useState<SupabaseProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -127,6 +131,25 @@ export default function Chat() {
     ? supabaseProducts.find(p => p.id === productId)
     : null;
 
+  // Gerar mensagem de boas-vindas baseada no contexto
+  const getWelcomeMessage = useCallback((isNewSession: boolean = false) => {
+    if (contextProduct) {
+      const price = Number(contextProduct.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (isNewSession) {
+        return `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Agora estou focada em te ajudar com o **${contextProduct.name}**! O valor é ${price}. Em que posso ajudar?`;
+      }
+      return `Olá! 👋 Você está interessado no **${contextProduct.name}**! O valor é ${price}. Posso te ajudar?`;
+    } else if (supabaseProducts.length > 0) {
+      if (isNewSession) {
+        return `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Bem-vindo${business.nome ? ` à ${business.nome}` : ''}! Temos ${supabaseProducts.length} produto(s) disponíveis. Como posso ajudar?`;
+      }
+      return `Olá! 👋 Bem-vindo${business.nome ? ` à ${business.nome}` : ''}! Temos ${supabaseProducts.length} produto(s). Como posso ajudar?`;
+    }
+    return isNewSession 
+      ? `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Como posso te ajudar hoje?`
+      : `Olá! 👋 Como posso te ajudar hoje?`;
+  }, [contextProduct, supabaseProducts, business.nome]);
+
   // Mensagem inicial
   useEffect(() => {
     if (hasInitialized || conversationLoading || loadingProducts) return;
@@ -135,19 +158,33 @@ export default function Chat() {
       return;
     }
     
-    let welcomeMessage = '';
-    if (contextProduct) {
-      const price = Number(contextProduct.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      welcomeMessage = `Olá! 👋 Você está interessado no **${contextProduct.name}**! O valor é ${price}. Posso te ajudar?`;
-    } else if (supabaseProducts.length > 0) {
-      welcomeMessage = `Olá! 👋 Bem-vindo${business.nome ? ` à ${business.nome}` : ''}! Temos ${supabaseProducts.length} produto(s). Como posso ajudar?`;
-    } else {
-      welcomeMessage = `Olá! 👋 Como posso te ajudar hoje?`;
-    }
-    
-    addMessage(welcomeMessage, 'bot', 'Boas-vindas');
+    addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
     setHasInitialized(true);
-  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, contextProduct, supabaseProducts, business.nome, addMessage]);
+  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage]);
+
+  // Handler para limpar conversa e iniciar novo atendimento
+  const handleClearConversation = async () => {
+    if (isClearing) return;
+    
+    setIsClearing(true);
+    try {
+      const newConvId = await clearConversation();
+      if (newConvId) {
+        setHasInitialized(false);
+        // Aguardar um tick para o estado atualizar, depois adicionar mensagem de boas-vindas
+        setTimeout(async () => {
+          await addMessage(getWelcomeMessage(true), 'bot', 'Novo Atendimento');
+          setHasInitialized(true);
+          toast.success('Novo atendimento iniciado!');
+        }, 100);
+      }
+    } catch (err) {
+      console.error('[Chat] Error clearing conversation:', err);
+      toast.error('Erro ao iniciar novo atendimento');
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const handleSend = async () => {
     const trimmedInput = inputValue.trim();
@@ -252,6 +289,22 @@ export default function Chat() {
           <h1 className="font-semibold">{contextProduct?.name || storeName}</h1>
           <p className="text-xs text-muted-foreground">{isTyping ? 'Digitando...' : 'Online'}</p>
         </div>
+        
+        {/* Botão limpar conversa */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClearConversation}
+          disabled={isClearing || isTyping}
+          className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+          title="Iniciar novo atendimento"
+        >
+          {isClearing ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Trash2 className="w-5 h-5" />
+          )}
+        </Button>
         
         {/* Link para ver produtos */}
         <Link to={vitrineLink} className="p-2 hover:bg-muted/50 rounded-full transition-colors">
