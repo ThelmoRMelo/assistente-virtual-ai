@@ -47,17 +47,21 @@ export function useConversation(productId?: string, isSimulation: boolean = fals
   const [loading, setLoading] = useState(true);
   const lastBotResponseRef = useRef<string>('');
   const initRef = useRef(false);
+  const currentProductIdRef = useRef<string | undefined>(productId);
 
-  // Gerar ou recuperar session_id
+  // Gerar ou recuperar session_id - agora inclui productId para contexto separado
   const getSessionId = useCallback(() => {
-    const key = isSimulation ? `${SESSION_KEY}_sim` : SESSION_KEY;
+    // Para chat público com produto específico, usar session_id único por produto
+    const baseKey = isSimulation ? `${SESSION_KEY}_sim` : SESSION_KEY;
+    const key = productId ? `${baseKey}_product_${productId}` : baseKey;
+    
     let sessionId = localStorage.getItem(key);
     if (!sessionId) {
       sessionId = crypto.randomUUID();
       localStorage.setItem(key, sessionId);
     }
     return sessionId;
-  }, [isSimulation]);
+  }, [isSimulation, productId]);
 
   // Criar nova conversa
   const createConversation = useCallback(async (sessionId: string): Promise<string | null> => {
@@ -228,10 +232,12 @@ export function useConversation(productId?: string, isSimulation: boolean = fals
     }
   }, [conversationId, closing]);
 
-  // Limpar conversa (nova sessão)
-  const clearConversation = useCallback(() => {
-    const key = isSimulation ? `${SESSION_KEY}_sim` : SESSION_KEY;
+  // Limpar conversa (nova sessão) - agora suporta productId
+  const clearConversation = useCallback(async () => {
+    const baseKey = isSimulation ? `${SESSION_KEY}_sim` : SESSION_KEY;
+    const key = productId ? `${baseKey}_product_${productId}` : baseKey;
     localStorage.removeItem(key);
+    
     setMessages([]);
     setConversationId(null);
     setNegotiation({
@@ -248,8 +254,29 @@ export function useConversation(productId?: string, isSimulation: boolean = fals
       hasOfferedPaymentLink: false,
       conversationEnded: false
     });
+    lastBotResponseRef.current = '';
     initRef.current = false;
-  }, [isSimulation]);
+
+    // Criar nova conversa automaticamente
+    const newSessionId = crypto.randomUUID();
+    localStorage.setItem(key, newSessionId);
+    const newId = await createConversation(newSessionId);
+    if (newId) {
+      setConversationId(newId);
+    }
+    setLoading(false);
+    
+    return newId;
+  }, [isSimulation, productId, createConversation]);
+
+  // Detectar mudança de produto e reiniciar conversa
+  useEffect(() => {
+    if (currentProductIdRef.current !== productId) {
+      currentProductIdRef.current = productId;
+      initRef.current = false;
+      loadConversation();
+    }
+  }, [productId, loadConversation]);
 
   useEffect(() => {
     loadConversation();
