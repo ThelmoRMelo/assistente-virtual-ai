@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, MessageCircle, Loader2, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Loader2, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { themes, getThemeForCategory, generateThemeCSS, type ThemeConfig } from '@/lib/themes';
+import { themes, getThemeForCategory, type ThemeConfig } from '@/lib/themes';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
+
+// Vitrine components
+import { VitrineHeader } from '@/components/vitrine/VitrineHeader';
+import { VitrineHero } from '@/components/vitrine/VitrineHero';
+import { ProductSection } from '@/components/vitrine/ProductSection';
+import { ThemeShowcase } from '@/components/vitrine/ThemeShowcase';
+import { VitrineFooter } from '@/components/vitrine/VitrineFooter';
 
 interface Product {
   id: string;
@@ -38,7 +44,6 @@ export default function Vitrine() {
   const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [business, setBusiness] = useState<BusinessConfig | null>(null);
   const [theme, setTheme] = useState<ThemeConfig>(themes.default);
-  const [tenantId, setTenantId] = useState<string | null>(null);
 
   useEffect(() => {
     loadStorefront();
@@ -51,7 +56,6 @@ export default function Vitrine() {
       let currentTenantId: string | null = null;
       
       if (slug) {
-        // Buscar vitrine pelo slug
         const { data: storefrontData, error: sfError } = await supabase
           .from('storefronts')
           .select('*')
@@ -67,14 +71,9 @@ export default function Vitrine() {
         
         setStorefront(storefrontData);
         currentTenantId = storefrontData.tenant_id;
-      } else {
-        // Sem slug = vitrine global (todos os produtos ativos)
-        // Ou pode ser do primeiro tenant disponível para demo
       }
-      
-      setTenantId(currentTenantId);
 
-      // Buscar configurações do negócio
+      // Fetch business config
       if (currentTenantId) {
         const { data: configData } = await supabase
           .from('business_config')
@@ -84,12 +83,10 @@ export default function Vitrine() {
         
         if (configData) {
           setBusiness(configData);
-          // Aplicar tema baseado na categoria
           const themeId = getThemeForCategory(configData.business_category || '');
           setTheme(themes[themeId]);
         }
       } else {
-        // Buscar primeira config disponível para demo
         const { data: configData } = await supabase
           .from('business_config')
           .select('business_name, business_category')
@@ -103,7 +100,7 @@ export default function Vitrine() {
         }
       }
 
-      // Buscar produtos ativos
+      // Fetch active products
       let productsQuery = supabase
         .from('products')
         .select('id, name, price, short_description, image_url, category')
@@ -124,12 +121,7 @@ export default function Vitrine() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
   const handleProductClick = (productId: string) => {
-    // Navegar para o chat com contexto do produto e tenant
     if (slug) {
       navigate(`/loja/${slug}/chat/${productId}`);
     } else {
@@ -137,10 +129,50 @@ export default function Vitrine() {
     }
   };
 
-  // Aplicar tema dinamicamente
+  const chatPath = slug ? `/loja/${slug}/chat` : '/chat';
+  const businessName = business?.business_name || 'Minha Loja';
+
+  // Group products by category
+  const productsByCategory = useMemo(() => {
+    const grouped: Record<string, Product[]> = {};
+    
+    products.forEach(product => {
+      const category = product.category || 'Outros';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(product);
+    });
+    
+    return grouped;
+  }, [products]);
+
+  // Identify main categories
+  const coursesProducts = useMemo(() => 
+    products.filter(p => 
+      p.category?.toLowerCase().includes('curso') || 
+      p.category?.toLowerCase().includes('treinamento') ||
+      p.category?.toLowerCase().includes('educação')
+    ), [products]
+  );
+
+  const appsProducts = useMemo(() => 
+    products.filter(p => 
+      p.category?.toLowerCase().includes('app') || 
+      p.category?.toLowerCase().includes('software') ||
+      p.category?.toLowerCase().includes('sistema')
+    ), [products]
+  );
+
+  const otherProducts = useMemo(() => 
+    products.filter(p => 
+      !coursesProducts.includes(p) && !appsProducts.includes(p)
+    ), [products, coursesProducts, appsProducts]
+  );
+
+  // Apply theme dynamically
   useEffect(() => {
     if (theme.fonts.googleImport) {
-      // Adicionar fonte do Google
       const link = document.createElement('link');
       link.href = theme.fonts.googleImport;
       link.rel = 'stylesheet';
@@ -153,7 +185,6 @@ export default function Vitrine() {
       document.head.appendChild(link);
     }
 
-    // Aplicar CSS variables
     const root = document.documentElement;
     root.style.setProperty('--primary', theme.colors.primary);
     root.style.setProperty('--secondary', theme.colors.secondary);
@@ -164,7 +195,6 @@ export default function Vitrine() {
     root.style.setProperty('--border', theme.colors.border);
 
     return () => {
-      // Resetar para tema padrão ao sair
       const defaultTheme = themes.default;
       root.style.setProperty('--primary', defaultTheme.colors.primary);
       root.style.setProperty('--secondary', defaultTheme.colors.secondary);
@@ -185,130 +215,78 @@ export default function Vitrine() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: `var(--gradient-primary)` }}>
-      {/* Header */}
-      <header className="glass-card border-b border-border/50 px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 
-                className="font-bold text-lg"
-                style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
-              >
-                {business?.business_name || 'Nossa Loja'}
-              </h1>
-              {business?.business_category && (
-                <p className="text-xs text-muted-foreground">{business.business_category}</p>
-              )}
-            </div>
-          </div>
-          
-          <Link to={slug ? `/loja/${slug}/chat` : '/chat'}>
-            <Button variant="glass" size="sm">
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <VitrineHeader 
+        businessName={businessName} 
+        theme={theme} 
+        chatPath={chatPath} 
+      />
 
-      {/* Hero */}
-      <section className="px-4 py-8 text-center max-w-4xl mx-auto">
-        <h2 
-          className="text-3xl md:text-4xl font-bold mb-3 gradient-text"
-          style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
-        >
-          Bem-vindo à {business?.business_name || 'Nossa Loja'}
-        </h2>
-        <p className="text-muted-foreground max-w-xl mx-auto">
-          Explore nossos produtos e converse com nossa assistente virtual para tirar dúvidas e fazer seu pedido.
-        </p>
-      </section>
+      <VitrineHero 
+        businessName={businessName} 
+        theme={theme} 
+        chatPath={chatPath} 
+      />
 
-      {/* Products Grid - Banner Style */}
-      <main className="px-4 pb-8 max-w-4xl mx-auto">
+      <main className="max-w-7xl mx-auto px-4">
         {products.length === 0 ? (
-          <div className="glass-card rounded-2xl p-12 text-center">
-            <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Nenhum produto disponível</h3>
-            <p className="text-muted-foreground">Em breve teremos novidades!</p>
+          <div className="py-20 text-center">
+            <div className="glass-card rounded-3xl p-12 max-w-md mx-auto">
+              <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Nenhum produto disponível</h3>
+              <p className="text-muted-foreground">Em breve teremos novidades!</p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {products.map((product, index) => (
-              <div
-                key={product.id}
-                onClick={() => handleProductClick(product.id)}
-                className="group glass-card rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-glow animate-slide-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                {/* Banner Image */}
-                <div className="relative h-48 md:h-64 overflow-hidden">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                      <ShoppingBag className="w-16 h-16 text-muted-foreground/50" />
-                    </div>
-                  )}
-                  
-                  {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent" />
-                  
-                  {/* Price badge */}
-                  <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-lg shadow-glow">
-                    {formatPrice(product.price)}
-                  </div>
-                </div>
+          <>
+            {/* Featured/Courses section */}
+            {coursesProducts.length > 0 ? (
+              <ProductSection
+                title="Cursos"
+                products={coursesProducts}
+                theme={theme}
+                onProductClick={handleProductClick}
+                layout="featured"
+              />
+            ) : products.length > 0 && (
+              <ProductSection
+                title="Destaques"
+                products={products.slice(0, 3)}
+                theme={theme}
+                onProductClick={handleProductClick}
+                layout="featured"
+              />
+            )}
 
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 
-                        className="text-xl md:text-2xl font-bold mb-2 group-hover:text-primary transition-colors"
-                        style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
-                      >
-                        {product.name}
-                      </h3>
-                      {product.short_description && (
-                        <p className="text-muted-foreground line-clamp-2">
-                          {product.short_description}
-                        </p>
-                      )}
-                      {product.category && (
-                        <span className="inline-block mt-3 text-xs bg-muted/50 text-muted-foreground px-3 py-1 rounded-full">
-                          {product.category}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <Button 
-                      variant="gradient" 
-                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      Quero este
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            {/* Apps section */}
+            {appsProducts.length > 0 && (
+              <ProductSection
+                title="Aplicativos"
+                products={appsProducts}
+                theme={theme}
+                onProductClick={handleProductClick}
+                layout="grid"
+              />
+            )}
+
+            {/* Other products */}
+            {otherProducts.length > 0 && (
+              <ProductSection
+                title={coursesProducts.length > 0 || appsProducts.length > 0 ? "Outros Produtos" : "Nossos Produtos"}
+                products={otherProducts}
+                theme={theme}
+                onProductClick={handleProductClick}
+                layout="grid"
+              />
+            )}
+          </>
         )}
+
+        {/* Theme showcase */}
+        <ThemeShowcase theme={theme} />
       </main>
 
-      {/* Footer */}
-      <footer className="px-4 py-6 text-center text-muted-foreground text-sm">
-        <p>Atendimento por IA disponível 24h</p>
-      </footer>
+      <VitrineFooter />
     </div>
   );
 }
