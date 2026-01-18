@@ -1,4 +1,4 @@
-import { Check, Share2, ArrowRight } from 'lucide-react';
+import { Check, Share2, ArrowRight, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { ThemeConfig } from '@/lib/themes';
@@ -11,6 +11,7 @@ interface Product {
   image_url: string | null;
   category: string | null;
   long_description?: string | null;
+  has_gallery?: boolean;
 }
 
 interface ProductCardProps {
@@ -131,6 +132,14 @@ export function ProductCard({
             <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full font-bold text-lg shadow-lg">
               {formatPrice(product.price)}
             </div>
+
+            {/* Gallery indicator */}
+            {product.has_gallery && (
+              <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                <Images className="w-3.5 h-3.5" />
+                Ver galeria
+              </div>
+            )}
             
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-card/80 via-transparent to-transparent md:block hidden" />
@@ -222,6 +231,14 @@ export function ProductCard({
         <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
           {formatPrice(product.price)}
         </div>
+
+        {/* Gallery indicator */}
+        {product.has_gallery && (
+          <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+            <Images className="w-3 h-3" />
+            +fotos
+          </div>
+        )}
 
         {/* Share button */}
         <Button 

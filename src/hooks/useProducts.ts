@@ -17,6 +17,7 @@ export interface SupabaseProduct {
   image_url: string | null;
   payment_link: string | null;
   active: boolean;
+  has_gallery: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +36,7 @@ export interface Product {
   imagemUrl: string;
   linkPagamento: string;
   ativo: boolean;
+  hasGallery: boolean;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
@@ -57,6 +59,7 @@ function toUIProduct(p: SupabaseProduct): Product {
     imagemUrl: p.image_url || '',
     linkPagamento: p.payment_link || '',
     ativo: p.active,
+    hasGallery: p.has_gallery || false,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     // Legado
@@ -80,6 +83,7 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.imagemUrl !== undefined) result.image_url = p.imagemUrl;
   if (p.linkPagamento !== undefined) result.payment_link = p.linkPagamento;
   if (p.ativo !== undefined) result.active = p.ativo;
+  if (p.hasGallery !== undefined) result.has_gallery = p.hasGallery;
   
   return result;
 }
