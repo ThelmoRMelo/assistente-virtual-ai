@@ -13,6 +13,7 @@ import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
 import { toast } from 'sonner';
+import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
 
 interface SupabaseProduct {
   id: string;
@@ -28,6 +29,7 @@ interface SupabaseProduct {
   payment_link: string | null;
   active: boolean;
   tenant_id: string | null;
+  has_gallery: boolean;
 }
 
 interface StorefrontData {
@@ -66,6 +68,11 @@ export default function Chat() {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
+  
+  // Gallery state
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
 
   // Buscar produtos do Supabase com suporte a tenant
   useEffect(() => {
@@ -130,6 +137,32 @@ export default function Chat() {
   const contextProduct = productId 
     ? supabaseProducts.find(p => p.id === productId)
     : null;
+
+  // Buscar imagens da galeria quando o produto tem galeria
+  useEffect(() => {
+    const fetchGalleryImages = async () => {
+      if (!contextProduct?.has_gallery || !productId) {
+        setGalleryImages([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('product_images')
+        .select('image_url')
+        .eq('product_id', productId)
+        .order('display_order', { ascending: true });
+
+      setGalleryImages(data?.map(img => img.image_url) || []);
+    };
+
+    fetchGalleryImages();
+  }, [contextProduct?.has_gallery, productId]);
+
+  // Handler para abrir galeria
+  const handleOpenGallery = (index: number) => {
+    setGalleryInitialIndex(index);
+    setGalleryOpen(true);
+  };
 
   // Gerar mensagem de boas-vindas baseada no contexto
   const getWelcomeMessage = useCallback((isNewSession: boolean = false) => {
@@ -313,6 +346,18 @@ export default function Chat() {
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Galeria de imagens do produto - exibida quando há galeria */}
+        {contextProduct?.image_url && (contextProduct.has_gallery && galleryImages.length > 0) && (
+          <div className="mb-4">
+            <ProductGalleryPreview
+              coverImage={contextProduct.image_url}
+              galleryImages={galleryImages}
+              productName={contextProduct.name}
+              onOpenGallery={handleOpenGallery}
+            />
+          </div>
+        )}
+
         {messages.map((message, index) => (
           <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`} style={{ animationDelay: `${index * 30}ms` }}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.sender === 'user' ? 'bg-primary text-primary-foreground rounded-br-sm' : 'glass-card rounded-bl-sm'}`}>
@@ -353,6 +398,18 @@ export default function Chat() {
           </Button>
         </div>
       </footer>
+
+      {/* Modal da galeria de imagens */}
+      {contextProduct?.image_url && (
+        <ProductGalleryViewer
+          coverImage={contextProduct.image_url}
+          galleryImages={galleryImages}
+          productName={contextProduct.name}
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          initialIndex={galleryInitialIndex}
+        />
+      )}
     </div>
   );
 }
