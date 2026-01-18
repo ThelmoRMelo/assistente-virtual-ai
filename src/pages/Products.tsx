@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2, Images } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
+import { useProductGallery } from '@/hooks/useProductGallery';
+import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
 import { toast } from 'sonner';
 
 const categories = [
@@ -32,6 +34,7 @@ interface ProductForm {
   imagemUrl: string;
   linkPagamento: string;
   ativo: boolean;
+  galleryImages: string[];
 }
 
 const emptyForm: ProductForm = {
@@ -46,6 +49,7 @@ const emptyForm: ProductForm = {
   imagemUrl: '',
   linkPagamento: '',
   ativo: true,
+  galleryImages: [],
 };
 
 export default function Products() {
@@ -68,6 +72,19 @@ export default function Products() {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
+  // Hook para galeria de imagens
+  const { images: galleryImages, saveGallery, fetchImages } = useProductGallery(editingId);
+
+  // Carregar imagens da galeria quando editar produto
+  useEffect(() => {
+    if (formMode === 'edit' && editingId && galleryImages.length > 0) {
+      setForm(prev => ({
+        ...prev,
+        galleryImages: galleryImages.map(img => img.imageUrl),
+      }));
+    }
+  }, [formMode, editingId, galleryImages]);
+
   const openAddForm = () => {
     setForm(emptyForm);
     setImagePreview('');
@@ -88,6 +105,7 @@ export default function Products() {
       imagemUrl: product.imagemUrl || '',
       linkPagamento: product.linkPagamento || '',
       ativo: product.ativo,
+      galleryImages: [], // Será carregado pelo useEffect
     });
     setImagePreview(product.imagemUrl || '');
     setEditingId(product.id);
@@ -153,16 +171,43 @@ export default function Products() {
       imagemUrl: form.imagemUrl.trim(),
       linkPagamento: form.linkPagamento.trim(),
       ativo: form.ativo,
+      hasGallery: form.galleryImages.length > 0,
     };
 
     try {
+      let savedProductId: string | null = null;
+      
       if (formMode === 'edit' && editingId) {
         await updateProduct(editingId, productData);
+        savedProductId = editingId;
+        
+        // Salvar galeria de imagens
+        if (savedProductId) {
+          await saveGallery(form.galleryImages);
+        }
+        
         toast.success('Produto atualizado!');
       } else {
-        await addProduct(productData);
+        const newProduct = await addProduct(productData);
+        if (newProduct) {
+          savedProductId = newProduct.id;
+          
+          // Salvar galeria para novo produto (precisamos atualizar o editingId temporariamente)
+          if (form.galleryImages.length > 0) {
+            // Para novo produto, salvamos direto no banco
+            const { supabase } = await import('@/integrations/supabase/client');
+            const inserts = form.galleryImages.map((url, index) => ({
+              product_id: savedProductId,
+              image_url: url,
+              display_order: index,
+            }));
+            await supabase.from('product_images').insert(inserts);
+            await supabase.from('products').update({ has_gallery: true }).eq('id', savedProductId);
+          }
+        }
         toast.success('Produto salvo com sucesso!');
       }
+      
       closeForm();
     } catch (err) {
       console.error('Erro ao salvar:', err);
@@ -433,6 +478,13 @@ export default function Products() {
               </div>
             </div>
 
+            {/* Galeria de imagens adicionais */}
+            <ProductGalleryUpload
+              images={form.galleryImages}
+              onImagesChange={(images) => setForm(prev => ({ ...prev, galleryImages: images }))}
+              maxImages={5}
+            />
+
             {/* Produto ativo */}
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
               <div>
@@ -575,6 +627,12 @@ function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: Produ
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
               {product.categoria || 'Produtos'}
             </span>
+            {product.hasGallery && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary/20 text-secondary-foreground font-medium flex items-center gap-1">
+                <Images className="w-3 h-3" />
+                Galeria
+              </span>
+            )}
             {inactive && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
                 Inativo
