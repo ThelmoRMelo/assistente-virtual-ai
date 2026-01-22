@@ -36,27 +36,61 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://assistente-virtual-ai.lovable.app";
     const chatUrl = `${siteUrl}/chat/${productId}`;
 
-    // IMPORTANTE:
-    // - Crawlers (WhatsApp/Facebook/etc.) precisam receber HTML com OG tags para gerar o banner.
-    // - Cliques humanos devem ir direto para /chat/:productId via redirect HTTP (mais confiável do que meta refresh).
+    // Detecção de crawlers sociais
     const userAgent = req.headers.get("user-agent") ?? "";
     const purpose = (req.headers.get("purpose") ?? req.headers.get("x-purpose") ?? "").toLowerCase();
     const secFetchMode = (req.headers.get("sec-fetch-mode") ?? "").toLowerCase();
     const secFetchDest = (req.headers.get("sec-fetch-dest") ?? "").toLowerCase();
     const secFetchUser = req.headers.get("sec-fetch-user") ?? "";
     const hasUpgradeInsecureRequests = req.headers.has("upgrade-insecure-requests");
+    const accept = (req.headers.get("accept") ?? "").toLowerCase();
 
-    const isSocialCrawler =
-      /facebookexternalhit|facebot|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|whatsapp|instagram|metainspector/i.test(
-        userAgent
-      ) || purpose.includes("preview") || purpose.includes("prefetch");
+    // Lista expandida de crawlers sociais incluindo variações do Instagram
+    const crawlerPatterns = [
+      /facebookexternalhit/i,
+      /facebot/i,
+      /twitterbot/i,
+      /telegrambot/i,
+      /linkedinbot/i,
+      /slackbot/i,
+      /discordbot/i,
+      /whatsapp/i,
+      /instagram/i,           // Instagram genérico
+      /instagrambot/i,        // InstagramBot específico
+      /metainspector/i,
+      /pinterest/i,
+      /pinterestbot/i,
+      /googlebot/i,
+      /bingbot/i,
+      /applebot/i,
+      /embedly/i,
+      /quora link preview/i,
+      /showyoubot/i,
+      /outbrain/i,
+      /vkshare/i,
+      /w3c_validator/i,
+      /facebookcatalog/i,
+    ];
 
+    const isSocialCrawler = 
+      crawlerPatterns.some(pattern => pattern.test(userAgent)) ||
+      purpose.includes("preview") || 
+      purpose.includes("prefetch") ||
+      // Alguns crawlers não se identificam mas pedem apenas HTML/imagem
+      (accept.includes("text/html") && !accept.includes("application/javascript") && userAgent.includes("Bot"));
+
+    // Detectar navegação humana real
     const isNavigation =
       secFetchMode === "navigate" ||
       secFetchDest === "document" ||
       secFetchUser === "?1" ||
       hasUpgradeInsecureRequests;
 
+    // Log para debug
+    console.log(`[preview] UA: ${userAgent.substring(0, 100)}`);
+    console.log(`[preview] isSocialCrawler: ${isSocialCrawler}, isNavigation: ${isNavigation}`);
+
+    // Redirecionar apenas navegação humana real (não crawlers)
     if (!isSocialCrawler && isNavigation && req.method === "GET") {
       const headers = new Headers(corsHeaders);
       headers.set("Location", chatUrl);
@@ -64,139 +98,130 @@ Deno.serve(async (req) => {
       return new Response(null, { status: 302, headers });
     }
 
-    // OG data - sempre renderizado server-side para garantir preview imediato (inclusive para produtos novos)
-    // Observação: em SPA (React/Vite) crawlers como WhatsApp não executam JS, então o HTML servido por esta função
-    // precisa conter OG tags completas já na primeira resposta.
+    // OG data - sempre renderizado server-side para garantir preview imediato
     const ogTitle = product.name || "Produto";
     const ogDescription = product.short_description || "Confira este produto incrível!";
     const ogImage = product.image_url || `${siteUrl}/icon-512.png`;
     const ogImageType = guessImageMimeType(ogImage);
 
+    // HTML otimizado para crawlers sociais (Instagram, WhatsApp, Facebook, etc.)
+    // IMPORTANTE: Manter estrutura mínima e limpa para evitar problemas de parsing
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Redirect sem depender de JavaScript (CSP pode bloquear scripts) -->
-  <meta http-equiv="refresh" content="0; url=${escapeHtml(chatUrl)}">
-  <link rel="canonical" href="${escapeHtml(chatUrl)}">
+<title>${escapeHtml(ogTitle)}</title>
+<meta name="description" content="${escapeHtml(ogDescription)}">
 
-  <title>${escapeHtml(ogTitle)}</title>
-  <meta name="description" content="${escapeHtml(ogDescription)}">
+<!-- Open Graph Meta Tags (Instagram, WhatsApp, Facebook, LinkedIn) -->
+<meta property="og:title" content="${escapeHtml(ogTitle)}">
+<meta property="og:description" content="${escapeHtml(ogDescription)}">
+<meta property="og:image" content="${escapeHtml(ogImage)}">
+<meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
+${ogImageType ? `<meta property="og:image:type" content="${escapeHtml(ogImageType)}">` : ''}
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${escapeHtml(ogTitle)}">
+<meta property="og:url" content="${escapeHtml(chatUrl)}">
+<meta property="og:type" content="product">
+<meta property="og:site_name" content="${escapeHtml(ogTitle)}">
+<meta property="og:locale" content="pt_BR">
 
-  <!-- Open Graph Meta Tags (WhatsApp, Facebook, LinkedIn) -->
-  <meta property="og:title" content="${escapeHtml(ogTitle)}">
-  <meta property="og:description" content="${escapeHtml(ogDescription)}">
-  <meta property="og:image" content="${escapeHtml(ogImage)}">
-  <meta property="og:image:secure_url" content="${escapeHtml(ogImage)}">
-  ${ogImageType ? '<meta property="og:image:type" content="' + escapeHtml(ogImageType) + '">' : ''}
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="${escapeHtml(ogTitle)}">
-  <meta property="og:url" content="${escapeHtml(chatUrl)}">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="${escapeHtml(ogTitle)}">
-  <meta property="og:locale" content="pt_BR">
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtml(ogTitle)}">
+<meta name="twitter:description" content="${escapeHtml(ogDescription)}">
+<meta name="twitter:image" content="${escapeHtml(ogImage)}">
+<meta name="twitter:image:alt" content="${escapeHtml(ogTitle)}">
 
-  <!-- Twitter Card Meta Tags -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(ogTitle)}">
-  <meta name="twitter:description" content="${escapeHtml(ogDescription)}">
-  <meta name="twitter:image" content="${escapeHtml(ogImage)}">
-  <meta name="twitter:image:alt" content="${escapeHtml(ogTitle)}">
+<!-- Redirect para humanos que não são crawlers -->
+<meta http-equiv="refresh" content="0; url=${escapeHtml(chatUrl)}">
+<link rel="canonical" href="${escapeHtml(chatUrl)}">
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    .container {
-      text-align: center;
-      padding: 20px;
-      max-width: 500px;
-    }
-    .product-image {
-      width: 100%;
-      max-width: 400px;
-      height: auto;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      margin-bottom: 24px;
-      display: block;
-    }
-    .product-name {
-      color: white;
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .product-description {
-      color: rgba(255,255,255,0.9);
-      font-size: 16px;
-      line-height: 1.5;
-      margin-bottom: 24px;
-    }
-    .loading {
-      color: rgba(255,255,255,0.8);
-      font-size: 14px;
-    }
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 12px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .fallback-link {
-      display: inline-block;
-      margin-top: 10px;
-      color: rgba(255,255,255,0.95);
-      text-decoration: underline;
-    }
-  </style>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.container { text-align: center; padding: 20px; max-width: 500px; }
+.product-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  margin-bottom: 24px;
+  display: block;
+}
+.product-name {
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.product-description {
+  color: rgba(255,255,255,0.9);
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.loading { color: rgba(255,255,255,0.8); font-size: 14px; }
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.fallback-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: rgba(255,255,255,0.95);
+  text-decoration: underline;
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    ${ogImage ? `<a href="${escapeHtml(chatUrl)}"><img src="${escapeHtml(ogImage)}" alt="${escapeHtml(ogTitle)}" class="product-image"></a>` : ''}
-    <h1 class="product-name">${escapeHtml(ogTitle)}</h1>
-    <p class="product-description">${escapeHtml(ogDescription)}</p>
-    <div class="loading">
-      <div class="spinner"></div>
-      Abrindo o chat do produto...
-      <div>
-        <a class="fallback-link" href="${escapeHtml(chatUrl)}">Clique aqui se não redirecionar</a>
-      </div>
-    </div>
-  </div>
+<div class="container">
+${ogImage ? `<a href="${escapeHtml(chatUrl)}"><img src="${escapeHtml(ogImage)}" alt="${escapeHtml(ogTitle)}" class="product-image"></a>` : ''}
+<h1 class="product-name">${escapeHtml(ogTitle)}</h1>
+<p class="product-description">${escapeHtml(ogDescription)}</p>
+<div class="loading">
+<div class="spinner"></div>
+Abrindo o chat do produto...
+<div><a class="fallback-link" href="${escapeHtml(chatUrl)}">Clique aqui se não redirecionar</a></div>
+</div>
+</div>
 </body>
 </html>`;
 
-    const headers = new Headers(corsHeaders);
+    const headers = new Headers();
+    // Content-Type é crítico para que crawlers interpretem corretamente
     headers.set("Content-Type", "text/html; charset=utf-8");
-    // WhatsApp não cacheia bem; usar cache curto para permitir atualizações
-    // Evita cache agressivo (WhatsApp/Meta podem cachear previews “em branco”)
-    headers.set("Cache-Control", "no-store, max-age=0");
-    // Permite renderizar HTML/CSS/imagens sem depender de JavaScript.
+    // Cache curto para permitir atualizações rápidas de produtos
+    headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    // CSP mais permissivo para evitar bloqueios de imagem
     headers.set(
       "Content-Security-Policy",
-      "default-src 'none'; img-src https: data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+      "default-src 'self'; img-src * data: https:; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
     );
+    // CORS headers
+    headers.set("Access-Control-Allow-Origin", "*");
+    // X-Content-Type-Options para garantir que o browser respeite o Content-Type
+    headers.set("X-Content-Type-Options", "nosniff");
 
     return new Response(html, { status: 200, headers });
   } catch (error) {
@@ -222,9 +247,10 @@ function guessImageMimeType(url: string): string | null {
     if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) return 'image/jpeg';
     if (pathname.endsWith('.webp')) return 'image/webp';
     if (pathname.endsWith('.gif')) return 'image/gif';
-    return null;
+    // Para URLs do Supabase Storage que não têm extensão, assumir JPEG
+    if (url.includes('supabase') && url.includes('storage')) return 'image/jpeg';
+    return 'image/jpeg'; // Default para imagens sem extensão
   } catch {
-    // URL inválida ou relativa: não define type
-    return null;
+    return 'image/jpeg';
   }
 }
