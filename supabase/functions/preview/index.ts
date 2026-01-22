@@ -45,7 +45,9 @@ Deno.serve(async (req) => {
     const hasUpgradeInsecureRequests = req.headers.has("upgrade-insecure-requests");
     const accept = (req.headers.get("accept") ?? "").toLowerCase();
 
-    // Lista expandida de crawlers sociais incluindo variações do Instagram
+    // Lista expandida de crawlers sociais.
+    // IMPORTANTE: NÃO marcar o app do Instagram (navegação humana) como crawler.
+    // O app do Instagram costuma enviar UA contendo "Instagram" (sem "Bot") e com sec-fetch-mode=navigate.
     const crawlerPatterns = [
       /facebookexternalhit/i,
       /facebot/i,
@@ -55,8 +57,7 @@ Deno.serve(async (req) => {
       /slackbot/i,
       /discordbot/i,
       /whatsapp/i,
-      /instagram/i,           // Instagram genérico
-      /instagrambot/i,        // InstagramBot específico
+      /instagrambot/i,        // InstagramBot específico (crawler)
       /metainspector/i,
       /pinterest/i,
       /pinterestbot/i,
@@ -72,12 +73,16 @@ Deno.serve(async (req) => {
       /facebookcatalog/i,
     ];
 
-    const isSocialCrawler = 
-      crawlerPatterns.some(pattern => pattern.test(userAgent)) ||
-      purpose.includes("preview") || 
+    // Instagram in-app browser (humano): contém "Instagram" no UA, mas não "InstagramBot".
+    // Em alguns ambientes ele pode vir sem os sec-fetch-*; ainda assim devemos redirecionar para o chat.
+    const isInstagramApp = /instagram/i.test(userAgent) && !/instagrambot/i.test(userAgent);
+
+    const isSocialCrawler =
+      crawlerPatterns.some((pattern) => pattern.test(userAgent)) ||
+      purpose.includes("preview") ||
       purpose.includes("prefetch") ||
       // Alguns crawlers não se identificam mas pedem apenas HTML/imagem
-      (accept.includes("text/html") && !accept.includes("application/javascript") && userAgent.includes("Bot"));
+      (accept.includes("text/html") && !accept.includes("application/javascript") && /bot/i.test(userAgent));
 
     // Detectar navegação humana real
     const isNavigation =
@@ -90,8 +95,17 @@ Deno.serve(async (req) => {
     console.log(`[preview] UA: ${userAgent.substring(0, 100)}`);
     console.log(`[preview] isSocialCrawler: ${isSocialCrawler}, isNavigation: ${isNavigation}`);
 
-    // Redirecionar apenas navegação humana real (não crawlers)
-    if (!isSocialCrawler && isNavigation && req.method === "GET") {
+    // Redirecionar navegação humana real.
+    // - Não redirecionar crawlers (para manter o banner/OG)
+    // - EXCEÇÃO: o app do Instagram (human) contém "Instagram" no UA e era confundido com crawler.
+    const shouldRedirectToChat =
+      req.method === "GET" &&
+      // Navegação humana real OU webview do Instagram (que às vezes não manda sec-fetch-*)
+      (isNavigation || isInstagramApp) &&
+      // Não redirecionar crawlers (para manter OG), exceto o app do Instagram (humano)
+      (!isSocialCrawler || isInstagramApp);
+
+    if (shouldRedirectToChat) {
       const headers = new Headers(corsHeaders);
       headers.set("Location", chatUrl);
       headers.set("Cache-Control", "no-store, max-age=0");
@@ -206,22 +220,23 @@ Abrindo o chat do produto...
 </body>
 </html>`;
 
-    const headers = new Headers();
-    // Content-Type é crítico para que crawlers interpretem corretamente
-    headers.set("Content-Type", "text/html; charset=utf-8");
-    // Cache curto para permitir atualizações rápidas de produtos
-    headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-    headers.set("Pragma", "no-cache");
-    headers.set("Expires", "0");
-    // CSP mais permissivo para evitar bloqueios de imagem
-    headers.set(
-      "Content-Security-Policy",
-      "default-src 'self'; img-src * data: https:; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
-    );
-    // CORS headers
-    headers.set("Access-Control-Allow-Origin", "*");
-    // X-Content-Type-Options para garantir que o browser respeite o Content-Type
-    headers.set("X-Content-Type-Options", "nosniff");
+    // Headers (em formato objeto) para evitar o runtime cair no default text/plain.
+    const headers: Record<string, string> = {
+      ...corsHeaders,
+      // Content-Type é crítico para que navegadores (ex.: in-app browser do Instagram) renderizem HTML e não exibam como texto.
+      "Content-Type": "text/html; charset=utf-8",
+      // Cache curto para permitir atualizações rápidas de produtos
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      Pragma: "no-cache",
+      Expires: "0",
+      // CSP mais permissivo para evitar bloqueios de imagem
+      "Content-Security-Policy":
+        "default-src 'self'; img-src * data: https:; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+      // Forçar respeito ao Content-Type
+      "X-Content-Type-Options": "nosniff",
+      // Ajuda a evitar cache/variações estranhas por user-agent
+      Vary: "User-Agent, Accept",
+    };
 
     return new Response(html, { status: 200, headers });
   } catch (error) {
