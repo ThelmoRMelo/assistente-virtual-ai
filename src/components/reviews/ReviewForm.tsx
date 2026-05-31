@@ -51,7 +51,13 @@ export function ReviewForm({ productId, tenantId, onSubmitted }: ReviewFormProps
 
     setSubmitting(true);
     try {
-      await submitReview({ product_id: productId, ...parsed.data, tenant_id: tenantId ?? null });
+      await submitReview({
+        product_id: productId,
+        customer_name: parsed.data.customer_name,
+        comment: parsed.data.comment,
+        stars: parsed.data.stars,
+        tenant_id: tenantId ?? null,
+      });
       localStorage.setItem(key, String(Date.now()));
       toast.success('Avaliação enviada!', {
         description: 'Será publicada após aprovação do administrador.',
