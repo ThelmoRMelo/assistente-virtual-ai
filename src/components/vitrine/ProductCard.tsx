@@ -79,11 +79,12 @@ export function ProductCard({
             )}
             
             <h3 
-              className="text-2xl md:text-3xl font-bold mb-4 group-hover:text-primary transition-colors"
+              className="text-2xl md:text-3xl font-bold mb-2 group-hover:text-primary transition-colors"
               style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
             >
               {product.name}
             </h3>
+            <ProductRatingSummary productId={product.id} className="mb-4" />
 
             {/* Benefits grid */}
             <div className="grid grid-cols-2 gap-2 mb-6">
@@ -179,6 +180,7 @@ export function ProductCard({
             >
               {product.name}
             </h4>
+            <ProductRatingSummary productId={product.id} className="mt-0.5" />
             
             {benefits.length > 0 && (
               <div className="mt-1 space-y-0.5">
@@ -255,11 +257,12 @@ export function ProductCard({
       {/* Content */}
       <div className="p-5">
         <h4 
-          className="font-bold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-2"
+          className="font-bold text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2"
           style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
         >
           {product.name}
         </h4>
+        <ProductRatingSummary productId={product.id} className="mb-2" />
         
         {benefits.length > 0 && (
           <div className="space-y-1 mb-4">
