@@ -1,6 +1,7 @@
 import { Check, Share2, ArrowRight, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { ProductRatingSummary } from '@/components/reviews/ProductRatingSummary';
 import type { ThemeConfig } from '@/lib/themes';
 
 interface Product {
