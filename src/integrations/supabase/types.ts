@@ -167,6 +167,71 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
+          ania_reply: string | null
+          ania_reply_at: string | null
+          comment: string
+          created_at: string
+          customer_name: string
+          helpful_count: number
+          id: string
+          is_pinned: boolean
+          is_reported: boolean
+          product_id: string
+          stars: number
+          status: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          ania_reply?: string | null
+          ania_reply_at?: string | null
+          comment: string
+          created_at?: string
+          customer_name: string
+          helpful_count?: number
+          id?: string
+          is_pinned?: boolean
+          is_reported?: boolean
+          product_id: string
+          stars: number
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          ania_reply?: string | null
+          ania_reply_at?: string | null
+          comment?: string
+          created_at?: string
+          customer_name?: string
+          helpful_count?: number
+          id?: string
+          is_pinned?: boolean
+          is_reported?: boolean
+          product_id?: string
+          stars?: number
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
@@ -257,6 +322,35 @@ export type Database = {
         }
         Relationships: []
       }
+      review_helpful_votes: {
+        Row: {
+          created_at: string
+          id: string
+          review_id: string
+          voter_fingerprint: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          review_id: string
+          voter_fingerprint: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          review_id?: string
+          voter_fingerprint?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpful_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storefronts: {
         Row: {
           created_at: string
@@ -290,6 +384,10 @@ export type Database = {
     }
     Functions: {
       get_current_tenant_id: { Args: never; Returns: string }
+      register_review_helpful: {
+        Args: { _fingerprint: string; _review_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

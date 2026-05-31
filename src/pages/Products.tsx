@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2, Images } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2, Images, Star } from 'lucide-react';
+import { ProductReviewsDialog } from '@/components/reviews/ProductReviewsDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,7 @@ export default function Products() {
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [reviewsProduct, setReviewsProduct] = useState<{ id: string; name: string } | null>(null);
 
   // Hook para galeria de imagens
   const { images: galleryImages, saveGallery, fetchImages } = useProductGallery(editingId);
@@ -544,6 +546,7 @@ export default function Products() {
                 product={product} 
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
+                onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
                 formatPrice={formatPrice}
               />
             ))}
@@ -567,6 +570,7 @@ export default function Products() {
                 product={product} 
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
+                onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
                 formatPrice={formatPrice}
                 inactive
               />
@@ -576,6 +580,13 @@ export default function Products() {
       </main>
 
       <BottomNav />
+
+      <ProductReviewsDialog
+        productId={reviewsProduct?.id ?? null}
+        productName={reviewsProduct?.name}
+        open={!!reviewsProduct}
+        onOpenChange={(o) => !o && setReviewsProduct(null)}
+      />
     </div>
   );
 }
@@ -585,11 +596,12 @@ interface ProductCardProps {
   product: Product;
   onEdit: () => void;
   onDelete: () => void;
+  onReviews: () => void;
   formatPrice: (value: number) => string;
   inactive?: boolean;
 }
 
-function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: ProductCardProps) {
+function ProductCard({ product, onEdit, onDelete, onReviews, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // Link de preview (necessário para o WhatsApp gerar o banner com Open Graph)
@@ -658,6 +670,13 @@ function ProductCard({ product, onEdit, onDelete, formatPrice, inactive }: Produ
             title="Copiar link de compartilhamento"
           >
             <Share2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onReviews}
+            className="p-2 rounded-lg hover:bg-yellow-500/20 text-muted-foreground hover:text-yellow-400 transition-colors"
+            title="Ver avaliações do produto"
+          >
+            <Star className="w-4 h-4" />
           </button>
           <button
             onClick={onEdit}

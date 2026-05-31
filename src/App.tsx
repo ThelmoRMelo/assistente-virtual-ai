@@ -14,6 +14,7 @@ import Chat from "./pages/Chat";
 import Conversations from "./pages/Conversations";
 import ConversationDetail from "./pages/ConversationDetail";
 import Vitrine from "./pages/Vitrine";
+import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/ajustes" element={<Settings />} />
             <Route path="/conversas" element={<Conversations />} />
             <Route path="/conversas/:id" element={<ConversationDetail />} />
+            <Route path="/avaliacoes" element={<Reviews />} />
             
             {/* Vitrine pública */}
             <Route path="/vitrine" element={<Vitrine />} />

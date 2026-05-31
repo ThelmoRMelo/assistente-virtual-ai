@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, Store } from 'lucide-react';
+import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, Store, Star } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MenuCard } from '@/components/MenuCard';
@@ -221,11 +221,11 @@ export default function Home() {
             delay={250}
           />
           <MenuCard
-            icon={MessageCircle}
-            title="Testar Fluxo de Vendas"
-            description="Simular conversa com a IA"
-            path="/simular"
-            iconColor="text-blue-400"
+            icon={Star}
+            title="Avaliações e Depoimentos"
+            description="Modere comentários dos clientes"
+            path="/avaliacoes"
+            iconColor="text-yellow-400"
             delay={300}
           />
           <MenuCard
