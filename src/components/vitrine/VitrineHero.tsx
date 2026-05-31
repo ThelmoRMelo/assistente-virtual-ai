@@ -30,7 +30,7 @@ export function VitrineHero({ businessName, theme, chatPath }: VitrineHeroProps)
             >
               Sua vitrine inteligente{' '}
               <span className="gradient-text">
-                com atendimento por IA 24h
+                com atendimento 24h
               </span>
             </h1>
             
