@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, Store, Star } from 'lucide-react';
+import { Bot, TrendingUp, Package, MessageCircle, Building2, Settings, Check, Pause, Play, Zap, Users, Phone, XCircle, ExternalLink, Store, Star, ShoppingCart, MousePointerClick } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MenuCard } from '@/components/MenuCard';
@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { useApp } from '@/contexts/AppContext';
 import { useConversationMetrics } from '@/hooks/useConversationMetrics';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
+import { useProductClickMetrics } from '@/hooks/useProductClickMetrics';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +16,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { business, aiSettings, updateAISettings } = useApp();
   const { metrics, loading: metricsLoading } = useConversationMetrics();
+  const { metrics: clickMetrics, loading: clickLoading } = useProductClickMetrics();
   const { config } = useBusinessConfig();
   const [storefrontSlug, setStorefrontSlug] = useState<string | null>(null);
 
