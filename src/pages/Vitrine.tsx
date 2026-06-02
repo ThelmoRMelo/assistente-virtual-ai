@@ -17,8 +17,12 @@ interface Product {
   name: string;
   price: number;
   short_description: string | null;
+  long_description: string | null;
   image_url: string | null;
   category: string | null;
+  payment_link: string | null;
+  tenant_id: string | null;
+  has_gallery: boolean;
 }
 
 interface StorefrontData {
@@ -103,7 +107,7 @@ export default function Vitrine() {
       // Fetch active products
       let productsQuery = supabase
         .from('products')
-        .select('id, name, price, short_description, image_url, category')
+        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery')
         .eq('active', true)
         .order('created_at', { ascending: false });
       

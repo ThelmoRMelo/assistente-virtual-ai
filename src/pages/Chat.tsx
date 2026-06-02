@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
 import { toast } from 'sonner';
 import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
-import { ReviewsSection } from '@/components/reviews/ReviewsSection';
+
 
 interface SupabaseProduct {
   id: string;
@@ -418,12 +418,6 @@ export default function Chat() {
         )}
         <div ref={messagesEndRef} />
 
-        {/* Avaliações do produto */}
-        {contextProduct && (
-          <div className="pt-4">
-            <ReviewsSection productId={contextProduct.id} tenantId={contextProduct.tenant_id} />
-          </div>
-        )}
       </main>
 
       {/* Footer - input estilo WhatsApp */}

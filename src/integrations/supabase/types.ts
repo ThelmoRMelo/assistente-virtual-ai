@@ -135,6 +135,30 @@ export type Database = {
           },
         ]
       }
+      product_click_events: {
+        Row: {
+          click_type: string
+          created_at: string
+          id: string
+          product_id: string
+          tenant_id: string | null
+        }
+        Insert: {
+          click_type: string
+          created_at?: string
+          id?: string
+          product_id: string
+          tenant_id?: string | null
+        }
+        Update: {
+          click_type?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
