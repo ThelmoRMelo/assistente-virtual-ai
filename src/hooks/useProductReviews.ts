@@ -26,12 +26,13 @@ interface UseReviewsOptions {
   productId?: string;
   status?: ReviewStatus | 'all';
   onlyApproved?: boolean;
+  enabled?: boolean;
 }
 
 export function useProductReviews(opts: UseReviewsOptions = {}) {
-  const { productId, status = 'all', onlyApproved = false } = opts;
+  const { productId, status = 'all', onlyApproved = false, enabled = true } = opts;
   const [reviews, setReviews] = useState<ProductReview[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -39,6 +40,7 @@ export function useProductReviews(opts: UseReviewsOptions = {}) {
       .from('product_reviews')
       .select('*')
       .order('is_pinned', { ascending: false })
+      .order('helpful_count', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (productId) q = q.eq('product_id', productId);
@@ -51,8 +53,8 @@ export function useProductReviews(opts: UseReviewsOptions = {}) {
   }, [productId, status, onlyApproved]);
 
   useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+    if (enabled) fetchReviews();
+  }, [fetchReviews, enabled]);
 
   const submitReview = useCallback(
     async (input: { product_id: string; customer_name: string; comment: string; stars: number; tenant_id?: string | null }) => {
