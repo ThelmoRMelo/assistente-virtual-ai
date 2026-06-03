@@ -2,7 +2,7 @@ import { Check, Share2, ArrowRight, Images, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ProductRatingSummary } from '@/components/reviews/ProductRatingSummary';
-import { ReviewsSection } from '@/components/reviews/ReviewsSection';
+import { ReviewsSummaryModal } from '@/components/reviews/ReviewsSummaryModal';
 import { trackProductClick } from '@/hooks/useProductClickMetrics';
 import type { ThemeConfig } from '@/lib/themes';
 
@@ -150,9 +150,9 @@ export function ProductCard({
               </div>
             )}
 
-            {/* Avaliações - acima dos botões */}
+            {/* Avaliações compactas - acima dos botões */}
             <div className="mb-6">
-              <ReviewsSection productId={product.id} tenantId={product.tenant_id ?? null} />
+              <ReviewsSummaryModal productId={product.id} tenantId={product.tenant_id ?? null} />
             </div>
 
             <div className="flex items-center gap-3 mt-auto">

@@ -27,7 +27,7 @@ export function ReviewForm({ productId, tenantId, onSubmitted }: ReviewFormProps
   const [comment, setComment] = useState('');
   const [stars, setStars] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const { submitReview } = useProductReviews({ productId, onlyApproved: true });
+  const { submitReview } = useProductReviews({ productId, onlyApproved: true, enabled: false });
 
   const reset = () => {
     setName('');
