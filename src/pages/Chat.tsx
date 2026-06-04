@@ -241,6 +241,18 @@ export default function Chat() {
     setIsTyping(true);
     await addMessage(trimmedInput, 'user');
 
+    // Vitrine mode: intercept catalog questions and reply with cards (no AI call needed)
+    if (!contextProduct && CATALOG_REGEX.test(trimmedInput) && supabaseProducts.length > 0) {
+      const intro = supabaseProducts.length === 1
+        ? 'Temos atualmente este produto disponível. Toque abaixo para ver os detalhes 👇'
+        : `Veja os ${supabaseProducts.length} produtos disponíveis. Toque em "Saber mais" para conversar sobre um deles 👇`;
+      await addMessage(intro, 'bot', 'Catálogo');
+      await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+      setIsTyping(false);
+      inputRef.current?.focus();
+      return;
+    }
+
     try {
       const productsList = supabaseProducts.map(p => ({
         id: p.id,
