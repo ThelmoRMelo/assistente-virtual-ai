@@ -218,6 +218,9 @@ export default function Chat() {
         // Aguardar um tick para o estado atualizar, depois adicionar mensagem de boas-vindas
         setTimeout(async () => {
           await addMessage(getWelcomeMessage(true), 'bot', 'Novo Atendimento');
+          if (!contextProduct && supabaseProducts.length > 0) {
+            await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+          }
           setHasInitialized(true);
           toast.success('Novo atendimento iniciado!');
         }, 100);
