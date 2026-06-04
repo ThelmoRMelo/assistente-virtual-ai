@@ -68,8 +68,11 @@ serve(async (req) => {
       negotiationState,
       conversationHistory,
       lastBotResponse,
-      closingState
+      closingState,
+      mode
     } = await req.json();
+
+    const chatMode: 'vitrine' | 'product' = mode === 'vitrine' || !productContext ? 'vitrine' : 'product';
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -479,7 +482,31 @@ Quando o cliente demonstrar interesse em um produto:
 ════════════════════════════════════════════
 Você é uma vendedora virtual profissional.
 Clareza visual é prioridade máxima.
-Conduza o cliente até a decisão final.`;
+Conduza o cliente até a decisão final.
+
+${chatMode === 'vitrine' ? `
+════════════════════════════════════════════
+🛍️ MODO VITRINE (sem produto selecionado)
+════════════════════════════════════════════
+O cliente está conversando na vitrine geral, SEM ter escolhido um produto.
+
+VOCÊ PODE:
+- Apresentar o catálogo da loja
+- Ajudar o cliente a escolher um produto
+- Explicar de forma resumida o que cada produto oferece
+- Encaminhar o cliente para o atendimento específico do produto
+
+VOCÊ NÃO PODE (PROIBIDO):
+❌ Negociar preços ou oferecer descontos
+❌ Gerar PIX, links de pagamento ou qualquer link de cobrança
+❌ Prometer promoções, brindes ou condições não cadastradas
+❌ Fechar venda aqui
+
+SEMPRE que o cliente demonstrar interesse em um produto específico, oriente:
+"Toque em 👉 *Saber mais* no card do produto para falar diretamente sobre ele 😊"
+
+A negociação e o fechamento acontecem APENAS no atendimento específico de cada produto.
+` : ''}`;
 
     // Montar mensagens com histórico
     const aiMessages = [

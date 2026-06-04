@@ -14,6 +14,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
 import { toast } from 'sonner';
 import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
+import { CatalogCards } from '@/components/chat/CatalogCards';
+
+const CATALOG_MARKER = '__CATALOG__';
+const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
 
 
 interface SupabaseProduct {
@@ -192,9 +196,15 @@ export default function Chat() {
       return;
     }
     
-    addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
-    setHasInitialized(true);
-  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage]);
+    (async () => {
+      await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
+      // Vitrine mode: show catalog automatically
+      if (!contextProduct && supabaseProducts.length > 0) {
+        await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+      }
+      setHasInitialized(true);
+    })();
+  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
 
   // Handler para limpar conversa e iniciar novo atendimento
   const handleClearConversation = async () => {
@@ -208,6 +218,9 @@ export default function Chat() {
         // Aguardar um tick para o estado atualizar, depois adicionar mensagem de boas-vindas
         setTimeout(async () => {
           await addMessage(getWelcomeMessage(true), 'bot', 'Novo Atendimento');
+          if (!contextProduct && supabaseProducts.length > 0) {
+            await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+          }
           setHasInitialized(true);
           toast.success('Novo atendimento iniciado!');
         }, 100);
@@ -227,6 +240,18 @@ export default function Chat() {
     setInputValue('');
     setIsTyping(true);
     await addMessage(trimmedInput, 'user');
+
+    // Vitrine mode: intercept catalog questions and reply with cards (no AI call needed)
+    if (!contextProduct && CATALOG_REGEX.test(trimmedInput) && supabaseProducts.length > 0) {
+      const intro = supabaseProducts.length === 1
+        ? 'Temos atualmente este produto disponível. Toque abaixo para ver os detalhes 👇'
+        : `Veja os ${supabaseProducts.length} produtos disponíveis. Toque em "Saber mais" para conversar sobre um deles 👇`;
+      await addMessage(intro, 'bot', 'Catálogo');
+      await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+      setIsTyping(false);
+      inputRef.current?.focus();
+      return;
+    }
 
     try {
       const productsList = supabaseProducts.map(p => ({
@@ -271,7 +296,8 @@ export default function Chat() {
           paymentLink: config?.payment_link,
           whatsappNumber: config?.whatsapp_number,
           saleMode: config?.sale_mode || 'vendedora',
-          tenantId: storefront?.tenant_id || null
+          tenantId: storefront?.tenant_id || null,
+          mode: contextProduct ? 'product' : 'vitrine'
         }
       });
 
@@ -361,44 +387,82 @@ export default function Chat() {
           </div>
         )}
 
-        {messages.map((message, index) => (
-          <div 
-            key={message.id} 
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`} 
-            style={{ animationDelay: `${index * 20}ms` }}
-          >
-            <div 
-              className={`max-w-[80%] relative px-3 py-2 shadow-sm ${
-                message.sender === 'user' 
-                  ? 'bg-[#005c4b] text-white rounded-2xl rounded-tr-md' 
-                  : 'bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20'
-              }`}
-            >
-              {/* Tail da bolha estilo WhatsApp */}
-              <div 
-                className={`absolute top-0 w-3 h-3 ${
-                  message.sender === 'user' 
-                    ? '-right-1.5 bg-[#005c4b]' 
-                    : '-left-1.5 bg-card border-l border-t border-border/20'
-                }`}
-                style={{
-                  clipPath: message.sender === 'user' 
-                    ? 'polygon(0 0, 100% 0, 0 100%)' 
-                    : 'polygon(100% 0, 100% 100%, 0 0)'
-                }}
-              />
-              
-              <div className="text-[15px] leading-relaxed">
-                <MarkdownMessage content={message.content} />
+        {messages.map((message, index) => {
+          const isCatalog = message.content === CATALOG_MARKER;
+
+          if (isCatalog) {
+            return (
+              <div
+                key={message.id}
+                className="flex justify-start animate-slide-up"
+                style={{ animationDelay: `${index * 20}ms` }}
+              >
+                <div className="max-w-[92%] w-full bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative">
+                  <div
+                    className="absolute top-0 -left-1.5 w-3 h-3 bg-card border-l border-t border-border/20"
+                    style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+                  />
+                  <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
+                    🛍️ Catálogo
+                  </div>
+                  <CatalogCards
+                    products={supabaseProducts.map(p => ({
+                      id: p.id,
+                      name: p.name,
+                      price: Number(p.price),
+                      image_url: p.image_url,
+                      short_description: p.short_description,
+                      payment_link: p.payment_link,
+                      tenant_id: p.tenant_id,
+                    }))}
+                    slug={slug}
+                  />
+                  <span className="text-[10px] mt-1 block text-right text-muted-foreground">
+                    {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
-              <span className={`text-[10px] mt-1 block text-right ${
-                message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
-              }`}>
-                {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
+            );
+          }
+
+          return (
+            <div
+              key={message.id}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
+              style={{ animationDelay: `${index * 20}ms` }}
+            >
+              <div
+                className={`max-w-[80%] relative px-3 py-2 shadow-sm ${
+                  message.sender === 'user'
+                    ? 'bg-[#005c4b] text-white rounded-2xl rounded-tr-md'
+                    : 'bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20'
+                }`}
+              >
+                <div
+                  className={`absolute top-0 w-3 h-3 ${
+                    message.sender === 'user'
+                      ? '-right-1.5 bg-[#005c4b]'
+                      : '-left-1.5 bg-card border-l border-t border-border/20'
+                  }`}
+                  style={{
+                    clipPath: message.sender === 'user'
+                      ? 'polygon(0 0, 100% 0, 0 100%)'
+                      : 'polygon(100% 0, 100% 100%, 0 0)'
+                  }}
+                />
+
+                <div className="text-[15px] leading-relaxed">
+                  <MarkdownMessage content={message.content} />
+                </div>
+                <span className={`text-[10px] mt-1 block text-right ${
+                  message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
+                }`}>
+                  {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         
         {/* Typing indicator */}
         {isTyping && (
