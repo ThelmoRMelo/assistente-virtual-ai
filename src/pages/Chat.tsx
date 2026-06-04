@@ -14,6 +14,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
 import { toast } from 'sonner';
 import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
+import { CatalogCards } from '@/components/chat/CatalogCards';
+
+const CATALOG_MARKER = '__CATALOG__';
+const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
 
 
 interface SupabaseProduct {
