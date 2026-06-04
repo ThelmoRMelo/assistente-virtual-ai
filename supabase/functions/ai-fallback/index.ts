@@ -68,8 +68,11 @@ serve(async (req) => {
       negotiationState,
       conversationHistory,
       lastBotResponse,
-      closingState
+      closingState,
+      mode
     } = await req.json();
+
+    const chatMode: 'vitrine' | 'product' = mode === 'vitrine' || !productContext ? 'vitrine' : 'product';
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
