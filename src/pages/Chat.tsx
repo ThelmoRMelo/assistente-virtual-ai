@@ -196,9 +196,15 @@ export default function Chat() {
       return;
     }
     
-    addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
-    setHasInitialized(true);
-  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage]);
+    (async () => {
+      await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
+      // Vitrine mode: show catalog automatically
+      if (!contextProduct && supabaseProducts.length > 0) {
+        await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+      }
+      setHasInitialized(true);
+    })();
+  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
 
   // Handler para limpar conversa e iniciar novo atendimento
   const handleClearConversation = async () => {
