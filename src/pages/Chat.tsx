@@ -296,7 +296,8 @@ export default function Chat() {
           paymentLink: config?.payment_link,
           whatsappNumber: config?.whatsapp_number,
           saleMode: config?.sale_mode || 'vendedora',
-          tenantId: storefront?.tenant_id || null
+          tenantId: storefront?.tenant_id || null,
+          mode: contextProduct ? 'product' : 'vitrine'
         }
       });
 
