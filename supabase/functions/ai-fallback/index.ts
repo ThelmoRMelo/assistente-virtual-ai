@@ -73,11 +73,26 @@ serve(async (req) => {
     } = await req.json();
 
     const chatMode: 'vitrine' | 'product' = mode === 'vitrine' || !productContext ? 'vitrine' : 'product';
-    
+
+    // 🛡️ BLOQUEIO ABSOLUTO: modo vitrine (sem produto selecionado)
+    // Nunca permitir negociação, descontos, PIX, preço específico ou benefícios.
+    if (chatMode === 'vitrine') {
+      const msgLowerEarly = String(message || '').toLowerCase();
+      const negotiationRegex = /\b(desconto|descontos|menor|menos|baix(ar|a)|abaix(ar|a)|promo[cç][aã]o|barato|negoci(ar|ação|acao)|pix|cart[aã]o|parcel|parcelamento|à vista|a vista|boleto|pagar|pagamento|comprar|compro|fechar|finalizar|valor|preço|preco|quanto custa|quanto é|quanto e|prazo|acesso|certificado|benef[ií]cio|garantia|cupom|frete|entrega)\b/i;
+      if (negotiationRegex.test(msgLowerEarly)) {
+        return new Response(
+          JSON.stringify({
+            response: `Para que eu possa te ajudar corretamente, **escolha primeiro um produto do catálogo** disponível 👇\n\nToque em **"Saber mais"** no produto desejado para que eu possa te dar valores, condições e formas de pagamento específicas.`,
+            showCatalog: true
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
+
 
     const storeName = businessName || "nossa loja";
     const storeCategory = businessCategory || "produtos";
