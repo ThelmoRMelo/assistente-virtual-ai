@@ -51,6 +51,7 @@ export default function Chat() {
   const { config } = useBusinessConfig();
   
   const {
+    conversationId,
     messages,
     negotiation,
     closing,
@@ -70,7 +71,11 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  // Tracks which conversationId has already been initialized (welcome + catalog inserted).
+  // Using a ref + per-conversation key prevents duplicate inserts caused by
+  // re-renders, async timing of addMessage, or multiple effect runs after clearing.
+  const initializedConvRef = useRef<string | null>(null);
+  const isInitializingRef = useRef(false);
   const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
   
@@ -188,43 +193,46 @@ export default function Chat() {
       : `Olá! 👋 Como posso te ajudar hoje?`;
   }, [contextProduct, supabaseProducts, business.nome]);
 
-  // Mensagem inicial
+  // Mensagem inicial — protegida contra duplicidade via ref por conversationId
   useEffect(() => {
-    if (hasInitialized || conversationLoading || loadingProducts) return;
+    if (conversationLoading || loadingProducts) return;
+    if (!conversationId) return;
+    if (initializedConvRef.current === conversationId) return;
+    if (isInitializingRef.current) return;
+
+    // Se já existem mensagens nessa conversa, apenas marca como inicializada.
     if (messages.length > 0) {
-      setHasInitialized(true);
+      initializedConvRef.current = conversationId;
       return;
     }
-    
-    (async () => {
-      await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
-      // Vitrine mode: show catalog automatically
-      if (!contextProduct && supabaseProducts.length > 0) {
-        await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
-      }
-      setHasInitialized(true);
-    })();
-  }, [hasInitialized, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
 
-  // Handler para limpar conversa e iniciar novo atendimento
+    isInitializingRef.current = true;
+    const convAtStart = conversationId;
+    (async () => {
+      try {
+        await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
+        if (!contextProduct && supabaseProducts.length > 0) {
+          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+        }
+        initializedConvRef.current = convAtStart;
+      } finally {
+        isInitializingRef.current = false;
+      }
+    })();
+  }, [conversationId, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
+
+  // Handler para limpar conversa e iniciar novo atendimento.
+  // A inserção da boas-vindas + catálogo é feita pelo useEffect acima
+  // assim que o novo conversationId for emitido — evita duplicação.
   const handleClearConversation = async () => {
     if (isClearing) return;
-    
+
     setIsClearing(true);
     try {
-      const newConvId = await clearConversation();
-      if (newConvId) {
-        setHasInitialized(false);
-        // Aguardar um tick para o estado atualizar, depois adicionar mensagem de boas-vindas
-        setTimeout(async () => {
-          await addMessage(getWelcomeMessage(true), 'bot', 'Novo Atendimento');
-          if (!contextProduct && supabaseProducts.length > 0) {
-            await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
-          }
-          setHasInitialized(true);
-          toast.success('Novo atendimento iniciado!');
-        }, 100);
-      }
+      // Invalida o guard atual para permitir nova inicialização
+      initializedConvRef.current = null;
+      await clearConversation();
+      toast.success('Novo atendimento iniciado!');
     } catch (err) {
       console.error('[Chat] Error clearing conversation:', err);
       toast.error('Erro ao iniciar novo atendimento');
