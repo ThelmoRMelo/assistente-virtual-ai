@@ -51,6 +51,7 @@ export default function Chat() {
   const { config } = useBusinessConfig();
   
   const {
+    conversationId,
     messages,
     negotiation,
     closing,
@@ -70,7 +71,11 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  // Tracks which conversationId has already been initialized (welcome + catalog inserted).
+  // Using a ref + per-conversation key prevents duplicate inserts caused by
+  // re-renders, async timing of addMessage, or multiple effect runs after clearing.
+  const initializedConvRef = useRef<string | null>(null);
+  const isInitializingRef = useRef(false);
   const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
   
