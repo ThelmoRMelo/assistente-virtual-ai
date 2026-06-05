@@ -315,9 +315,14 @@ export default function Chat() {
         const response = data?.response || 'Como posso ajudar?';
         await addMessage(response, 'bot', data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA');
 
+        if (data?.showCatalog && supabaseProducts.length > 0) {
+          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+        }
+
         if (data?.negotiationUpdate) await updateNegotiation(data.negotiationUpdate);
         if (data?.closingUpdate) await updateClosing(data.closingUpdate);
       }
+
     } catch (err) {
       await addMessage('Desculpe, tive um problema. Pode repetir?', 'bot', 'Erro');
     } finally {
