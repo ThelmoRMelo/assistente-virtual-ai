@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,8 +75,26 @@ serve(async (req) => {
 
     const chatMode: 'vitrine' | 'product' = mode === 'vitrine' || !productContext ? 'vitrine' : 'product';
 
+    // Load global ANIA settings (best-effort)
+    let aniaSettings: any = null;
+    try {
+      const supaUrl = Deno.env.get("SUPABASE_URL");
+      const supaKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY");
+      if (supaUrl && supaKey) {
+        const supa = createClient(supaUrl, supaKey);
+        const { data } = await supa.from("ania_settings").select("*").limit(1).maybeSingle();
+        aniaSettings = data || null;
+      }
+    } catch (e) {
+      console.warn("[ai-fallback] ania_settings load failed:", e);
+    }
+
+    const assistantName = aniaSettings?.assistant_name || "ANIA";
+    const fallbackMessage =
+      aniaSettings?.fallback_message ||
+      "Essa informação não está cadastrada no sistema no momento.";
+
     // 🛡️ BLOQUEIO ABSOLUTO: modo vitrine (sem produto selecionado)
-    // Nunca permitir negociação, descontos, PIX, preço específico ou benefícios.
     if (chatMode === 'vitrine') {
       const msgLowerEarly = String(message || '').toLowerCase();
       const negotiationRegex = /\b(desconto|descontos|menor|menos|baix(ar|a)|abaix(ar|a)|promo[cç][aã]o|barato|negoci(ar|ação|acao)|pix|cart[aã]o|parcel|parcelamento|à vista|a vista|boleto|pagar|pagamento|comprar|compro|fechar|finalizar|valor|preço|preco|quanto custa|quanto é|quanto e|prazo|acesso|certificado|benef[ií]cio|garantia|cupom|frete|entrega)\b/i;
