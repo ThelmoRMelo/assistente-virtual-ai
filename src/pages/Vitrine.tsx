@@ -34,6 +34,11 @@ interface StorefrontData {
 interface BusinessConfig {
   business_name: string | null;
   business_category: string | null;
+  hero_title?: string | null;
+  hero_subtitle?: string | null;
+  footer_text?: string | null;
+  hero_banner_url?: string | null;
+  assistant_image_url?: string | null;
 }
 
 export default function Vitrine() {
@@ -81,24 +86,22 @@ export default function Vitrine() {
       if (currentTenantId) {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category')
+          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
           .eq('tenant_id', currentTenantId)
           .single();
-        
         if (configData) {
-          setBusiness(configData);
+          setBusiness(configData as BusinessConfig);
           const themeId = getThemeForCategory(configData.business_category || '');
           setTheme(themes[themeId]);
         }
       } else {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category')
+          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
           .limit(1)
           .single();
-        
         if (configData) {
-          setBusiness(configData);
+          setBusiness(configData as BusinessConfig);
           const themeId = getThemeForCategory(configData.business_category || '');
           setTheme(themes[themeId]);
         }
@@ -229,7 +232,11 @@ export default function Vitrine() {
       <VitrineHero 
         businessName={businessName} 
         theme={theme} 
-        chatPath={chatPath} 
+        chatPath={chatPath}
+        heroTitle={business?.hero_title}
+        heroSubtitle={business?.hero_subtitle}
+        bannerUrl={business?.hero_banner_url}
+        assistantImageUrl={business?.assistant_image_url}
       />
 
       <main className="max-w-7xl mx-auto px-4">
@@ -290,7 +297,7 @@ export default function Vitrine() {
         <ThemeShowcase theme={theme} />
       </main>
 
-      <VitrineFooter />
+      <VitrineFooter footerText={business?.footer_text} />
     </div>
   );
 }

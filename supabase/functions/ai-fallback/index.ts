@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,8 +75,26 @@ serve(async (req) => {
 
     const chatMode: 'vitrine' | 'product' = mode === 'vitrine' || !productContext ? 'vitrine' : 'product';
 
+    // Load global ANIA settings (best-effort)
+    let aniaSettings: any = null;
+    try {
+      const supaUrl = Deno.env.get("SUPABASE_URL");
+      const supaKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY");
+      if (supaUrl && supaKey) {
+        const supa = createClient(supaUrl, supaKey);
+        const { data } = await supa.from("ania_settings").select("*").limit(1).maybeSingle();
+        aniaSettings = data || null;
+      }
+    } catch (e) {
+      console.warn("[ai-fallback] ania_settings load failed:", e);
+    }
+
+    const assistantName = aniaSettings?.assistant_name || "ANIA";
+    const fallbackMessage =
+      aniaSettings?.fallback_message ||
+      "Essa informação não está cadastrada no sistema no momento.";
+
     // 🛡️ BLOQUEIO ABSOLUTO: modo vitrine (sem produto selecionado)
-    // Nunca permitir negociação, descontos, PIX, preço específico ou benefícios.
     if (chatMode === 'vitrine') {
       const msgLowerEarly = String(message || '').toLowerCase();
       const negotiationRegex = /\b(desconto|descontos|menor|menos|baix(ar|a)|abaix(ar|a)|promo[cç][aã]o|barato|negoci(ar|ação|acao)|pix|cart[aã]o|parcel|parcelamento|à vista|a vista|boleto|pagar|pagamento|comprar|compro|fechar|finalizar|valor|preço|preco|quanto custa|quanto é|quanto e|prazo|acesso|certificado|benef[ií]cio|garantia|cupom|frete|entrega)\b/i;
@@ -406,8 +425,55 @@ ${isAskingIdentity ? `RESPOSTA SOBRE IDENTIDADE:
 ════════════════════════════════════════════`;
     }
 
+    // ─── Bloco de configurações GLOBAIS da ANIA ───
+    const globalConfigBlock = `
+════════════════════════════════════════════
+🌐 CONFIGURAÇÕES GLOBAIS DA ASSISTENTE (ania_settings)
+════════════════════════════════════════════
+Use estas informações OFICIAIS sempre que não houver dado no produto selecionado.
+NUNCA invente nada que não esteja aqui ou no produto.
+
+• Nome da assistente: ${assistantName}
+• Mensagem inicial cadastrada: ${aniaSettings?.welcome_message || '(não cadastrada)'}
+• Descrição da empresa: ${aniaSettings?.company_description || '(não cadastrada)'}
+• WhatsApp de atendimento humano: ${aniaSettings?.human_support_whatsapp || '(não cadastrado)'}
+• URL de atendimento humano: ${aniaSettings?.human_support_url || '(não cadastrada)'}
+• E-mail de suporte: ${aniaSettings?.support_email || '(não cadastrado)'}
+• Chave PIX oficial: ${aniaSettings?.pix_key || '(não cadastrada)'}
+• Recebedor PIX: ${aniaSettings?.pix_receiver_name || '(não cadastrado)'}
+• Banco PIX: ${aniaSettings?.pix_bank || '(não cadastrado)'}
+
+📜 INSTRUÇÕES PERMANENTES (prompt mestre):
+${aniaSettings?.global_instructions || '(nenhuma instrução adicional cadastrada)'}
+
+📜 REGRAS DE VENDA:
+${aniaSettings?.sales_rules || '(nenhuma regra adicional cadastrada)'}
+
+════════════════════════════════════════════
+🛡️ REGRAS ABSOLUTAS ANTI-INVENÇÃO
+════════════════════════════════════════════
+A ANIA está PROIBIDA de inventar QUALQUER um dos itens abaixo. Se não estiver cadastrado, responda exatamente:
+"${fallbackMessage}"
+
+NUNCA invente:
+- Números de telefone ou WhatsApp
+- Links (de pagamento, contato, suporte ou QR Code)
+- Descontos, promoções ou cupons
+- Chaves PIX ou dados bancários
+- Formas de pagamento não listadas no produto
+- Preços, prazos ou condições
+
+✅ ORDEM DE PRIORIDADE para QUALQUER informação:
+  1º — Dados do PRODUTO selecionado (se houver)
+  2º — Configurações globais da ANIA (acima)
+  3º — Caso nada exista: responda "${fallbackMessage}"
+`;
+
     // PROMPT PRINCIPAL - ANIA: Assistente de Vendas Virtual
-    const systemPrompt = `Você é a ANIA, a assistente de vendas virtual da **${storeName}**.
+    const systemPrompt = `Você é a ${assistantName}, a assistente de vendas virtual da **${storeName}**.
+
+${globalConfigBlock}
+
 
 ════════════════════════════════════════════
 🧠 REGRAS ABSOLUTAS DE IDENTIDADE

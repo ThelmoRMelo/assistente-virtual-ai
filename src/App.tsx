@@ -10,6 +10,7 @@ import Products from "./pages/Products";
 import Simulate from "./pages/Simulate";
 import Business from "./pages/Business";
 import Settings from "./pages/Settings";
+import AniaSettingsPage from "./pages/AniaSettings";
 import Chat from "./pages/Chat";
 import Conversations from "./pages/Conversations";
 import ConversationDetail from "./pages/ConversationDetail";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/simular" element={<Simulate />} />
             <Route path="/negocio" element={<Business />} />
             <Route path="/ajustes" element={<Settings />} />
+            <Route path="/ania" element={<AniaSettingsPage />} />
             <Route path="/conversas" element={<Conversations />} />
             <Route path="/conversas/:id" element={<ConversationDetail />} />
             <Route path="/avaliacoes" element={<Reviews />} />

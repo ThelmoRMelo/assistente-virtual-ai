@@ -239,14 +239,6 @@ export default function Home() {
         {/* Menu Cards */}
         <div className="space-y-3 pt-2">
           <MenuCard
-            icon={TrendingUp}
-            title="Estratégia de Atendimento"
-            description="Configurar comportamento de vendas"
-            path="/treinar"
-            iconColor="text-purple-400"
-            delay={200}
-          />
-          <MenuCard
             icon={Package}
             title="Meus Produtos"
             description="Cadastrar produtos à venda"
@@ -265,17 +257,17 @@ export default function Home() {
           <MenuCard
             icon={Building2}
             title="Meu Negócio"
-            description="Dados do estabelecimento"
+            description="Dados e aparência da Landing Page"
             path="/negocio"
             iconColor="text-green-400"
             delay={350}
           />
           <MenuCard
-            icon={Settings}
+            icon={Bot}
             title="Ajustes"
-            description="Configurações e backup"
-            path="/ajustes"
-            iconColor="text-gray-400"
+            description="Configurações da Assistente"
+            path="/ania"
+            iconColor="text-primary"
             delay={400}
           />
         </div>
