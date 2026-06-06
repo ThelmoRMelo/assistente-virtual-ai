@@ -14,14 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      ania_settings: {
+        Row: {
+          assistant_name: string | null
+          company_description: string | null
+          created_at: string
+          fallback_message: string | null
+          global_instructions: string | null
+          human_support_url: string | null
+          human_support_whatsapp: string | null
+          id: string
+          pix_bank: string | null
+          pix_key: string | null
+          pix_receiver_name: string | null
+          sales_rules: string | null
+          support_email: string | null
+          tenant_id: string | null
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          assistant_name?: string | null
+          company_description?: string | null
+          created_at?: string
+          fallback_message?: string | null
+          global_instructions?: string | null
+          human_support_url?: string | null
+          human_support_whatsapp?: string | null
+          id?: string
+          pix_bank?: string | null
+          pix_key?: string | null
+          pix_receiver_name?: string | null
+          sales_rules?: string | null
+          support_email?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          assistant_name?: string | null
+          company_description?: string | null
+          created_at?: string
+          fallback_message?: string | null
+          global_instructions?: string | null
+          human_support_url?: string | null
+          human_support_whatsapp?: string | null
+          id?: string
+          pix_bank?: string | null
+          pix_key?: string | null
+          pix_receiver_name?: string | null
+          sales_rules?: string | null
+          support_email?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: []
+      }
       business_config: {
         Row: {
+          assistant_image_url: string | null
           business_category: string | null
           business_name: string | null
           created_at: string
+          footer_text: string | null
+          hero_banner_url: string | null
+          hero_subtitle: string | null
+          hero_title: string | null
           id: string
           payment_link: string | null
           sale_mode: string
+          section_texts: Json | null
           tenant_id: string | null
           transfer_enabled: boolean
           updated_at: string
@@ -29,12 +92,18 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          assistant_image_url?: string | null
           business_category?: string | null
           business_name?: string | null
           created_at?: string
+          footer_text?: string | null
+          hero_banner_url?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           payment_link?: string | null
           sale_mode?: string
+          section_texts?: Json | null
           tenant_id?: string | null
           transfer_enabled?: boolean
           updated_at?: string
@@ -42,12 +111,18 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          assistant_image_url?: string | null
           business_category?: string | null
           business_name?: string | null
           created_at?: string
+          footer_text?: string | null
+          hero_banner_url?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           payment_link?: string | null
           sale_mode?: string
+          section_texts?: Json | null
           tenant_id?: string | null
           transfer_enabled?: boolean
           updated_at?: string
