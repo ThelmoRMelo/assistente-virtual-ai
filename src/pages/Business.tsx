@@ -136,18 +136,34 @@ export default function Business() {
             <div className="flex items-center gap-2 text-sm font-medium">
               <ImageIcon className="w-4 h-4" /> Aparência
             </div>
-            <div>
-              <Label>URL do banner principal</Label>
-              <Input value={heroBannerUrl} onChange={(e) => setHeroBannerUrl(e.target.value)} placeholder="https://..." />
-            </div>
-            <div>
-              <Label>URL da imagem da assistente</Label>
-              <Input value={assistantImageUrl} onChange={(e) => setAssistantImageUrl(e.target.value)} placeholder="https://..." />
-            </div>
+
+            <ImagePicker
+              label="Banner principal"
+              buttonLabel="Alterar Banner"
+              value={heroBannerUrl}
+              onChange={setHeroBannerUrl}
+              aspect="banner"
+            />
+
+            <ImagePicker
+              label="Imagem da assistente"
+              buttonLabel="Alterar Assistente"
+              value={assistantImageUrl}
+              onChange={setAssistantImageUrl}
+              aspect="avatar"
+            />
           </div>
 
           <Button variant="gradient" className="w-full" onClick={handleSaveLanding}>
             <Save className="w-4 h-4" /> Salvar Landing Page
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => window.open('/vitrine', '_blank', 'noopener,noreferrer')}
+          >
+            <Eye className="w-4 h-4" /> Visualizar Vitrine
           </Button>
         </div>
       </main>
