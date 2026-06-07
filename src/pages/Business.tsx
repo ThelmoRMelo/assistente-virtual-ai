@@ -172,3 +172,68 @@ export default function Business() {
     </div>
   );
 }
+
+interface ImagePickerProps {
+  label: string;
+  buttonLabel: string;
+  value: string;
+  onChange: (url: string) => void;
+  aspect: 'banner' | 'avatar';
+}
+
+function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePickerProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { uploadImage, uploading } = useProductImageUpload();
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file);
+    if (url) {
+      onChange(url);
+      toast.success('Imagem enviada com sucesso!');
+    }
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div
+        className={`relative w-full overflow-hidden rounded-xl border border-border bg-muted/30 ${
+          aspect === 'banner' ? 'aspect-[16/9]' : 'aspect-square max-w-[180px]'
+        }`}
+      >
+        {value ? (
+          <img src={value} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+            Sem imagem
+          </div>
+        )}
+        {uploading && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+        {buttonLabel}
+      </Button>
+    </div>
+  );
+}
