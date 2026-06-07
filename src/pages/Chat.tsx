@@ -497,25 +497,43 @@ export default function Chat() {
 
       </main>
 
-      {/* Footer - input estilo WhatsApp */}
-      <footer className="bg-card/95 backdrop-blur-md border-t border-border/30 px-3 py-3 safe-bottom sticky bottom-0">
-        <div className="flex gap-2 max-w-3xl mx-auto items-center">
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Mensagem"
-            disabled={isTyping}
-            className="flex-1 h-11 rounded-full bg-muted/30 border-border/30 px-4 text-[15px] placeholder:text-muted-foreground/60"
-          />
-          <Button 
-            onClick={handleSend} 
-            disabled={!inputValue.trim() || isTyping} 
-            size="icon"
-            className="w-11 h-11 rounded-full bg-[#005c4b] hover:bg-[#006d5b] text-white shadow-md transition-all active:scale-95"
+      {/* Footer - input premium ANIA */}
+      <footer
+        className="px-3 pt-4 pb-4 safe-bottom sticky bottom-0 backdrop-blur-xl border-t border-white/5"
+        style={{
+          background: 'linear-gradient(180deg, hsl(230 40% 10% / 0.4) 0%, hsl(230 45% 8% / 0.95) 60%)',
+          boxShadow: '0 -8px 32px -8px hsl(230 50% 3% / 0.6)',
+        }}
+      >
+        <div className="flex gap-2.5 max-w-3xl mx-auto items-center">
+          <div
+            className="relative flex-1 rounded-full p-[1.5px] transition-all duration-300"
+            style={{
+              background: 'linear-gradient(135deg, hsl(190 100% 50% / 0.6) 0%, hsl(270 70% 60% / 0.6) 100%)',
+              boxShadow: '0 4px 24px -6px hsl(270 70% 60% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.05)',
+            }}
           >
-            <Send className="w-5 h-5" />
+            <Input
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Digite sua mensagem para a ANIA..."
+              disabled={isTyping}
+              className="flex-1 h-14 w-full rounded-full bg-[hsl(230_40%_10%/0.95)] border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+            />
+          </div>
+          <Button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isTyping}
+            size="icon"
+            className="w-14 h-14 rounded-full text-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 border-0 shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, hsl(190 100% 50%) 0%, hsl(270 70% 60%) 100%)',
+              boxShadow: '0 0 24px hsl(270 70% 60% / 0.5), 0 4px 16px hsl(190 100% 50% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.2)',
+            }}
+          >
+            <Send className="w-6 h-6 -ml-0.5" />
           </Button>
         </div>
       </footer>
