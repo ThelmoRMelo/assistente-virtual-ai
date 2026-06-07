@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save, Eye, Upload, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
+import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { toast } from 'sonner';
 
 const categories = [
