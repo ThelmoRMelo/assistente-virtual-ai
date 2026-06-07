@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save, Eye, Upload, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/contexts/AppContext';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
+import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { toast } from 'sonner';
 
 const categories = [
@@ -135,23 +136,104 @@ export default function Business() {
             <div className="flex items-center gap-2 text-sm font-medium">
               <ImageIcon className="w-4 h-4" /> Aparência
             </div>
-            <div>
-              <Label>URL do banner principal</Label>
-              <Input value={heroBannerUrl} onChange={(e) => setHeroBannerUrl(e.target.value)} placeholder="https://..." />
-            </div>
-            <div>
-              <Label>URL da imagem da assistente</Label>
-              <Input value={assistantImageUrl} onChange={(e) => setAssistantImageUrl(e.target.value)} placeholder="https://..." />
-            </div>
+
+            <ImagePicker
+              label="Banner principal"
+              buttonLabel="Alterar Banner"
+              value={heroBannerUrl}
+              onChange={setHeroBannerUrl}
+              aspect="banner"
+            />
+
+            <ImagePicker
+              label="Imagem da assistente"
+              buttonLabel="Alterar Assistente"
+              value={assistantImageUrl}
+              onChange={setAssistantImageUrl}
+              aspect="avatar"
+            />
           </div>
 
           <Button variant="gradient" className="w-full" onClick={handleSaveLanding}>
             <Save className="w-4 h-4" /> Salvar Landing Page
           </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => window.open('/vitrine', '_blank', 'noopener,noreferrer')}
+          >
+            <Eye className="w-4 h-4" /> Visualizar Vitrine
+          </Button>
         </div>
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+interface ImagePickerProps {
+  label: string;
+  buttonLabel: string;
+  value: string;
+  onChange: (url: string) => void;
+  aspect: 'banner' | 'avatar';
+}
+
+function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePickerProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { uploadImage, uploading } = useProductImageUpload();
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadImage(file);
+    if (url) {
+      onChange(url);
+      toast.success('Imagem enviada com sucesso!');
+    }
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div
+        className={`relative w-full overflow-hidden rounded-xl border border-border bg-muted/30 ${
+          aspect === 'banner' ? 'aspect-[16/9]' : 'aspect-square max-w-[180px]'
+        }`}
+      >
+        {value ? (
+          <img src={value} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+            Sem imagem
+          </div>
+        )}
+        {uploading && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        )}
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+      >
+        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+        {buttonLabel}
+      </Button>
     </div>
   );
 }
