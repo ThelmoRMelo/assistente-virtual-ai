@@ -73,57 +73,102 @@ export type Database = {
       }
       business_config: {
         Row: {
+          accent_color: string | null
+          assistant_bubble_text: string | null
           assistant_image_url: string | null
+          assistant_position_axis: string | null
+          assistant_position_value: number | null
+          assistant_size: number | null
           business_category: string | null
           business_name: string | null
+          button_color: string | null
           created_at: string
           footer_text: string | null
           hero_banner_url: string | null
+          hero_button_glow: number | null
+          hero_button_radius: number | null
+          hero_button_text: string | null
           hero_subtitle: string | null
+          hero_subtitle_size: number | null
           hero_title: string | null
+          hero_title_size: number | null
           id: string
           payment_link: string | null
+          primary_color: string | null
           sale_mode: string
           section_texts: Json | null
+          show_assistant_bubble: boolean | null
           tenant_id: string | null
+          text_color: string | null
+          title_color: string | null
           transfer_enabled: boolean
           updated_at: string
           use_emojis: boolean
           whatsapp_number: string | null
         }
         Insert: {
+          accent_color?: string | null
+          assistant_bubble_text?: string | null
           assistant_image_url?: string | null
+          assistant_position_axis?: string | null
+          assistant_position_value?: number | null
+          assistant_size?: number | null
           business_category?: string | null
           business_name?: string | null
+          button_color?: string | null
           created_at?: string
           footer_text?: string | null
           hero_banner_url?: string | null
+          hero_button_glow?: number | null
+          hero_button_radius?: number | null
+          hero_button_text?: string | null
           hero_subtitle?: string | null
+          hero_subtitle_size?: number | null
           hero_title?: string | null
+          hero_title_size?: number | null
           id?: string
           payment_link?: string | null
+          primary_color?: string | null
           sale_mode?: string
           section_texts?: Json | null
+          show_assistant_bubble?: boolean | null
           tenant_id?: string | null
+          text_color?: string | null
+          title_color?: string | null
           transfer_enabled?: boolean
           updated_at?: string
           use_emojis?: boolean
           whatsapp_number?: string | null
         }
         Update: {
+          accent_color?: string | null
+          assistant_bubble_text?: string | null
           assistant_image_url?: string | null
+          assistant_position_axis?: string | null
+          assistant_position_value?: number | null
+          assistant_size?: number | null
           business_category?: string | null
           business_name?: string | null
+          button_color?: string | null
           created_at?: string
           footer_text?: string | null
           hero_banner_url?: string | null
+          hero_button_glow?: number | null
+          hero_button_radius?: number | null
+          hero_button_text?: string | null
           hero_subtitle?: string | null
+          hero_subtitle_size?: number | null
           hero_title?: string | null
+          hero_title_size?: number | null
           id?: string
           payment_link?: string | null
+          primary_color?: string | null
           sale_mode?: string
           section_texts?: Json | null
+          show_assistant_bubble?: boolean | null
           tenant_id?: string | null
+          text_color?: string | null
+          title_color?: string | null
           transfer_enabled?: boolean
           updated_at?: string
           use_emojis?: boolean
