@@ -4,14 +4,34 @@ import { ArrowRight } from 'lucide-react';
 import type { ThemeConfig } from '@/lib/themes';
 import aniaAvatar from '@/assets/ania-avatar.png';
 
-interface VitrineHeroProps {
-  businessName: string;
-  theme: ThemeConfig;
-  chatPath: string;
+export interface HeroCustomization {
   heroTitle?: string | null;
   heroSubtitle?: string | null;
   bannerUrl?: string | null;
   assistantImageUrl?: string | null;
+  heroTitleSize?: number | null;
+  heroSubtitleSize?: number | null;
+  assistantPositionAxis?: 'horizontal' | 'vertical' | null;
+  assistantPositionValue?: number | null;
+  assistantSize?: number | null;
+  showAssistantBubble?: boolean | null;
+  assistantBubbleText?: string | null;
+  heroButtonText?: string | null;
+  heroButtonGlow?: number | null;
+  heroButtonRadius?: number | null;
+  primaryColor?: string | null;
+  titleColor?: string | null;
+  textColor?: string | null;
+  buttonColor?: string | null;
+  accentColor?: string | null;
+}
+
+interface VitrineHeroProps extends HeroCustomization {
+  businessName: string;
+  theme: ThemeConfig;
+  chatPath: string;
+  /** If true, render the CTA without router Link (for preview). */
+  previewMode?: boolean;
 }
 
 export function VitrineHero({
@@ -22,6 +42,22 @@ export function VitrineHero({
   heroSubtitle,
   bannerUrl,
   assistantImageUrl,
+  heroTitleSize,
+  heroSubtitleSize,
+  assistantPositionAxis,
+  assistantPositionValue,
+  assistantSize,
+  showAssistantBubble,
+  assistantBubbleText,
+  heroButtonText,
+  heroButtonGlow,
+  heroButtonRadius,
+  primaryColor,
+  titleColor,
+  textColor,
+  buttonColor,
+  accentColor,
+  previewMode,
 }: VitrineHeroProps) {
   const title = heroTitle?.trim() || 'Sua vitrine inteligente com atendimento 24h';
   const subtitle =
@@ -29,8 +65,48 @@ export function VitrineHero({
     'Cursos, aplicativos e soluções digitais que vendem por você com a ajuda da ANIA, sua assistente virtual.';
   const avatarSrc = assistantImageUrl?.trim() || aniaAvatar;
 
+  const titleSize = heroTitleSize ?? 36;
+  const subtitleSize = heroSubtitleSize ?? 18;
+  const sizePct = (assistantSize ?? 100) / 100;
+  const axis = assistantPositionAxis ?? 'vertical';
+  const posVal = assistantPositionValue ?? 0;
+  const showBubble = showAssistantBubble ?? true;
+  const bubbleText = assistantBubbleText?.trim() || 'Olá! Precisa de ajuda?';
+  const buttonText = heroButtonText?.trim() || 'Falar com a ANIA';
+  const glow = heroButtonGlow ?? 50;
+  const radius = heroButtonRadius ?? 12;
+
+  const assistantTransform =
+    axis === 'horizontal' ? `translateX(${posVal}%)` : `translateY(${posVal}%)`;
+
+  const buttonStyle: React.CSSProperties = {
+    backgroundColor: buttonColor || undefined,
+    color: buttonColor ? '#fff' : undefined,
+    borderRadius: `${radius}px`,
+    boxShadow: glow > 0
+      ? `0 0 ${glow * 0.6}px ${glow * 0.15}px ${buttonColor || 'hsl(var(--primary))'}`
+      : 'none',
+  };
+
+  const ButtonInner = (
+    <Button
+      size="lg"
+      className="text-lg px-8 h-14 font-semibold"
+      style={buttonStyle}
+    >
+      {buttonText}
+      <ArrowRight className="w-5 h-5 ml-2" />
+    </Button>
+  );
+
   return (
-    <section className="relative overflow-hidden">
+    <section
+      className="relative overflow-hidden"
+      style={{
+        ...(primaryColor ? { ['--primary' as any]: primaryColor } : {}),
+        ...(accentColor ? { ['--accent' as any]: accentColor } : {}),
+      }}
+    >
       {bannerUrl ? (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30"
@@ -38,7 +114,10 @@ export function VitrineHero({
         />
       ) : (
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10"
+            style={primaryColor ? { background: `linear-gradient(135deg, ${primaryColor}1a, transparent, ${accentColor || primaryColor}1a)` } : undefined}
+          />
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
         </>
@@ -48,28 +127,44 @@ export function VitrineHero({
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6 text-center md:text-left">
             <h1
-              className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight"
-              style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
+              className="font-bold leading-tight"
+              style={{
+                fontFamily: `'${theme.fonts.heading}', sans-serif`,
+                fontSize: `${titleSize}px`,
+                color: titleColor || undefined,
+              }}
             >
               {title}
             </h1>
-            <p className="text-muted-foreground text-lg md:text-xl max-w-xl">{subtitle}</p>
+            <p
+              className="max-w-xl"
+              style={{
+                fontSize: `${subtitleSize}px`,
+                color: textColor || 'hsl(var(--muted-foreground))',
+              }}
+            >
+              {subtitle}
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <Link to={chatPath}>
-                <Button size="lg" className="text-lg px-8 h-14 font-semibold bg-primary hover:bg-primary/90 shadow-glow">
-                  Falar com a ANIA
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
+              {previewMode ? (
+                ButtonInner
+              ) : (
+                <Link to={chatPath}>{ButtonInner}</Link>
+              )}
             </div>
           </div>
 
           <div className="relative flex justify-center md:justify-end">
-            <div className="absolute top-0 right-1/4 md:right-1/3 z-10 bg-card border border-border rounded-2xl px-4 py-2 shadow-lg animate-float">
-              <p className="text-sm font-medium">Olá! Precisa de ajuda?</p>
-              <div className="absolute -bottom-2 left-6 w-4 h-4 bg-card border-l border-b border-border transform rotate-[-45deg]" />
-            </div>
-            <div className="relative">
+            {showBubble && (
+              <div className="absolute top-0 right-1/4 md:right-1/3 z-10 bg-card border border-border rounded-2xl px-4 py-2 shadow-lg animate-float">
+                <p className="text-sm font-medium">{bubbleText}</p>
+                <div className="absolute -bottom-2 left-6 w-4 h-4 bg-card border-l border-b border-border transform rotate-[-45deg]" />
+              </div>
+            )}
+            <div
+              className="relative transition-transform"
+              style={{ transform: `${assistantTransform} scale(${sizePct})` }}
+            >
               <div className="w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-primary/30 shadow-glow-lg">
                 <img src={avatarSrc} alt={`Assistente virtual da ${businessName}`} className="w-full h-full object-cover object-top" />
               </div>
