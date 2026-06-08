@@ -39,6 +39,21 @@ interface BusinessConfig {
   footer_text?: string | null;
   hero_banner_url?: string | null;
   assistant_image_url?: string | null;
+  hero_title_size?: number | null;
+  hero_subtitle_size?: number | null;
+  assistant_position_axis?: 'horizontal' | 'vertical' | null;
+  assistant_position_value?: number | null;
+  assistant_size?: number | null;
+  show_assistant_bubble?: boolean | null;
+  assistant_bubble_text?: string | null;
+  hero_button_text?: string | null;
+  hero_button_glow?: number | null;
+  hero_button_radius?: number | null;
+  primary_color?: string | null;
+  title_color?: string | null;
+  text_color?: string | null;
+  button_color?: string | null;
+  accent_color?: string | null;
 }
 
 export default function Vitrine() {
