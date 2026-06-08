@@ -101,7 +101,7 @@ export default function Vitrine() {
       if (currentTenantId) {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
+          .select('*')
           .eq('tenant_id', currentTenantId)
           .single();
         if (configData) {
@@ -112,7 +112,7 @@ export default function Vitrine() {
       } else {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
+          .select('*')
           .limit(1)
           .single();
         if (configData) {
