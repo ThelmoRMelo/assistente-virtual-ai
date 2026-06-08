@@ -39,6 +39,21 @@ interface BusinessConfig {
   footer_text?: string | null;
   hero_banner_url?: string | null;
   assistant_image_url?: string | null;
+  hero_title_size?: number | null;
+  hero_subtitle_size?: number | null;
+  assistant_position_axis?: 'horizontal' | 'vertical' | null;
+  assistant_position_value?: number | null;
+  assistant_size?: number | null;
+  show_assistant_bubble?: boolean | null;
+  assistant_bubble_text?: string | null;
+  hero_button_text?: string | null;
+  hero_button_glow?: number | null;
+  hero_button_radius?: number | null;
+  primary_color?: string | null;
+  title_color?: string | null;
+  text_color?: string | null;
+  button_color?: string | null;
+  accent_color?: string | null;
 }
 
 export default function Vitrine() {
@@ -86,7 +101,7 @@ export default function Vitrine() {
       if (currentTenantId) {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
+          .select('*')
           .eq('tenant_id', currentTenantId)
           .single();
         if (configData) {
@@ -97,7 +112,7 @@ export default function Vitrine() {
       } else {
         const { data: configData } = await supabase
           .from('business_config')
-          .select('business_name, business_category, hero_title, hero_subtitle, footer_text, hero_banner_url, assistant_image_url')
+          .select('*')
           .limit(1)
           .single();
         if (configData) {
@@ -237,6 +252,21 @@ export default function Vitrine() {
         heroSubtitle={business?.hero_subtitle}
         bannerUrl={business?.hero_banner_url}
         assistantImageUrl={business?.assistant_image_url}
+        heroTitleSize={business?.hero_title_size}
+        heroSubtitleSize={business?.hero_subtitle_size}
+        assistantPositionAxis={business?.assistant_position_axis}
+        assistantPositionValue={business?.assistant_position_value}
+        assistantSize={business?.assistant_size}
+        showAssistantBubble={business?.show_assistant_bubble}
+        assistantBubbleText={business?.assistant_bubble_text}
+        heroButtonText={business?.hero_button_text}
+        heroButtonGlow={business?.hero_button_glow}
+        heroButtonRadius={business?.hero_button_radius}
+        primaryColor={business?.primary_color}
+        titleColor={business?.title_color}
+        textColor={business?.text_color}
+        buttonColor={business?.button_color}
+        accentColor={business?.accent_color}
       />
 
       <main className="max-w-7xl mx-auto px-4">
