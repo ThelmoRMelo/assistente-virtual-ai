@@ -162,8 +162,29 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
+      splash_enabled: splashEnabled,
+      splash_image_url: splashImageUrl,
+      splash_bg_type: splashBgType,
+      splash_bg_color: splashBgColor,
+      splash_bg_gradient_from: splashBgFrom,
+      splash_bg_gradient_to: splashBgTo,
+      splash_duration_ms: splashDurationMs,
+      splash_animation: splashAnimation,
+      chat_wallpaper_url: chatWallpaperUrl,
+      chat_wallpaper_opacity: chatWallpaperOpacity,
+      chat_wallpaper_blur: chatWallpaperBlur,
+      chat_wallpaper_dim: chatWallpaperDim,
+      chat_wallpaper_fit: chatWallpaperFit,
+      chat_header_color: chatHeaderColor,
+      chat_input_bg_color: chatInputBgColor,
+      chat_send_button_color: chatSendButtonColor,
+      chat_ania_bubble_color: chatAniaBubbleColor,
+      chat_user_bubble_color: chatUserBubbleColor,
+      chat_link_color: chatLinkColor,
+      chat_icon_color: chatIconColor,
+      chat_catalog_card_color: chatCatalogCardColor,
     } as any);
-    if (r?.success) toast.success('Landing Page atualizada!');
+    if (r?.success) toast.success('Identidade visual atualizada!');
     else toast.error('Erro ao salvar');
   };
 
