@@ -113,6 +113,29 @@ export default function Business() {
     if (c.text_color) setTextColor(c.text_color);
     if (c.button_color) setButtonColor(c.button_color);
     if (c.accent_color) setAccentColor(c.accent_color);
+    // splash
+    setSplashEnabled(c.splash_enabled ?? true);
+    setSplashImageUrl(c.splash_image_url || '');
+    setSplashBgType((c.splash_bg_type as any) || 'solid');
+    if (c.splash_bg_color) setSplashBgColor(c.splash_bg_color);
+    if (c.splash_bg_gradient_from) setSplashBgFrom(c.splash_bg_gradient_from);
+    if (c.splash_bg_gradient_to) setSplashBgTo(c.splash_bg_gradient_to);
+    setSplashDurationMs(c.splash_duration_ms ?? 2000);
+    setSplashAnimation(c.splash_animation ?? true);
+    // chat
+    setChatWallpaperUrl(c.chat_wallpaper_url || '');
+    setChatWallpaperOpacity(c.chat_wallpaper_opacity ?? 100);
+    setChatWallpaperBlur((c.chat_wallpaper_blur as any) || 'none');
+    setChatWallpaperDim(c.chat_wallpaper_dim ?? false);
+    setChatWallpaperFit((c.chat_wallpaper_fit as any) || 'cover');
+    if (c.chat_header_color) setChatHeaderColor(c.chat_header_color);
+    if (c.chat_input_bg_color) setChatInputBgColor(c.chat_input_bg_color);
+    if (c.chat_send_button_color) setChatSendButtonColor(c.chat_send_button_color);
+    if (c.chat_ania_bubble_color) setChatAniaBubbleColor(c.chat_ania_bubble_color);
+    if (c.chat_user_bubble_color) setChatUserBubbleColor(c.chat_user_bubble_color);
+    if (c.chat_link_color) setChatLinkColor(c.chat_link_color);
+    if (c.chat_icon_color) setChatIconColor(c.chat_icon_color);
+    if (c.chat_catalog_card_color) setChatCatalogCardColor(c.chat_catalog_card_color);
   }, [config]);
 
   const handleSaveLocal = () => toast.success('Dados locais salvos!');
