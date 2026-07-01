@@ -343,10 +343,56 @@ export default function Chat() {
   const storeName = tenantConfig?.business_name || config?.business_name || business.nome || 'Assistente';
   const vitrineLink = slug ? `/loja/${slug}` : '/vitrine';
 
+  // Chat appearance from business_config
+  const chatHeaderColor = config?.chat_header_color || undefined;
+  const chatInputBg = config?.chat_input_bg_color || undefined;
+  const chatSendColor = config?.chat_send_button_color || 'hsl(270 70% 60%)';
+  const chatAniaBubble = config?.chat_ania_bubble_color || undefined;
+  const chatUserBubble = config?.chat_user_bubble_color || '#005c4b';
+  const chatIconColor = config?.chat_icon_color || undefined;
+  const chatCatalogCard = config?.chat_catalog_card_color || undefined;
+  const chatLinkColor = config?.chat_link_color || undefined;
+
+  const wallpaperUrl = config?.chat_wallpaper_url || '';
+  const wallpaperOpacity = (config?.chat_wallpaper_opacity ?? 100) / 100;
+  const wallpaperBlurMap = { none: '0px', light: '3px', medium: '6px', strong: '12px' } as const;
+  const wallpaperBlur = wallpaperBlurMap[(config?.chat_wallpaper_blur as keyof typeof wallpaperBlurMap) || 'none'];
+  const wallpaperDim = config?.chat_wallpaper_dim ?? false;
+  const wallpaperFit = config?.chat_wallpaper_fit || 'cover';
+  const bgSize = wallpaperFit === 'contain' ? 'contain' : wallpaperFit === 'center' ? 'auto' : wallpaperFit === 'repeat' ? 'auto' : 'cover';
+  const bgRepeat = wallpaperFit === 'repeat' ? 'repeat' : 'no-repeat';
+  const bgPosition = 'center';
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(230 30% 12%) 100%)' }}>
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={{ background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(230 30% 12%) 100%)', ['--chat-link' as any]: chatLinkColor }}
+    >
+      {wallpaperUrl && (
+        <>
+          <div
+            className="fixed inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `url(${wallpaperUrl})`,
+              backgroundSize: bgSize,
+              backgroundRepeat: bgRepeat,
+              backgroundPosition: bgPosition,
+              opacity: wallpaperOpacity,
+              filter: wallpaperBlur !== '0px' ? `blur(${wallpaperBlur})` : undefined,
+              zIndex: 0,
+            }}
+          />
+          {wallpaperDim && (
+            <div className="fixed inset-0 pointer-events-none bg-black/40" style={{ zIndex: 0 }} />
+          )}
+        </>
+      )}
+      <div className="relative z-[1] flex-1 flex flex-col min-h-screen">
       {/* Header - mantido igual, apenas ajuste de cor */}
-      <header className="bg-card/95 backdrop-blur-md border-b border-border/30 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+      <header
+        className="bg-card/95 backdrop-blur-md border-b border-border/30 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm"
+        style={chatHeaderColor ? { backgroundColor: chatHeaderColor } : undefined}
+      >
         {/* Botão voltar para vitrine */}
         <Link to={vitrineLink} className="p-2 hover:bg-muted/50 rounded-full transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -410,10 +456,13 @@ export default function Chat() {
                 className="flex justify-start animate-slide-up"
                 style={{ animationDelay: `${index * 20}ms` }}
               >
-                <div className="max-w-[92%] w-full bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative">
+                <div
+                  className="max-w-[92%] w-full text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative bg-card"
+                  style={chatCatalogCard ? { backgroundColor: chatCatalogCard } : undefined}
+                >
                   <div
-                    className="absolute top-0 -left-1.5 w-3 h-3 bg-card border-l border-t border-border/20"
-                    style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+                    className="absolute top-0 -left-1.5 w-3 h-3 border-l border-t border-border/20 bg-card"
+                    style={chatCatalogCard ? { backgroundColor: chatCatalogCard, clipPath: 'polygon(100% 0, 100% 100%, 0 0)' } : { clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
                   />
                   <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
                     🛍️ Catálogo
@@ -447,24 +496,29 @@ export default function Chat() {
               <div
                 className={`max-w-[80%] relative px-3 py-2 shadow-sm ${
                   message.sender === 'user'
-                    ? 'bg-[#005c4b] text-white rounded-2xl rounded-tr-md'
-                    : 'bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20'
+                    ? 'text-white rounded-2xl rounded-tr-md'
+                    : 'text-foreground rounded-2xl rounded-tl-md border border-border/20'
                 }`}
+                style={
+                  message.sender === 'user'
+                    ? { backgroundColor: chatUserBubble }
+                    : chatAniaBubble ? { backgroundColor: chatAniaBubble } : undefined
+                }
               >
                 <div
                   className={`absolute top-0 w-3 h-3 ${
-                    message.sender === 'user'
-                      ? '-right-1.5 bg-[#005c4b]'
-                      : '-left-1.5 bg-card border-l border-t border-border/20'
+                    message.sender === 'user' ? '-right-1.5' : '-left-1.5 border-l border-t border-border/20'
                   }`}
                   style={{
+                    backgroundColor:
+                      message.sender === 'user' ? chatUserBubble : (chatAniaBubble || undefined),
                     clipPath: message.sender === 'user'
                       ? 'polygon(0 0, 100% 0, 0 100%)'
-                      : 'polygon(100% 0, 100% 100%, 0 0)'
+                      : 'polygon(100% 0, 100% 100%, 0 0)',
                   }}
                 />
 
-                <div className="text-[15px] leading-relaxed">
+                <div className="text-[15px] leading-relaxed [&_a]:text-[var(--chat-link,inherit)]">
                   <MarkdownMessage content={message.content} />
                 </div>
                 <span className={`text-[10px] mt-1 block text-right ${
@@ -520,7 +574,8 @@ export default function Chat() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Digite sua mensagem para a ANIA..."
               disabled={isTyping}
-              className="flex-1 h-14 w-full rounded-full bg-[hsl(230_40%_10%/0.95)] border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              className="flex-1 h-14 w-full rounded-full border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              style={{ backgroundColor: chatInputBg || 'hsl(230 40% 10% / 0.95)' }}
             />
           </div>
           <Button
@@ -529,8 +584,10 @@ export default function Chat() {
             size="icon"
             className="w-14 h-14 rounded-full text-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 border-0 shrink-0"
             style={{
-              background: 'linear-gradient(135deg, hsl(190 100% 50%) 0%, hsl(270 70% 60%) 100%)',
-              boxShadow: '0 0 24px hsl(270 70% 60% / 0.5), 0 4px 16px hsl(190 100% 50% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.2)',
+              background: chatSendColor.includes('gradient')
+                ? chatSendColor
+                : `linear-gradient(135deg, ${chatSendColor} 0%, ${chatSendColor} 100%)`,
+              boxShadow: `0 0 24px ${chatSendColor}80, 0 4px 16px ${chatSendColor}55, inset 0 1px 0 hsl(0 0% 100% / 0.2)`,
             }}
           >
             <Send className="w-6 h-6 -ml-0.5" />
@@ -549,6 +606,7 @@ export default function Chat() {
           initialIndex={galleryInitialIndex}
         />
       )}
+      </div>
     </div>
   );
 }

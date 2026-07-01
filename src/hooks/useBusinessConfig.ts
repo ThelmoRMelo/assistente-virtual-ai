@@ -31,6 +31,30 @@ export interface BusinessConfig {
   text_color: string | null;
   button_color: string | null;
   accent_color: string | null;
+  // Splash screen
+  splash_enabled?: boolean | null;
+  splash_image_url?: string | null;
+  splash_bg_type?: 'solid' | 'gradient' | null;
+  splash_bg_color?: string | null;
+  splash_bg_gradient_from?: string | null;
+  splash_bg_gradient_to?: string | null;
+  splash_duration_ms?: number | null;
+  splash_animation?: boolean | null;
+  // Chat appearance
+  assistant_position?: 'left' | 'center' | 'right' | null;
+  chat_wallpaper_url?: string | null;
+  chat_wallpaper_opacity?: number | null;
+  chat_wallpaper_blur?: 'none' | 'light' | 'medium' | 'strong' | null;
+  chat_wallpaper_dim?: boolean | null;
+  chat_wallpaper_fit?: 'cover' | 'contain' | 'center' | 'repeat' | null;
+  chat_header_color?: string | null;
+  chat_input_bg_color?: string | null;
+  chat_send_button_color?: string | null;
+  chat_ania_bubble_color?: string | null;
+  chat_user_bubble_color?: string | null;
+  chat_link_color?: string | null;
+  chat_icon_color?: string | null;
+  chat_catalog_card_color?: string | null;
   created_at: string;
   updated_at: string;
 }

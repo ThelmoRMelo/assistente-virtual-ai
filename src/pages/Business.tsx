@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save, Eye, Upload, Loader2,
-  Palette, Sparkles, MessageSquare, MousePointer,
+  Palette, Sparkles, MessageSquare, MousePointer, Smartphone, Layout,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
@@ -62,6 +62,31 @@ export default function Business() {
   const [buttonColor, setButtonColor] = useState('#7c3aed');
   const [accentColor, setAccentColor] = useState('#06b6d4');
 
+  // Splash screen
+  const [splashEnabled, setSplashEnabled] = useState(true);
+  const [splashImageUrl, setSplashImageUrl] = useState('');
+  const [splashBgType, setSplashBgType] = useState<'solid' | 'gradient'>('solid');
+  const [splashBgColor, setSplashBgColor] = useState('#0F172A');
+  const [splashBgFrom, setSplashBgFrom] = useState('#7c3aed');
+  const [splashBgTo, setSplashBgTo] = useState('#06b6d4');
+  const [splashDurationMs, setSplashDurationMs] = useState(2000);
+  const [splashAnimation, setSplashAnimation] = useState(true);
+
+  // Chat appearance
+  const [chatWallpaperUrl, setChatWallpaperUrl] = useState('');
+  const [chatWallpaperOpacity, setChatWallpaperOpacity] = useState(100);
+  const [chatWallpaperBlur, setChatWallpaperBlur] = useState<'none' | 'light' | 'medium' | 'strong'>('none');
+  const [chatWallpaperDim, setChatWallpaperDim] = useState(false);
+  const [chatWallpaperFit, setChatWallpaperFit] = useState<'cover' | 'contain' | 'center' | 'repeat'>('cover');
+  const [chatHeaderColor, setChatHeaderColor] = useState('#0b141a');
+  const [chatInputBgColor, setChatInputBgColor] = useState('#1f2c33');
+  const [chatSendButtonColor, setChatSendButtonColor] = useState('#7c3aed');
+  const [chatAniaBubbleColor, setChatAniaBubbleColor] = useState('#ffffff');
+  const [chatUserBubbleColor, setChatUserBubbleColor] = useState('#005c4b');
+  const [chatLinkColor, setChatLinkColor] = useState('#53bdeb');
+  const [chatIconColor, setChatIconColor] = useState('#8696a0');
+  const [chatCatalogCardColor, setChatCatalogCardColor] = useState('#111b21');
+
   // Preview
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -88,6 +113,29 @@ export default function Business() {
     if (c.text_color) setTextColor(c.text_color);
     if (c.button_color) setButtonColor(c.button_color);
     if (c.accent_color) setAccentColor(c.accent_color);
+    // splash
+    setSplashEnabled(c.splash_enabled ?? true);
+    setSplashImageUrl(c.splash_image_url || '');
+    setSplashBgType((c.splash_bg_type as any) || 'solid');
+    if (c.splash_bg_color) setSplashBgColor(c.splash_bg_color);
+    if (c.splash_bg_gradient_from) setSplashBgFrom(c.splash_bg_gradient_from);
+    if (c.splash_bg_gradient_to) setSplashBgTo(c.splash_bg_gradient_to);
+    setSplashDurationMs(c.splash_duration_ms ?? 2000);
+    setSplashAnimation(c.splash_animation ?? true);
+    // chat
+    setChatWallpaperUrl(c.chat_wallpaper_url || '');
+    setChatWallpaperOpacity(c.chat_wallpaper_opacity ?? 100);
+    setChatWallpaperBlur((c.chat_wallpaper_blur as any) || 'none');
+    setChatWallpaperDim(c.chat_wallpaper_dim ?? false);
+    setChatWallpaperFit((c.chat_wallpaper_fit as any) || 'cover');
+    if (c.chat_header_color) setChatHeaderColor(c.chat_header_color);
+    if (c.chat_input_bg_color) setChatInputBgColor(c.chat_input_bg_color);
+    if (c.chat_send_button_color) setChatSendButtonColor(c.chat_send_button_color);
+    if (c.chat_ania_bubble_color) setChatAniaBubbleColor(c.chat_ania_bubble_color);
+    if (c.chat_user_bubble_color) setChatUserBubbleColor(c.chat_user_bubble_color);
+    if (c.chat_link_color) setChatLinkColor(c.chat_link_color);
+    if (c.chat_icon_color) setChatIconColor(c.chat_icon_color);
+    if (c.chat_catalog_card_color) setChatCatalogCardColor(c.chat_catalog_card_color);
   }, [config]);
 
   const handleSaveLocal = () => toast.success('Dados locais salvos!');
@@ -114,8 +162,29 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
+      splash_enabled: splashEnabled,
+      splash_image_url: splashImageUrl,
+      splash_bg_type: splashBgType,
+      splash_bg_color: splashBgColor,
+      splash_bg_gradient_from: splashBgFrom,
+      splash_bg_gradient_to: splashBgTo,
+      splash_duration_ms: splashDurationMs,
+      splash_animation: splashAnimation,
+      chat_wallpaper_url: chatWallpaperUrl,
+      chat_wallpaper_opacity: chatWallpaperOpacity,
+      chat_wallpaper_blur: chatWallpaperBlur,
+      chat_wallpaper_dim: chatWallpaperDim,
+      chat_wallpaper_fit: chatWallpaperFit,
+      chat_header_color: chatHeaderColor,
+      chat_input_bg_color: chatInputBgColor,
+      chat_send_button_color: chatSendButtonColor,
+      chat_ania_bubble_color: chatAniaBubbleColor,
+      chat_user_bubble_color: chatUserBubbleColor,
+      chat_link_color: chatLinkColor,
+      chat_icon_color: chatIconColor,
+      chat_catalog_card_color: chatCatalogCardColor,
     } as any);
-    if (r?.success) toast.success('Landing Page atualizada!');
+    if (r?.success) toast.success('Identidade visual atualizada!');
     else toast.error('Erro ao salvar');
   };
 
@@ -124,7 +193,7 @@ export default function Business() {
 
   return (
     <div className="min-h-screen pb-24">
-      <PageHeader title="Meu Negócio" subtitle="Dados e Landing Page" />
+      <PageHeader title="Meu Negócio" subtitle="Dados e Identidade Visual" />
 
       <main className="px-6 py-4 space-y-4 max-w-lg mx-auto">
         <div className="glass-card rounded-2xl p-6 flex flex-col items-center text-center">
@@ -274,16 +343,138 @@ export default function Business() {
           <ColorRow label="Cor dos destaques" value={accentColor} onChange={setAccentColor} />
         </SectionCard>
 
+        {/* SPLASH SCREEN */}
+        <div className="pt-6">
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
+            <Smartphone className="w-5 h-5 text-primary" /> Tela de abertura (Splash)
+          </h2>
+        </div>
+        <SectionCard icon={<ImageIcon className="w-5 h-5 text-primary" />} title="Splash Screen" subtitle="Aparece na abertura do app">
+          <div className="flex items-center justify-between">
+            <Label>Ativar splash</Label>
+            <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
+          </div>
+          <ImagePicker
+            label="Imagem da splash"
+            buttonLabel="Alterar imagem"
+            value={splashImageUrl}
+            onChange={setSplashImageUrl}
+            aspect="avatar"
+          />
+          <div>
+            <Label>Tipo de fundo</Label>
+            <div className="flex gap-2 mt-2">
+              {(['solid', 'gradient'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSplashBgType(t)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                    splashBgType === t ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {t === 'solid' ? 'Sólido' : 'Gradiente'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {splashBgType === 'solid' ? (
+            <ColorRow label="Cor de fundo" value={splashBgColor} onChange={setSplashBgColor} />
+          ) : (
+            <>
+              <ColorRow label="Gradiente – início" value={splashBgFrom} onChange={setSplashBgFrom} />
+              <ColorRow label="Gradiente – fim" value={splashBgTo} onChange={setSplashBgTo} />
+            </>
+          )}
+          <SliderRow
+            label="Tempo de exibição"
+            value={splashDurationMs}
+            min={1000} max={5000} unit="ms"
+            onChange={setSplashDurationMs}
+          />
+          <div className="flex items-center justify-between">
+            <Label>Animação (fade + zoom)</Label>
+            <Switch checked={splashAnimation} onCheckedChange={setSplashAnimation} />
+          </div>
+        </SectionCard>
+
+        {/* CHAT */}
+        <div className="pt-6">
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
+            <Layout className="w-5 h-5 text-primary" /> Aparência do Chat
+          </h2>
+        </div>
+        <SectionCard icon={<ImageIcon className="w-5 h-5 text-primary" />} title="Papel de parede" subtitle="Fundo do chat da ANIA">
+          <ImagePicker
+            label="Papel de parede"
+            buttonLabel="Alterar papel de parede"
+            value={chatWallpaperUrl}
+            onChange={setChatWallpaperUrl}
+            aspect="banner"
+          />
+          <SliderRow
+            label="Opacidade"
+            value={chatWallpaperOpacity}
+            min={0} max={100} unit="%"
+            onChange={setChatWallpaperOpacity}
+          />
+          <div>
+            <Label>Intensidade do blur</Label>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {(['none', 'light', 'medium', 'strong'] as const).map((b) => (
+                <button
+                  key={b}
+                  onClick={() => setChatWallpaperBlur(b)}
+                  className={`px-2 py-2 rounded-lg text-xs transition-all ${
+                    chatWallpaperBlur === b ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {b === 'none' ? 'Sem' : b === 'light' ? 'Leve' : b === 'medium' ? 'Médio' : 'Forte'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>Escurecimento automático</Label>
+            <Switch checked={chatWallpaperDim} onCheckedChange={setChatWallpaperDim} />
+          </div>
+          <div>
+            <Label>Ajuste da imagem</Label>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {(['cover', 'contain', 'center', 'repeat'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setChatWallpaperFit(f)}
+                  className={`px-2 py-2 rounded-lg text-xs transition-all ${
+                    chatWallpaperFit === f ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {f === 'cover' ? 'Cobrir' : f === 'contain' ? 'Ajustar' : f === 'center' ? 'Centralizar' : 'Repetir'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </SectionCard>
+        <SectionCard icon={<Palette className="w-5 h-5 text-primary" />} title="Cores do Chat" subtitle="Personalize toda a interface">
+          <ColorRow label="Cabeçalho" value={chatHeaderColor} onChange={setChatHeaderColor} />
+          <ColorRow label="Caixa de digitação" value={chatInputBgColor} onChange={setChatInputBgColor} />
+          <ColorRow label="Botão Enviar" value={chatSendButtonColor} onChange={setChatSendButtonColor} />
+          <ColorRow label="Mensagens da ANIA" value={chatAniaBubbleColor} onChange={setChatAniaBubbleColor} />
+          <ColorRow label="Mensagens do cliente" value={chatUserBubbleColor} onChange={setChatUserBubbleColor} />
+          <ColorRow label="Links" value={chatLinkColor} onChange={setChatLinkColor} />
+          <ColorRow label="Ícones" value={chatIconColor} onChange={setChatIconColor} />
+          <ColorRow label="Cartões do catálogo" value={chatCatalogCardColor} onChange={setChatCatalogCardColor} />
+        </SectionCard>
+
         {/* AÇÕES */}
         <div className="space-y-2 sticky bottom-20 z-10">
           <Button variant="gradient" className="w-full" onClick={handleSaveLanding}>
-            <Save className="w-4 h-4" /> Salvar Landing Page
+            <Save className="w-4 h-4" /> Salvar Identidade Visual
           </Button>
           <Button variant="outline" className="w-full" onClick={() => setPreviewOpen(true)}>
             <Eye className="w-4 h-4" /> Pré-visualizar Landing Page
           </Button>
           <Button variant="ghost" className="w-full" onClick={() => window.open('/vitrine', '_blank', 'noopener,noreferrer')}>
-            <Eye className="w-4 h-4" /> Abrir Vitrine publicada
+            <Eye className="w-4 h-4" /> Visualizar Landing Page publicada
           </Button>
         </div>
       </main>

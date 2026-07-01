@@ -76,12 +76,26 @@ export type Database = {
           accent_color: string | null
           assistant_bubble_text: string | null
           assistant_image_url: string | null
+          assistant_position: string | null
           assistant_position_axis: string | null
           assistant_position_value: number | null
           assistant_size: number | null
           business_category: string | null
           business_name: string | null
           button_color: string | null
+          chat_ania_bubble_color: string | null
+          chat_catalog_card_color: string | null
+          chat_header_color: string | null
+          chat_icon_color: string | null
+          chat_input_bg_color: string | null
+          chat_link_color: string | null
+          chat_send_button_color: string | null
+          chat_user_bubble_color: string | null
+          chat_wallpaper_blur: string | null
+          chat_wallpaper_dim: boolean | null
+          chat_wallpaper_fit: string | null
+          chat_wallpaper_opacity: number | null
+          chat_wallpaper_url: string | null
           created_at: string
           footer_text: string | null
           hero_banner_url: string | null
@@ -98,6 +112,14 @@ export type Database = {
           sale_mode: string
           section_texts: Json | null
           show_assistant_bubble: boolean | null
+          splash_animation: boolean | null
+          splash_bg_color: string | null
+          splash_bg_gradient_from: string | null
+          splash_bg_gradient_to: string | null
+          splash_bg_type: string | null
+          splash_duration_ms: number | null
+          splash_enabled: boolean | null
+          splash_image_url: string | null
           tenant_id: string | null
           text_color: string | null
           title_color: string | null
@@ -110,12 +132,26 @@ export type Database = {
           accent_color?: string | null
           assistant_bubble_text?: string | null
           assistant_image_url?: string | null
+          assistant_position?: string | null
           assistant_position_axis?: string | null
           assistant_position_value?: number | null
           assistant_size?: number | null
           business_category?: string | null
           business_name?: string | null
           button_color?: string | null
+          chat_ania_bubble_color?: string | null
+          chat_catalog_card_color?: string | null
+          chat_header_color?: string | null
+          chat_icon_color?: string | null
+          chat_input_bg_color?: string | null
+          chat_link_color?: string | null
+          chat_send_button_color?: string | null
+          chat_user_bubble_color?: string | null
+          chat_wallpaper_blur?: string | null
+          chat_wallpaper_dim?: boolean | null
+          chat_wallpaper_fit?: string | null
+          chat_wallpaper_opacity?: number | null
+          chat_wallpaper_url?: string | null
           created_at?: string
           footer_text?: string | null
           hero_banner_url?: string | null
@@ -132,6 +168,14 @@ export type Database = {
           sale_mode?: string
           section_texts?: Json | null
           show_assistant_bubble?: boolean | null
+          splash_animation?: boolean | null
+          splash_bg_color?: string | null
+          splash_bg_gradient_from?: string | null
+          splash_bg_gradient_to?: string | null
+          splash_bg_type?: string | null
+          splash_duration_ms?: number | null
+          splash_enabled?: boolean | null
+          splash_image_url?: string | null
           tenant_id?: string | null
           text_color?: string | null
           title_color?: string | null
@@ -144,12 +188,26 @@ export type Database = {
           accent_color?: string | null
           assistant_bubble_text?: string | null
           assistant_image_url?: string | null
+          assistant_position?: string | null
           assistant_position_axis?: string | null
           assistant_position_value?: number | null
           assistant_size?: number | null
           business_category?: string | null
           business_name?: string | null
           button_color?: string | null
+          chat_ania_bubble_color?: string | null
+          chat_catalog_card_color?: string | null
+          chat_header_color?: string | null
+          chat_icon_color?: string | null
+          chat_input_bg_color?: string | null
+          chat_link_color?: string | null
+          chat_send_button_color?: string | null
+          chat_user_bubble_color?: string | null
+          chat_wallpaper_blur?: string | null
+          chat_wallpaper_dim?: boolean | null
+          chat_wallpaper_fit?: string | null
+          chat_wallpaper_opacity?: number | null
+          chat_wallpaper_url?: string | null
           created_at?: string
           footer_text?: string | null
           hero_banner_url?: string | null
@@ -166,6 +224,14 @@ export type Database = {
           sale_mode?: string
           section_texts?: Json | null
           show_assistant_bubble?: boolean | null
+          splash_animation?: boolean | null
+          splash_bg_color?: string | null
+          splash_bg_gradient_from?: string | null
+          splash_bg_gradient_to?: string | null
+          splash_bg_type?: string | null
+          splash_duration_ms?: number | null
+          splash_enabled?: boolean | null
+          splash_image_url?: string | null
           tenant_id?: string | null
           text_color?: string | null
           title_color?: string | null

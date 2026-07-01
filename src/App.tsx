@@ -17,6 +17,7 @@ import ConversationDetail from "./pages/ConversationDetail";
 import Vitrine from "./pages/Vitrine";
 import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
+import { SplashScreen } from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
       <AppProvider>
         <Toaster />
         <Sonner position="top-center" />
+        <SplashScreen>
         <BrowserRouter>
           <Routes>
             {/* Home principal do app (sem autenticação) */}
@@ -55,6 +57,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </SplashScreen>
       </AppProvider>
     </TooltipProvider>
   </QueryClientProvider>
