@@ -27,6 +27,7 @@ const App = () => (
       <AppProvider>
         <Toaster />
         <Sonner position="top-center" />
+        <SplashScreen>
         <BrowserRouter>
           <Routes>
             {/* Home principal do app (sem autenticação) */}
