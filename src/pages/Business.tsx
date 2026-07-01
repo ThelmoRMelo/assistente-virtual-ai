@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Building2, MapPin, Phone, FileText, Image as ImageIcon, Type, Save, Eye, Upload, Loader2,
-  Palette, Sparkles, MessageSquare, MousePointer,
+  Palette, Sparkles, MessageSquare, MousePointer, Smartphone, Layout,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
