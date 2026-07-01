@@ -496,24 +496,29 @@ export default function Chat() {
               <div
                 className={`max-w-[80%] relative px-3 py-2 shadow-sm ${
                   message.sender === 'user'
-                    ? 'bg-[#005c4b] text-white rounded-2xl rounded-tr-md'
-                    : 'bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20'
+                    ? 'text-white rounded-2xl rounded-tr-md'
+                    : 'text-foreground rounded-2xl rounded-tl-md border border-border/20'
                 }`}
+                style={
+                  message.sender === 'user'
+                    ? { backgroundColor: chatUserBubble }
+                    : chatAniaBubble ? { backgroundColor: chatAniaBubble } : undefined
+                }
               >
                 <div
                   className={`absolute top-0 w-3 h-3 ${
-                    message.sender === 'user'
-                      ? '-right-1.5 bg-[#005c4b]'
-                      : '-left-1.5 bg-card border-l border-t border-border/20'
+                    message.sender === 'user' ? '-right-1.5' : '-left-1.5 border-l border-t border-border/20'
                   }`}
                   style={{
+                    backgroundColor:
+                      message.sender === 'user' ? chatUserBubble : (chatAniaBubble || undefined),
                     clipPath: message.sender === 'user'
                       ? 'polygon(0 0, 100% 0, 0 100%)'
-                      : 'polygon(100% 0, 100% 100%, 0 0)'
+                      : 'polygon(100% 0, 100% 100%, 0 0)',
                   }}
                 />
 
-                <div className="text-[15px] leading-relaxed">
+                <div className="text-[15px] leading-relaxed [&_a]:text-[var(--chat-link,inherit)]">
                   <MarkdownMessage content={message.content} />
                 </div>
                 <span className={`text-[10px] mt-1 block text-right ${
