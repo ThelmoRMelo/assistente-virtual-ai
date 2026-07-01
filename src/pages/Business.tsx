@@ -62,6 +62,31 @@ export default function Business() {
   const [buttonColor, setButtonColor] = useState('#7c3aed');
   const [accentColor, setAccentColor] = useState('#06b6d4');
 
+  // Splash screen
+  const [splashEnabled, setSplashEnabled] = useState(true);
+  const [splashImageUrl, setSplashImageUrl] = useState('');
+  const [splashBgType, setSplashBgType] = useState<'solid' | 'gradient'>('solid');
+  const [splashBgColor, setSplashBgColor] = useState('#0F172A');
+  const [splashBgFrom, setSplashBgFrom] = useState('#7c3aed');
+  const [splashBgTo, setSplashBgTo] = useState('#06b6d4');
+  const [splashDurationMs, setSplashDurationMs] = useState(2000);
+  const [splashAnimation, setSplashAnimation] = useState(true);
+
+  // Chat appearance
+  const [chatWallpaperUrl, setChatWallpaperUrl] = useState('');
+  const [chatWallpaperOpacity, setChatWallpaperOpacity] = useState(100);
+  const [chatWallpaperBlur, setChatWallpaperBlur] = useState<'none' | 'light' | 'medium' | 'strong'>('none');
+  const [chatWallpaperDim, setChatWallpaperDim] = useState(false);
+  const [chatWallpaperFit, setChatWallpaperFit] = useState<'cover' | 'contain' | 'center' | 'repeat'>('cover');
+  const [chatHeaderColor, setChatHeaderColor] = useState('#0b141a');
+  const [chatInputBgColor, setChatInputBgColor] = useState('#1f2c33');
+  const [chatSendButtonColor, setChatSendButtonColor] = useState('#7c3aed');
+  const [chatAniaBubbleColor, setChatAniaBubbleColor] = useState('#ffffff');
+  const [chatUserBubbleColor, setChatUserBubbleColor] = useState('#005c4b');
+  const [chatLinkColor, setChatLinkColor] = useState('#53bdeb');
+  const [chatIconColor, setChatIconColor] = useState('#8696a0');
+  const [chatCatalogCardColor, setChatCatalogCardColor] = useState('#111b21');
+
   // Preview
   const [previewOpen, setPreviewOpen] = useState(false);
 
