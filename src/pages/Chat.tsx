@@ -574,7 +574,8 @@ export default function Chat() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Digite sua mensagem para a ANIA..."
               disabled={isTyping}
-              className="flex-1 h-14 w-full rounded-full bg-[hsl(230_40%_10%/0.95)] border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              className="flex-1 h-14 w-full rounded-full border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              style={{ backgroundColor: chatInputBg || 'hsl(230 40% 10% / 0.95)' }}
             />
           </div>
           <Button
@@ -583,8 +584,10 @@ export default function Chat() {
             size="icon"
             className="w-14 h-14 rounded-full text-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 border-0 shrink-0"
             style={{
-              background: 'linear-gradient(135deg, hsl(190 100% 50%) 0%, hsl(270 70% 60%) 100%)',
-              boxShadow: '0 0 24px hsl(270 70% 60% / 0.5), 0 4px 16px hsl(190 100% 50% / 0.3), inset 0 1px 0 hsl(0 0% 100% / 0.2)',
+              background: chatSendColor.includes('gradient')
+                ? chatSendColor
+                : `linear-gradient(135deg, ${chatSendColor} 0%, ${chatSendColor} 100%)`,
+              boxShadow: `0 0 24px ${chatSendColor}80, 0 4px 16px ${chatSendColor}55, inset 0 1px 0 hsl(0 0% 100% / 0.2)`,
             }}
           >
             <Send className="w-6 h-6 -ml-0.5" />
