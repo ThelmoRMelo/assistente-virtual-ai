@@ -17,6 +17,7 @@ import ConversationDetail from "./pages/ConversationDetail";
 import Vitrine from "./pages/Vitrine";
 import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
+import { SplashScreen } from "./components/SplashScreen";
 
 const queryClient = new QueryClient();
 
