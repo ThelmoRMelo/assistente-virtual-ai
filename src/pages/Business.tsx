@@ -193,7 +193,7 @@ export default function Business() {
 
   return (
     <div className="min-h-screen pb-24">
-      <PageHeader title="Meu Negócio" subtitle="Dados e Landing Page" />
+      <PageHeader title="Meu Negócio" subtitle="Dados e Identidade Visual" />
 
       <main className="px-6 py-4 space-y-4 max-w-lg mx-auto">
         <div className="glass-card rounded-2xl p-6 flex flex-col items-center text-center">
