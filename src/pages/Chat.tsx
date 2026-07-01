@@ -456,10 +456,13 @@ export default function Chat() {
                 className="flex justify-start animate-slide-up"
                 style={{ animationDelay: `${index * 20}ms` }}
               >
-                <div className="max-w-[92%] w-full bg-card text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative">
+                <div
+                  className="max-w-[92%] w-full text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative bg-card"
+                  style={chatCatalogCard ? { backgroundColor: chatCatalogCard } : undefined}
+                >
                   <div
-                    className="absolute top-0 -left-1.5 w-3 h-3 bg-card border-l border-t border-border/20"
-                    style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+                    className="absolute top-0 -left-1.5 w-3 h-3 border-l border-t border-border/20 bg-card"
+                    style={chatCatalogCard ? { backgroundColor: chatCatalogCard, clipPath: 'polygon(100% 0, 100% 100%, 0 0)' } : { clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
                   />
                   <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
                     🛍️ Catálogo
