@@ -343,16 +343,138 @@ export default function Business() {
           <ColorRow label="Cor dos destaques" value={accentColor} onChange={setAccentColor} />
         </SectionCard>
 
+        {/* SPLASH SCREEN */}
+        <div className="pt-6">
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
+            <Smartphone className="w-5 h-5 text-primary" /> Tela de abertura (Splash)
+          </h2>
+        </div>
+        <SectionCard icon={<ImageIcon className="w-5 h-5 text-primary" />} title="Splash Screen" subtitle="Aparece na abertura do app">
+          <div className="flex items-center justify-between">
+            <Label>Ativar splash</Label>
+            <Switch checked={splashEnabled} onCheckedChange={setSplashEnabled} />
+          </div>
+          <ImagePicker
+            label="Imagem da splash"
+            buttonLabel="Alterar imagem"
+            value={splashImageUrl}
+            onChange={setSplashImageUrl}
+            aspect="avatar"
+          />
+          <div>
+            <Label>Tipo de fundo</Label>
+            <div className="flex gap-2 mt-2">
+              {(['solid', 'gradient'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSplashBgType(t)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                    splashBgType === t ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {t === 'solid' ? 'Sólido' : 'Gradiente'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {splashBgType === 'solid' ? (
+            <ColorRow label="Cor de fundo" value={splashBgColor} onChange={setSplashBgColor} />
+          ) : (
+            <>
+              <ColorRow label="Gradiente – início" value={splashBgFrom} onChange={setSplashBgFrom} />
+              <ColorRow label="Gradiente – fim" value={splashBgTo} onChange={setSplashBgTo} />
+            </>
+          )}
+          <SliderRow
+            label="Tempo de exibição"
+            value={splashDurationMs}
+            min={1000} max={5000} unit="ms"
+            onChange={setSplashDurationMs}
+          />
+          <div className="flex items-center justify-between">
+            <Label>Animação (fade + zoom)</Label>
+            <Switch checked={splashAnimation} onCheckedChange={setSplashAnimation} />
+          </div>
+        </SectionCard>
+
+        {/* CHAT */}
+        <div className="pt-6">
+          <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
+            <Layout className="w-5 h-5 text-primary" /> Aparência do Chat
+          </h2>
+        </div>
+        <SectionCard icon={<ImageIcon className="w-5 h-5 text-primary" />} title="Papel de parede" subtitle="Fundo do chat da ANIA">
+          <ImagePicker
+            label="Papel de parede"
+            buttonLabel="Alterar papel de parede"
+            value={chatWallpaperUrl}
+            onChange={setChatWallpaperUrl}
+            aspect="banner"
+          />
+          <SliderRow
+            label="Opacidade"
+            value={chatWallpaperOpacity}
+            min={0} max={100} unit="%"
+            onChange={setChatWallpaperOpacity}
+          />
+          <div>
+            <Label>Intensidade do blur</Label>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {(['none', 'light', 'medium', 'strong'] as const).map((b) => (
+                <button
+                  key={b}
+                  onClick={() => setChatWallpaperBlur(b)}
+                  className={`px-2 py-2 rounded-lg text-xs transition-all ${
+                    chatWallpaperBlur === b ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {b === 'none' ? 'Sem' : b === 'light' ? 'Leve' : b === 'medium' ? 'Médio' : 'Forte'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <Label>Escurecimento automático</Label>
+            <Switch checked={chatWallpaperDim} onCheckedChange={setChatWallpaperDim} />
+          </div>
+          <div>
+            <Label>Ajuste da imagem</Label>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {(['cover', 'contain', 'center', 'repeat'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setChatWallpaperFit(f)}
+                  className={`px-2 py-2 rounded-lg text-xs transition-all ${
+                    chatWallpaperFit === f ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {f === 'cover' ? 'Cobrir' : f === 'contain' ? 'Ajustar' : f === 'center' ? 'Centralizar' : 'Repetir'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </SectionCard>
+        <SectionCard icon={<Palette className="w-5 h-5 text-primary" />} title="Cores do Chat" subtitle="Personalize toda a interface">
+          <ColorRow label="Cabeçalho" value={chatHeaderColor} onChange={setChatHeaderColor} />
+          <ColorRow label="Caixa de digitação" value={chatInputBgColor} onChange={setChatInputBgColor} />
+          <ColorRow label="Botão Enviar" value={chatSendButtonColor} onChange={setChatSendButtonColor} />
+          <ColorRow label="Mensagens da ANIA" value={chatAniaBubbleColor} onChange={setChatAniaBubbleColor} />
+          <ColorRow label="Mensagens do cliente" value={chatUserBubbleColor} onChange={setChatUserBubbleColor} />
+          <ColorRow label="Links" value={chatLinkColor} onChange={setChatLinkColor} />
+          <ColorRow label="Ícones" value={chatIconColor} onChange={setChatIconColor} />
+          <ColorRow label="Cartões do catálogo" value={chatCatalogCardColor} onChange={setChatCatalogCardColor} />
+        </SectionCard>
+
         {/* AÇÕES */}
         <div className="space-y-2 sticky bottom-20 z-10">
           <Button variant="gradient" className="w-full" onClick={handleSaveLanding}>
-            <Save className="w-4 h-4" /> Salvar Landing Page
+            <Save className="w-4 h-4" /> Salvar Identidade Visual
           </Button>
           <Button variant="outline" className="w-full" onClick={() => setPreviewOpen(true)}>
             <Eye className="w-4 h-4" /> Pré-visualizar Landing Page
           </Button>
           <Button variant="ghost" className="w-full" onClick={() => window.open('/vitrine', '_blank', 'noopener,noreferrer')}>
-            <Eye className="w-4 h-4" /> Abrir Vitrine publicada
+            <Eye className="w-4 h-4" /> Visualizar Landing Page publicada
           </Button>
         </div>
       </main>
