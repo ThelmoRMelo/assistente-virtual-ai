@@ -595,6 +595,7 @@ export default function Chat() {
           initialIndex={galleryInitialIndex}
         />
       )}
+      </div>
     </div>
   );
 }
