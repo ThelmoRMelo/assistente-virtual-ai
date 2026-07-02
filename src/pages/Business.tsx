@@ -348,6 +348,25 @@ export default function Business() {
           <ColorRow label="Cor dos destaques" value={accentColor} onChange={setAccentColor} />
         </SectionCard>
 
+        {/* ÍCONE OFICIAL DA ANIA */}
+        <SectionCard
+          icon={<Sparkles className="w-5 h-5 text-primary" />}
+          title="Ícone Oficial da ANIA"
+          subtitle="Usado na splash, favicon do navegador e ícone do PWA"
+        >
+          <ImagePicker
+            label="Ícone único da aplicação"
+            buttonLabel="Alterar Ícone"
+            value={officialIconUrl}
+            onChange={setOfficialIconUrl}
+            aspect="avatar"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ao salvar, este ícone será aplicado automaticamente na tela de abertura, na aba do navegador,
+            no manifest do PWA e na tela inicial do celular. Recomendado: PNG quadrado de 512×512px.
+          </p>
+        </SectionCard>
+
         {/* SPLASH SCREEN */}
         <div className="pt-6">
           <h2 className="text-lg font-bold flex items-center gap-2 mb-2">
