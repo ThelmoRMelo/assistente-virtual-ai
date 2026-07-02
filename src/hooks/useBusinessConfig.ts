@@ -31,6 +31,8 @@ export interface BusinessConfig {
   text_color: string | null;
   button_color: string | null;
   accent_color: string | null;
+  // Ícone oficial (usado em splash, favicon, PWA/manifest)
+  official_icon_url?: string | null;
   // Splash screen
   splash_enabled?: boolean | null;
   splash_image_url?: string | null;
