@@ -166,6 +166,7 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
+      official_icon_url: officialIconUrl,
       splash_enabled: splashEnabled,
       splash_image_url: splashImageUrl,
       splash_bg_type: splashBgType,
