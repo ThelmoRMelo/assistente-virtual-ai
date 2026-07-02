@@ -18,8 +18,14 @@ import Vitrine from "./pages/Vitrine";
 import Reviews from "./pages/Reviews";
 import NotFound from "./pages/NotFound";
 import { SplashScreen } from "./components/SplashScreen";
+import { useOfficialIcon } from "./hooks/useOfficialIcon";
 
 const queryClient = new QueryClient();
+
+const OfficialIconInjector = () => {
+  useOfficialIcon();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,6 +33,7 @@ const App = () => (
       <AppProvider>
         <Toaster />
         <Sonner position="top-center" />
+        <OfficialIconInjector />
         <SplashScreen>
         <BrowserRouter>
           <Routes>
