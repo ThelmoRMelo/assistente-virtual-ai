@@ -62,6 +62,9 @@ export default function Business() {
   const [buttonColor, setButtonColor] = useState('#7c3aed');
   const [accentColor, setAccentColor] = useState('#06b6d4');
 
+  // Ícone Oficial (favicon + splash + PWA)
+  const [officialIconUrl, setOfficialIconUrl] = useState('');
+
   // Splash screen
   const [splashEnabled, setSplashEnabled] = useState(true);
   const [splashImageUrl, setSplashImageUrl] = useState('');
