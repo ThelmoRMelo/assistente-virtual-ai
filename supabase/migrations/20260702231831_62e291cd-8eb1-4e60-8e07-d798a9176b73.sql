@@ -1,0 +1,1 @@
+ALTER TABLE public.business_config ADD COLUMN IF NOT EXISTS official_icon_url TEXT;

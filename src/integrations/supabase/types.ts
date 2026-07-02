@@ -107,6 +107,7 @@ export type Database = {
           hero_title: string | null
           hero_title_size: number | null
           id: string
+          official_icon_url: string | null
           payment_link: string | null
           primary_color: string | null
           sale_mode: string
@@ -163,6 +164,7 @@ export type Database = {
           hero_title?: string | null
           hero_title_size?: number | null
           id?: string
+          official_icon_url?: string | null
           payment_link?: string | null
           primary_color?: string | null
           sale_mode?: string
@@ -219,6 +221,7 @@ export type Database = {
           hero_title?: string | null
           hero_title_size?: number | null
           id?: string
+          official_icon_url?: string | null
           payment_link?: string | null
           primary_color?: string | null
           sale_mode?: string

@@ -62,6 +62,9 @@ export default function Business() {
   const [buttonColor, setButtonColor] = useState('#7c3aed');
   const [accentColor, setAccentColor] = useState('#06b6d4');
 
+  // Ícone Oficial (favicon + splash + PWA)
+  const [officialIconUrl, setOfficialIconUrl] = useState('');
+
   // Splash screen
   const [splashEnabled, setSplashEnabled] = useState(true);
   const [splashImageUrl, setSplashImageUrl] = useState('');
@@ -113,6 +116,7 @@ export default function Business() {
     if (c.text_color) setTextColor(c.text_color);
     if (c.button_color) setButtonColor(c.button_color);
     if (c.accent_color) setAccentColor(c.accent_color);
+    setOfficialIconUrl(c.official_icon_url || '');
     // splash
     setSplashEnabled(c.splash_enabled ?? true);
     setSplashImageUrl(c.splash_image_url || '');
@@ -162,6 +166,7 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
+      official_icon_url: officialIconUrl,
       splash_enabled: splashEnabled,
       splash_image_url: splashImageUrl,
       splash_bg_type: splashBgType,
@@ -341,6 +346,25 @@ export default function Business() {
           <ColorRow label="Cor dos textos" value={textColor} onChange={setTextColor} />
           <ColorRow label="Cor dos botões" value={buttonColor} onChange={setButtonColor} />
           <ColorRow label="Cor dos destaques" value={accentColor} onChange={setAccentColor} />
+        </SectionCard>
+
+        {/* ÍCONE OFICIAL DA ANIA */}
+        <SectionCard
+          icon={<Sparkles className="w-5 h-5 text-primary" />}
+          title="Ícone Oficial da ANIA"
+          subtitle="Usado na splash, favicon do navegador e ícone do PWA"
+        >
+          <ImagePicker
+            label="Ícone único da aplicação"
+            buttonLabel="Alterar Ícone"
+            value={officialIconUrl}
+            onChange={setOfficialIconUrl}
+            aspect="avatar"
+          />
+          <p className="text-xs text-muted-foreground">
+            Ao salvar, este ícone será aplicado automaticamente na tela de abertura, na aba do navegador,
+            no manifest do PWA e na tela inicial do celular. Recomendado: PNG quadrado de 512×512px.
+          </p>
         </SectionCard>
 
         {/* SPLASH SCREEN */}

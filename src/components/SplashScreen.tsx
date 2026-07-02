@@ -61,7 +61,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
     bgType === 'gradient'
       ? `linear-gradient(135deg, ${config?.splash_bg_gradient_from || '#7c3aed'} 0%, ${config?.splash_bg_gradient_to || '#06b6d4'} 100%)`
       : config?.splash_bg_color || '#0F172A';
-  const image = config?.splash_image_url || aniaAvatar;
+  const image = config?.official_icon_url || config?.splash_image_url || aniaAvatar;
   const animation = config?.splash_animation ?? true;
 
   return (
