@@ -116,6 +116,7 @@ export default function Business() {
     if (c.text_color) setTextColor(c.text_color);
     if (c.button_color) setButtonColor(c.button_color);
     if (c.accent_color) setAccentColor(c.accent_color);
+    setOfficialIconUrl(c.official_icon_url || '');
     // splash
     setSplashEnabled(c.splash_enabled ?? true);
     setSplashImageUrl(c.splash_image_url || '');
