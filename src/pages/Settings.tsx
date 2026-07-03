@@ -3,6 +3,8 @@ import { Bot, Globe, Download, Upload, RefreshCw, Trash2, ChevronRight, Check, P
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
+import { InstallAppButton } from '@/components/InstallAppButton';
+
 import { Input } from '@/components/ui/input';
 import { useApp } from '@/contexts/AppContext';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
@@ -179,6 +181,9 @@ export default function Settings() {
       <PageHeader title="Ajustes" subtitle="Configurações de vendas" />
 
       <main className="px-6 py-4 space-y-4 max-w-lg mx-auto">
+        <InstallAppButton />
+
+
         {/* Sale Mode */}
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-4">
