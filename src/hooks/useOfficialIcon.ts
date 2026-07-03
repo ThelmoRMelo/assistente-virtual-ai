@@ -45,17 +45,15 @@ export function useOfficialIcon() {
       name: 'ANIA',
       short_name: 'ANIA',
       start_url: '/',
-      // display: 'browser' evita o splash nativo do Android; o único splash
-      // exibido passa a ser o configurável no painel "Meu Negócio".
-      display: 'browser',
+      display: 'standalone',
       background_color: '#0F172A',
       theme_color: '#0F172A',
-      prefer_related_applications: true,
       icons: [
         { src: urlWithBuster, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
         { src: urlWithBuster, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
       ],
     };
+
     const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
     const manifestUrl = URL.createObjectURL(blob);
 
