@@ -41,10 +41,17 @@ export function useOfficialIcon() {
     addLink('apple-touch-icon', '512x512');
 
     // Manifest dinâmico via blob URL
+    // IMPORTANTE: como o manifest é servido via blob: URL, URLs relativas
+    // (ex.: "/") seriam resolvidas contra a blob URL e o navegador usaria
+    // a página atual como start_url — fazendo o PWA abrir na tela onde foi
+    // instalado (ex.: /ajustes). Usamos URLs absolutas para garantir "/".
+    const origin = window.location.origin;
     const manifest = {
+      id: '/',
       name: 'ANIA',
       short_name: 'ANIA',
-      start_url: '/',
+      start_url: `${origin}/`,
+      scope: `${origin}/`,
       display: 'standalone',
       background_color: '#0F172A',
       theme_color: '#0F172A',
