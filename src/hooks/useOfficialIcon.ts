@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useBusinessConfig } from './useBusinessConfig';
+import { assetVersionKey, versionAssetUrl } from '@/lib/versioned-assets';
 
 /**
  * Injeta dinamicamente o Ícone Oficial da ANIA em:
@@ -13,13 +14,11 @@ import { useBusinessConfig } from './useBusinessConfig';
 export function useOfficialIcon() {
   const { config } = useBusinessConfig();
   const iconUrl = config?.official_icon_url || null;
+  const iconVersion = assetVersionKey(config?.updated_at, iconUrl);
 
   useEffect(() => {
     if (!iconUrl) return;
-    // Cache-buster para evitar que o navegador continue exibindo o ícone antigo.
-    const urlWithBuster = iconUrl.includes('?')
-      ? `${iconUrl}&v=${Date.now()}`
-      : `${iconUrl}?v=${Date.now()}`;
+    const urlWithBuster = versionAssetUrl(iconUrl, iconVersion);
 
     // Remove links antigos de icon / apple-touch-icon
     document
@@ -73,5 +72,5 @@ export function useOfficialIcon() {
     document.head.appendChild(manifestLink);
 
     return () => URL.revokeObjectURL(manifestUrl);
-  }, [iconUrl]);
+  }, [iconUrl, iconVersion]);
 }

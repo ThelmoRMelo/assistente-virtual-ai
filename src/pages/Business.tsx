@@ -19,6 +19,7 @@ import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { VitrineHero } from '@/components/vitrine/VitrineHero';
 import { themes, getThemeForCategory } from '@/lib/themes';
+import { stripAssetVersion, versionAssetUrl } from '@/lib/versioned-assets';
 import { toast } from 'sonner';
 
 const categories = [
@@ -29,6 +30,7 @@ const categories = [
 export default function Business() {
   const { business, updateBusiness } = useApp();
   const { config, updateConfig } = useBusinessConfig();
+  const { deleteImage } = useProductImageUpload();
 
   // Texts
   const [heroTitle, setHeroTitle] = useState('');
@@ -145,6 +147,9 @@ export default function Business() {
   const handleSaveLocal = () => toast.success('Dados locais salvos!');
 
   const handleSaveLanding = async () => {
+    const saveVersion = Date.now();
+    const versionedOfficialIconUrl = officialIconUrl ? versionAssetUrl(officialIconUrl, saveVersion) : '';
+    const versionedSplashImageUrl = splashImageUrl ? versionAssetUrl(splashImageUrl, saveVersion) : '';
     const r = await updateConfig({
       hero_title: heroTitle,
       hero_subtitle: heroSubtitle,
@@ -166,9 +171,9 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
-      official_icon_url: officialIconUrl,
+      official_icon_url: versionedOfficialIconUrl,
       splash_enabled: splashEnabled,
-      splash_image_url: splashImageUrl,
+      splash_image_url: versionedSplashImageUrl,
       splash_bg_type: splashBgType,
       splash_bg_color: splashBgColor,
       splash_bg_gradient_from: splashBgFrom,
@@ -189,8 +194,16 @@ export default function Business() {
       chat_icon_color: chatIconColor,
       chat_catalog_card_color: chatCatalogCardColor,
     } as any);
-    if (r?.success) toast.success('Identidade visual atualizada!');
-    else toast.error('Erro ao salvar');
+    if (r?.success) {
+      const oldSplash = stripAssetVersion(config?.splash_image_url);
+      const newSplash = stripAssetVersion(versionedSplashImageUrl);
+      if (oldSplash && newSplash && oldSplash !== newSplash) {
+        void deleteImage(oldSplash);
+      }
+      setOfficialIconUrl(versionedOfficialIconUrl);
+      setSplashImageUrl(versionedSplashImageUrl);
+      toast.success('Identidade visual atualizada!');
+    } else toast.error('Erro ao salvar');
   };
 
   const previewTheme = themes[getThemeForCategory(business.categoria || '')] || themes.default;
@@ -621,7 +634,7 @@ function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePicke
     if (!file) return;
     const url = await uploadImage(file);
     if (url) {
-      onChange(url);
+      onChange(versionAssetUrl(url, Date.now()));
       toast.success('Imagem enviada com sucesso!');
     }
     if (inputRef.current) inputRef.current.value = '';
@@ -636,7 +649,7 @@ function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePicke
         }`}
       >
         {value ? (
-          <img src={value} alt={label} className="w-full h-full object-cover" />
+          <img src={versionAssetUrl(value, Date.now())} alt={label} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Sem imagem</div>
         )}
