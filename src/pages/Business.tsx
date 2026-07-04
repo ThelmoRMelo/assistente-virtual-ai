@@ -146,6 +146,36 @@ export default function Business() {
 
   const handleSaveLocal = () => toast.success('Dados locais salvos!');
 
+  const refreshSplashRuntime = async (previousSplashUrl?: string) => {
+    const urlsToForget = [previousSplashUrl, previousSplashUrl ? versionAssetUrl(previousSplashUrl, Date.now()) : '']
+      .filter(Boolean) as string[];
+
+    if ('caches' in window && urlsToForget.length > 0) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.allSettled(
+          cacheNames.flatMap((cacheName) =>
+            urlsToForget.map(async (url) => {
+              const cache = await caches.open(cacheName);
+              await cache.delete(url);
+            }),
+          ),
+        );
+      } catch {
+        // Cache API pode estar indisponível em alguns navegadores/modos privados.
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        await registration?.update();
+      } catch {
+        // A atualização do SW é apenas uma otimização; o cache busting já garante a nova imagem.
+      }
+    }
+  };
+
   const handleSaveLanding = async () => {
     const saveVersion = Date.now();
     const versionedOfficialIconUrl = officialIconUrl ? versionAssetUrl(officialIconUrl, saveVersion) : '';
@@ -198,7 +228,10 @@ export default function Business() {
       const oldSplash = stripAssetVersion(config?.splash_image_url);
       const newSplash = stripAssetVersion(versionedSplashImageUrl);
       if (oldSplash && newSplash && oldSplash !== newSplash) {
+        void refreshSplashRuntime(oldSplash);
         void deleteImage(oldSplash);
+      } else {
+        void refreshSplashRuntime(oldSplash);
       }
       setOfficialIconUrl(versionedOfficialIconUrl);
       setSplashImageUrl(versionedSplashImageUrl);
@@ -649,7 +682,7 @@ function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePicke
         }`}
       >
         {value ? (
-          <img src={versionAssetUrl(value, Date.now())} alt={label} className="w-full h-full object-cover" />
+          <img src={value} alt={label} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Sem imagem</div>
         )}

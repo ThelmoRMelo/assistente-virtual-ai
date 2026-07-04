@@ -7,7 +7,7 @@ import { assetVersionKey, versionAssetUrl } from '@/lib/versioned-assets';
  * Splash oficial (único) da aplicação.
  * - Renderiza IMEDIATAMENTE, antes de qualquer tela.
  * - Só libera a interface após: config carregada + imagem pré-carregada + duração mínima.
- * - Exibe apenas uma vez por sessão.
+ * - Mantém fundo sólido enquanto a imagem correta é carregada, sem exibir imagens antigas.
  */
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const { config, loading } = useBusinessConfig();
@@ -84,7 +84,14 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
     const t1 = setTimeout(() => setHiding(true), remaining);
     const t2 = setTimeout(() => setVisible(false), remaining + 400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [visible, loading, config, imgLoaded]);
+  }, [
+    visible,
+    loading,
+    config?.splash_enabled,
+    config?.splash_duration_ms,
+    imgLoaded,
+    image,
+  ]);
 
   const bgType = config?.splash_bg_type ?? 'solid';
   const bg =
@@ -108,19 +115,21 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             pointerEvents: hiding ? 'none' : 'auto',
           }}
         >
-          <img
-            src={readyImage || aniaAvatar}
-            alt="Splash"
-            className={animation ? 'splash-anim' : ''}
-            style={{
-              maxWidth: '55%',
-              maxHeight: '55%',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 10px 40px rgba(0,0,0,.4))',
-              opacity: readyImage ? 1 : 0,
-              transition: 'opacity .3s ease',
-            }}
-          />
+          {readyImage && (
+            <img
+              src={readyImage}
+              alt="Splash"
+              className={animation ? 'splash-anim' : ''}
+              style={{
+                maxWidth: '55%',
+                maxHeight: '55%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 10px 40px rgba(0,0,0,.4))',
+                opacity: 1,
+                transition: 'opacity .3s ease',
+              }}
+            />
+          )}
           <style>{`
             @keyframes ania-splash-in {
               0% { opacity: 0; transform: scale(.85); }

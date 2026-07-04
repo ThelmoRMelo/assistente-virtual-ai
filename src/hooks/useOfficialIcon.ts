@@ -46,7 +46,7 @@ export function useOfficialIcon() {
     // instalado (ex.: /ajustes). Usamos URLs absolutas para garantir "/".
     const origin = window.location.origin;
     const manifest = {
-      id: '/',
+      id: `${origin}/`,
       name: 'ANIA',
       short_name: 'ANIA',
       start_url: `${origin}/`,
