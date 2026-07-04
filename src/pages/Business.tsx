@@ -19,6 +19,7 @@ import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { VitrineHero } from '@/components/vitrine/VitrineHero';
 import { themes, getThemeForCategory } from '@/lib/themes';
+import { stripAssetVersion, versionAssetUrl } from '@/lib/versioned-assets';
 import { toast } from 'sonner';
 
 const categories = [
@@ -29,6 +30,7 @@ const categories = [
 export default function Business() {
   const { business, updateBusiness } = useApp();
   const { config, updateConfig } = useBusinessConfig();
+  const { deleteImage } = useProductImageUpload();
 
   // Texts
   const [heroTitle, setHeroTitle] = useState('');
@@ -144,7 +146,40 @@ export default function Business() {
 
   const handleSaveLocal = () => toast.success('Dados locais salvos!');
 
+  const refreshSplashRuntime = async (previousSplashUrl?: string) => {
+    const urlsToForget = [previousSplashUrl, previousSplashUrl ? versionAssetUrl(previousSplashUrl, Date.now()) : '']
+      .filter(Boolean) as string[];
+
+    if ('caches' in window && urlsToForget.length > 0) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.allSettled(
+          cacheNames.flatMap((cacheName) =>
+            urlsToForget.map(async (url) => {
+              const cache = await caches.open(cacheName);
+              await cache.delete(url);
+            }),
+          ),
+        );
+      } catch {
+        // Cache API pode estar indisponível em alguns navegadores/modos privados.
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        await registration?.update();
+      } catch {
+        // A atualização do SW é apenas uma otimização; o cache busting já garante a nova imagem.
+      }
+    }
+  };
+
   const handleSaveLanding = async () => {
+    const saveVersion = Date.now();
+    const versionedOfficialIconUrl = officialIconUrl ? versionAssetUrl(officialIconUrl, saveVersion) : '';
+    const versionedSplashImageUrl = splashImageUrl ? versionAssetUrl(splashImageUrl, saveVersion) : '';
     const r = await updateConfig({
       hero_title: heroTitle,
       hero_subtitle: heroSubtitle,
@@ -166,9 +201,9 @@ export default function Business() {
       text_color: textColor,
       button_color: buttonColor,
       accent_color: accentColor,
-      official_icon_url: officialIconUrl,
+      official_icon_url: versionedOfficialIconUrl,
       splash_enabled: splashEnabled,
-      splash_image_url: splashImageUrl,
+      splash_image_url: versionedSplashImageUrl,
       splash_bg_type: splashBgType,
       splash_bg_color: splashBgColor,
       splash_bg_gradient_from: splashBgFrom,
@@ -189,8 +224,19 @@ export default function Business() {
       chat_icon_color: chatIconColor,
       chat_catalog_card_color: chatCatalogCardColor,
     } as any);
-    if (r?.success) toast.success('Identidade visual atualizada!');
-    else toast.error('Erro ao salvar');
+    if (r?.success) {
+      const oldSplash = stripAssetVersion(config?.splash_image_url);
+      const newSplash = stripAssetVersion(versionedSplashImageUrl);
+      if (oldSplash && newSplash && oldSplash !== newSplash) {
+        void refreshSplashRuntime(oldSplash);
+        void deleteImage(oldSplash);
+      } else {
+        void refreshSplashRuntime(oldSplash);
+      }
+      setOfficialIconUrl(versionedOfficialIconUrl);
+      setSplashImageUrl(versionedSplashImageUrl);
+      toast.success('Identidade visual atualizada!');
+    } else toast.error('Erro ao salvar');
   };
 
   const previewTheme = themes[getThemeForCategory(business.categoria || '')] || themes.default;
@@ -621,7 +667,7 @@ function ImagePicker({ label, buttonLabel, value, onChange, aspect }: ImagePicke
     if (!file) return;
     const url = await uploadImage(file);
     if (url) {
-      onChange(url);
+      onChange(versionAssetUrl(url, Date.now()));
       toast.success('Imagem enviada com sucesso!');
     }
     if (inputRef.current) inputRef.current.value = '';

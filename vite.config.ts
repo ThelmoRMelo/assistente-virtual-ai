@@ -15,13 +15,15 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null,
+      devOptions: { enabled: false },
       includeAssets: ["icon-512.png", "favicon.ico"],
       manifest: {
         name: "Assistente Virtual Inteligente",
         short_name: "Assistente IA",
         description: "Configure e treine sua IA de atendimento para WhatsApp",
         start_url: "/",
-        display: "browser", // Changed from standalone to prevent install prompts
+        display: "standalone",
         background_color: "#0a0f1c",
         theme_color: "#0a0f1c",
         orientation: "portrait",
@@ -32,18 +34,48 @@ export default defineConfig(({ mode }) => ({
             type: "image/png",
             purpose: "any maskable"
           }
-        ],
-        prefer_related_applications: true // Disable install prompt
+        ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        cleanupOutdatedCaches: true,
+        globPatterns: ["**/*.{js,css,ico,png,svg,woff2}"],
         // Exclude public routes from service worker caching
         navigateFallbackDenylist: [
           /^\/chat/,
           /^\/vitrine/,
-          /^\/loja/
+          /^\/loja/,
+          /^\/~oauth/
         ],
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "ania-pages",
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.[a-f0-9]{8,}\.(js|css|woff2?|svg|png|ico)$/.test(url.pathname),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "ania-versioned-assets",
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",

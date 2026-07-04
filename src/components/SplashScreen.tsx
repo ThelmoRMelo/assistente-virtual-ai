@@ -1,29 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useBusinessConfig } from '@/hooks/useBusinessConfig';
 import aniaAvatar from '@/assets/ania-avatar.png';
-
-const SESSION_KEY = 'ania_splash_shown_v1';
+import { assetVersionKey, versionAssetUrl } from '@/lib/versioned-assets';
 
 /**
  * Splash oficial (único) da aplicação.
  * - Renderiza IMEDIATAMENTE, antes de qualquer tela.
  * - Só libera a interface após: config carregada + imagem pré-carregada + duração mínima.
- * - Exibe apenas uma vez por sessão.
+ * - Mantém fundo sólido enquanto a imagem correta é carregada, sem exibir imagens antigas.
  */
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const { config, loading } = useBusinessConfig();
-
-  const alreadyShown = (() => {
-    try {
-      return typeof window !== 'undefined' && sessionStorage.getItem(SESSION_KEY) === '1';
-    } catch {
-      return false;
-    }
-  })();
-
-  const [visible, setVisible] = useState<boolean>(!alreadyShown);
+  const [visible, setVisible] = useState(true);
   const [hiding, setHiding] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [readyImage, setReadyImage] = useState<string | null>(null);
   const mountedAtRef = useRef<number>(Date.now());
   const finishedRef = useRef(false);
 
@@ -36,22 +27,41 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    if (!alreadyShown) {
-      try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
-    }
-  }, [alreadyShown]);
-
-  const image = config?.official_icon_url || config?.splash_image_url || aniaAvatar;
+  const image = useMemo(() => {
+    if (loading) return null;
+    const configuredImage = config?.splash_image_url || config?.official_icon_url || aniaAvatar;
+    return versionAssetUrl(configuredImage, assetVersionKey(config?.updated_at, configuredImage));
+  }, [config?.official_icon_url, config?.splash_image_url, config?.updated_at, loading]);
 
   // Pré-carrega a imagem do splash configurado.
   useEffect(() => {
     if (!visible) return;
     setImgLoaded(false);
+    setReadyImage(null);
+    if (!image) return;
+
+    let cancelled = false;
     const img = new Image();
-    img.onload = () => setImgLoaded(true);
-    img.onerror = () => setImgLoaded(true);
+    img.decoding = 'async';
+    img.onload = async () => {
+      try { await img.decode?.(); } catch {}
+      if (cancelled) return;
+      setReadyImage(image);
+      setImgLoaded(true);
+    };
+    img.onerror = () => {
+      if (cancelled) return;
+      setReadyImage(null);
+      setImgLoaded(true);
+    };
     img.src = image;
+    return () => {
+      cancelled = true;
+      img.onload = null;
+      img.onerror = null;
+      img.src = '';
+      setReadyImage(null);
+    };
   }, [image, visible]);
 
   // Finaliza o splash quando: config carregada + imagem pronta + duração mínima cumprida.
@@ -65,7 +75,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
       setVisible(false);
       return;
     }
-    if (!imgLoaded) return;
+    if (image && !imgLoaded) return;
 
     finishedRef.current = true;
     const duration = Math.min(5000, Math.max(1000, config?.splash_duration_ms ?? 2000));
@@ -74,7 +84,14 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
     const t1 = setTimeout(() => setHiding(true), remaining);
     const t2 = setTimeout(() => setVisible(false), remaining + 400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [visible, loading, config, imgLoaded]);
+  }, [
+    visible,
+    loading,
+    config?.splash_enabled,
+    config?.splash_duration_ms,
+    imgLoaded,
+    image,
+  ]);
 
   const bgType = config?.splash_bg_type ?? 'solid';
   const bg =
@@ -83,14 +100,22 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
       : config?.splash_bg_color || '#0F172A';
   const animation = config?.splash_animation ?? true;
 
-  // Nada da UI principal aparece até o splash começar a esconder.
-  const showChildren = !visible || hiding;
+  // A UI principal monta invisível para carregar dados/recursos enquanto o splash cobre a tela.
+  const concealChildren = visible && !hiding;
 
   return (
     <>
-      {showChildren && children}
+      <div
+        aria-hidden={concealChildren}
+        style={{
+          visibility: concealChildren ? 'hidden' : 'visible',
+        }}
+      >
+        {children}
+      </div>
       {visible && (
         <div
+          data-ania-splash="true"
           className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
           style={{
             background: bg,
@@ -98,19 +123,21 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
             pointerEvents: hiding ? 'none' : 'auto',
           }}
         >
-          <img
-            src={image}
-            alt="Splash"
-            className={animation ? 'splash-anim' : ''}
-            style={{
-              maxWidth: '55%',
-              maxHeight: '55%',
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 10px 40px rgba(0,0,0,.4))',
-              opacity: imgLoaded ? 1 : 0,
-              transition: 'opacity .3s ease',
-            }}
-          />
+          {readyImage && (
+            <img
+              src={readyImage}
+              alt="Splash"
+              className={animation ? 'splash-anim' : ''}
+              style={{
+                maxWidth: '55%',
+                maxHeight: '55%',
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 10px 40px rgba(0,0,0,.4))',
+                opacity: 1,
+                transition: 'opacity .3s ease',
+              }}
+            />
+          )}
           <style>{`
             @keyframes ania-splash-in {
               0% { opacity: 0; transform: scale(.85); }
