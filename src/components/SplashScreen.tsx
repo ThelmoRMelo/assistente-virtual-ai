@@ -100,14 +100,22 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
       : config?.splash_bg_color || '#0F172A';
   const animation = config?.splash_animation ?? true;
 
-  // Nada da UI principal aparece até o splash começar a esconder.
-  const showChildren = !visible || hiding;
+  // A UI principal monta invisível para carregar dados/recursos enquanto o splash cobre a tela.
+  const concealChildren = visible && !hiding;
 
   return (
     <>
-      {showChildren && children}
+      <div
+        aria-hidden={concealChildren}
+        style={{
+          visibility: concealChildren ? 'hidden' : 'visible',
+        }}
+      >
+        {children}
+      </div>
       {visible && (
         <div
+          data-ania-splash="true"
           className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
           style={{
             background: bg,
