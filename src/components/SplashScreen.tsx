@@ -6,11 +6,9 @@ const SESSION_KEY = 'ania_splash_shown_v1';
 
 /**
  * Splash oficial (único) da aplicação.
- * - Só existe UM splash: este.
- * - Aguarda o carregamento da configuração para não exibir uma versão "fallback"
- *   antes da versão configurada pelo administrador (evita a percepção de 2 splashes).
+ * - Renderiza IMEDIATAMENTE, antes de qualquer tela.
+ * - Só libera a interface após: config carregada + imagem pré-carregada + duração mínima.
  * - Exibe apenas uma vez por sessão.
- * - Se o admin não cadastrou imagem, usa a imagem padrão do robô como fallback.
  */
 export function SplashScreen({ children }: { children: React.ReactNode }) {
   const { config, loading } = useBusinessConfig();
@@ -24,50 +22,74 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
   })();
 
   const [visible, setVisible] = useState<boolean>(!alreadyShown);
-  const [ready, setReady] = useState(false);
   const [hiding, setHiding] = useState(false);
-  const startedRef = useRef(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const mountedAtRef = useRef<number>(Date.now());
+  const finishedRef = useRef(false);
 
-  // Marca imediatamente que o splash foi consumido nesta sessão,
-  // para nunca reaparecer em navegações internas.
+  // Remove o boot splash estático do index.html assim que o React monta o seu splash.
+  useEffect(() => {
+    const el = document.getElementById('ania-boot-splash');
+    if (el) {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 300);
+    }
+  }, []);
+
   useEffect(() => {
     if (!alreadyShown) {
       try { sessionStorage.setItem(SESSION_KEY, '1'); } catch {}
     }
   }, [alreadyShown]);
 
-  // Só inicia o timer depois que a config carregou (evita flash de versão antiga).
-  useEffect(() => {
-    if (!visible || startedRef.current) return;
-    if (loading) return;
+  const image = config?.official_icon_url || config?.splash_image_url || aniaAvatar;
 
-    startedRef.current = true;
+  // Pré-carrega a imagem do splash configurado.
+  useEffect(() => {
+    if (!visible) return;
+    setImgLoaded(false);
+    const img = new Image();
+    img.onload = () => setImgLoaded(true);
+    img.onerror = () => setImgLoaded(true);
+    img.src = image;
+  }, [image, visible]);
+
+  // Finaliza o splash quando: config carregada + imagem pronta + duração mínima cumprida.
+  useEffect(() => {
+    if (!visible || finishedRef.current) return;
+    if (loading) return;
 
     const enabled = (config?.splash_enabled ?? true) !== false;
     if (!enabled) {
+      finishedRef.current = true;
       setVisible(false);
       return;
     }
+    if (!imgLoaded) return;
 
+    finishedRef.current = true;
     const duration = Math.min(5000, Math.max(1000, config?.splash_duration_ms ?? 2000));
-    setReady(true);
-    const t1 = setTimeout(() => setHiding(true), duration);
-    const t2 = setTimeout(() => setVisible(false), duration + 400);
+    const elapsed = Date.now() - mountedAtRef.current;
+    const remaining = Math.max(0, duration - elapsed);
+    const t1 = setTimeout(() => setHiding(true), remaining);
+    const t2 = setTimeout(() => setVisible(false), remaining + 400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [visible, loading, config]);
+  }, [visible, loading, config, imgLoaded]);
 
   const bgType = config?.splash_bg_type ?? 'solid';
   const bg =
     bgType === 'gradient'
       ? `linear-gradient(135deg, ${config?.splash_bg_gradient_from || '#7c3aed'} 0%, ${config?.splash_bg_gradient_to || '#06b6d4'} 100%)`
       : config?.splash_bg_color || '#0F172A';
-  const image = config?.official_icon_url || config?.splash_image_url || aniaAvatar;
   const animation = config?.splash_animation ?? true;
+
+  // Nada da UI principal aparece até o splash começar a esconder.
+  const showChildren = !visible || hiding;
 
   return (
     <>
-      {children}
-      {visible && ready && (
+      {showChildren && children}
+      {visible && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500"
           style={{
@@ -85,6 +107,8 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
               maxHeight: '55%',
               objectFit: 'contain',
               filter: 'drop-shadow(0 10px 40px rgba(0,0,0,.4))',
+              opacity: imgLoaded ? 1 : 0,
+              transition: 'opacity .3s ease',
             }}
           />
           <style>{`
