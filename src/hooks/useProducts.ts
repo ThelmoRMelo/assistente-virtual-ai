@@ -64,6 +64,8 @@ function toUIProduct(p: SupabaseProduct): Product {
     linkPagamento: p.payment_link || '',
     ativo: p.active,
     hasGallery: p.has_gallery || false,
+    isFeatured: p.is_featured ?? false,
+    showOnProducts: p.show_on_products ?? true,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     // Legado
