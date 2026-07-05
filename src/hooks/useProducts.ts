@@ -90,7 +90,9 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.linkPagamento !== undefined) result.payment_link = p.linkPagamento;
   if (p.ativo !== undefined) result.active = p.ativo;
   if (p.hasGallery !== undefined) result.has_gallery = p.hasGallery;
-  
+  if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
+  if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
+
   return result;
 }
 
