@@ -23,6 +23,8 @@ interface Product {
   payment_link: string | null;
   tenant_id: string | null;
   has_gallery: boolean;
+  is_featured: boolean;
+  show_on_products: boolean;
 }
 
 interface StorefrontData {
