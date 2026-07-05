@@ -174,6 +174,8 @@ export default function Products() {
       linkPagamento: form.linkPagamento.trim(),
       ativo: form.ativo,
       hasGallery: form.galleryImages.length > 0,
+      isFeatured: editingId ? (products.find(p => p.id === editingId)?.isFeatured ?? false) : false,
+      showOnProducts: editingId ? (products.find(p => p.id === editingId)?.showOnProducts ?? true) : true,
     };
 
     try {
