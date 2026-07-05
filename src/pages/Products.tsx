@@ -603,11 +603,13 @@ interface ProductCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onReviews: () => void;
+  onToggleFeatured: () => void;
+  onToggleShowOnProducts: () => void;
   formatPrice: (value: number) => string;
   inactive?: boolean;
 }
 
-function ProductCard({ product, onEdit, onDelete, onReviews, formatPrice, inactive }: ProductCardProps) {
+function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, onToggleShowOnProducts, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // Link de preview (necessário para o WhatsApp gerar o banner com Open Graph)
