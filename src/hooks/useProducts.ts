@@ -39,6 +39,8 @@ export interface Product {
   linkPagamento: string;
   ativo: boolean;
   hasGallery: boolean;
+  isFeatured: boolean;
+  showOnProducts: boolean;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
