@@ -454,6 +454,7 @@ export type Database = {
           has_gallery: boolean
           id: string
           image_url: string | null
+          is_featured: boolean
           long_description: string | null
           min_price_allowed: number | null
           name: string
@@ -461,6 +462,7 @@ export type Database = {
           payment_methods: string[] | null
           price: number
           short_description: string | null
+          show_on_products: boolean
           tenant_id: string | null
           updated_at: string
         }
@@ -472,6 +474,7 @@ export type Database = {
           has_gallery?: boolean
           id?: string
           image_url?: string | null
+          is_featured?: boolean
           long_description?: string | null
           min_price_allowed?: number | null
           name: string
@@ -479,6 +482,7 @@ export type Database = {
           payment_methods?: string[] | null
           price: number
           short_description?: string | null
+          show_on_products?: boolean
           tenant_id?: string | null
           updated_at?: string
         }
@@ -490,6 +494,7 @@ export type Database = {
           has_gallery?: boolean
           id?: string
           image_url?: string | null
+          is_featured?: boolean
           long_description?: string | null
           min_price_allowed?: number | null
           name?: string
@@ -497,6 +502,7 @@ export type Database = {
           payment_methods?: string[] | null
           price?: number
           short_description?: string | null
+          show_on_products?: boolean
           tenant_id?: string | null
           updated_at?: string
         }
