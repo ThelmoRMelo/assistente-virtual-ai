@@ -273,41 +273,22 @@ export default function Vitrine() {
           </div>
         ) : (
           <>
-            {/* Featured/Courses section */}
-            {coursesProducts.length > 0 ? (
-              <ProductSection
-                title="Cursos"
-                products={coursesProducts}
-                theme={theme}
-                onProductClick={handleProductClick}
-                layout="featured"
-              />
-            ) : products.length > 0 && (
+            {/* Destaques — controlado por is_featured */}
+            {featuredProducts.length > 0 && (
               <ProductSection
                 title="Destaques"
-                products={products.slice(0, 3)}
+                products={featuredProducts}
                 theme={theme}
                 onProductClick={handleProductClick}
                 layout="featured"
               />
             )}
 
-            {/* Apps section */}
-            {appsProducts.length > 0 && (
+            {/* Nossos Produtos — controlado por show_on_products */}
+            {showcaseProducts.length > 0 && (
               <ProductSection
-                title="Aplicativos"
-                products={appsProducts}
-                theme={theme}
-                onProductClick={handleProductClick}
-                layout="grid"
-              />
-            )}
-
-            {/* Other products */}
-            {otherProducts.length > 0 && (
-              <ProductSection
-                title={coursesProducts.length > 0 || appsProducts.length > 0 ? "Outros Produtos" : "Nossos Produtos"}
-                products={otherProducts}
+                title="Nossos Produtos"
+                products={showcaseProducts}
                 theme={theme}
                 onProductClick={handleProductClick}
                 layout="grid"
@@ -315,6 +296,7 @@ export default function Vitrine() {
             )}
           </>
         )}
+
 
         {/* Theme showcase */}
         <ThemeShowcase theme={theme} />
