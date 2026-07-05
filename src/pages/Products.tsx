@@ -549,6 +549,8 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
+                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured })}
+                onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
                 formatPrice={formatPrice}
               />
             ))}
