@@ -181,6 +181,8 @@ export function useProducts() {
         image_url: product.imagemUrl || null,
         payment_link: product.linkPagamento || null,
         active: product.ativo ?? true,
+        is_featured: product.isFeatured ?? false,
+        show_on_products: product.showOnProducts ?? true,
       };
       
       const { data, error: insertError } = await supabase
