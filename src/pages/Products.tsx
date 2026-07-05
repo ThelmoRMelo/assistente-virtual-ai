@@ -174,6 +174,8 @@ export default function Products() {
       linkPagamento: form.linkPagamento.trim(),
       ativo: form.ativo,
       hasGallery: form.galleryImages.length > 0,
+      isFeatured: editingId ? (products.find(p => p.id === editingId)?.isFeatured ?? false) : false,
+      showOnProducts: editingId ? (products.find(p => p.id === editingId)?.showOnProducts ?? true) : true,
     };
 
     try {
@@ -547,6 +549,8 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
+                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured })}
+                onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
                 formatPrice={formatPrice}
               />
             ))}
@@ -571,6 +575,8 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
+                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured })}
+                onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
                 formatPrice={formatPrice}
                 inactive
               />
@@ -597,11 +603,13 @@ interface ProductCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onReviews: () => void;
+  onToggleFeatured: () => void;
+  onToggleShowOnProducts: () => void;
   formatPrice: (value: number) => string;
   inactive?: boolean;
 }
 
-function ProductCard({ product, onEdit, onDelete, onReviews, formatPrice, inactive }: ProductCardProps) {
+function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, onToggleShowOnProducts, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // Link de preview (necessário para o WhatsApp gerar o banner com Open Graph)
@@ -660,7 +668,36 @@ function ProductCard({ product, onEdit, onDelete, onReviews, formatPrice, inacti
               {product.descricaoCurta}
             </p>
           )}
+
+          {/* Visibility toggles */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
+              onClick={onToggleFeatured}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                product.isFeatured
+                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'
+                  : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
+              }`}
+              title={product.isFeatured ? 'Remover dos Destaques' : 'Destacar na Landing Page'}
+            >
+              <Star className={`w-3.5 h-3.5 ${product.isFeatured ? 'fill-current' : ''}`} />
+              Destaque
+            </button>
+            <button
+              onClick={onToggleShowOnProducts}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                product.showOnProducts
+                  ? 'bg-primary/20 text-primary border-primary/40'
+                  : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
+              }`}
+              title={product.showOnProducts ? 'Ocultar de Nossos Produtos' : 'Exibir em Nossos Produtos'}
+            >
+              <Package className="w-3.5 h-3.5" />
+              Nossos Produtos
+            </button>
+          </div>
         </div>
+
 
         {/* Actions */}
         <div className="flex flex-col gap-1">

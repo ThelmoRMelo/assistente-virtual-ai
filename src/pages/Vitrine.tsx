@@ -23,6 +23,8 @@ interface Product {
   payment_link: string | null;
   tenant_id: string | null;
   has_gallery: boolean;
+  is_featured: boolean;
+  show_on_products: boolean;
 }
 
 interface StorefrontData {
@@ -125,7 +127,7 @@ export default function Vitrine() {
       // Fetch active products
       let productsQuery = supabase
         .from('products')
-        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery')
+        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, show_on_products')
         .eq('active', true)
         .order('created_at', { ascending: false });
       
@@ -169,28 +171,19 @@ export default function Vitrine() {
     return grouped;
   }, [products]);
 
-  // Identify main categories
-  const coursesProducts = useMemo(() => 
-    products.filter(p => 
-      p.category?.toLowerCase().includes('curso') || 
-      p.category?.toLowerCase().includes('treinamento') ||
-      p.category?.toLowerCase().includes('educação')
-    ), [products]
+  // Featured products (Destaques) — independent from "Nossos Produtos"
+  const featuredProducts = useMemo(
+    () => products.filter(p => p.is_featured),
+    [products]
   );
 
-  const appsProducts = useMemo(() => 
-    products.filter(p => 
-      p.category?.toLowerCase().includes('app') || 
-      p.category?.toLowerCase().includes('software') ||
-      p.category?.toLowerCase().includes('sistema')
-    ), [products]
+  // Nossos Produtos — controlled independently via show_on_products
+  const showcaseProducts = useMemo(
+    () => products.filter(p => p.show_on_products),
+    [products]
   );
 
-  const otherProducts = useMemo(() => 
-    products.filter(p => 
-      !coursesProducts.includes(p) && !appsProducts.includes(p)
-    ), [products, coursesProducts, appsProducts]
-  );
+
 
   // Apply theme dynamically
   useEffect(() => {
@@ -280,41 +273,22 @@ export default function Vitrine() {
           </div>
         ) : (
           <>
-            {/* Featured/Courses section */}
-            {coursesProducts.length > 0 ? (
-              <ProductSection
-                title="Cursos"
-                products={coursesProducts}
-                theme={theme}
-                onProductClick={handleProductClick}
-                layout="featured"
-              />
-            ) : products.length > 0 && (
+            {/* Destaques — controlado por is_featured */}
+            {featuredProducts.length > 0 && (
               <ProductSection
                 title="Destaques"
-                products={products.slice(0, 3)}
+                products={featuredProducts}
                 theme={theme}
                 onProductClick={handleProductClick}
                 layout="featured"
               />
             )}
 
-            {/* Apps section */}
-            {appsProducts.length > 0 && (
+            {/* Nossos Produtos — controlado por show_on_products */}
+            {showcaseProducts.length > 0 && (
               <ProductSection
-                title="Aplicativos"
-                products={appsProducts}
-                theme={theme}
-                onProductClick={handleProductClick}
-                layout="grid"
-              />
-            )}
-
-            {/* Other products */}
-            {otherProducts.length > 0 && (
-              <ProductSection
-                title={coursesProducts.length > 0 || appsProducts.length > 0 ? "Outros Produtos" : "Nossos Produtos"}
-                products={otherProducts}
+                title="Nossos Produtos"
+                products={showcaseProducts}
                 theme={theme}
                 onProductClick={handleProductClick}
                 layout="grid"
@@ -322,6 +296,7 @@ export default function Vitrine() {
             )}
           </>
         )}
+
 
         {/* Theme showcase */}
         <ThemeShowcase theme={theme} />

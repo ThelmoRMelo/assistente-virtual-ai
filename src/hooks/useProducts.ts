@@ -18,6 +18,8 @@ export interface SupabaseProduct {
   payment_link: string | null;
   active: boolean;
   has_gallery: boolean;
+  is_featured: boolean;
+  show_on_products: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +39,8 @@ export interface Product {
   linkPagamento: string;
   ativo: boolean;
   hasGallery: boolean;
+  isFeatured: boolean;
+  showOnProducts: boolean;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
@@ -60,6 +64,8 @@ function toUIProduct(p: SupabaseProduct): Product {
     linkPagamento: p.payment_link || '',
     ativo: p.active,
     hasGallery: p.has_gallery || false,
+    isFeatured: p.is_featured ?? false,
+    showOnProducts: p.show_on_products ?? true,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     // Legado
@@ -84,7 +90,9 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.linkPagamento !== undefined) result.payment_link = p.linkPagamento;
   if (p.ativo !== undefined) result.active = p.ativo;
   if (p.hasGallery !== undefined) result.has_gallery = p.hasGallery;
-  
+  if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
+  if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
+
   return result;
 }
 
@@ -173,6 +181,8 @@ export function useProducts() {
         image_url: product.imagemUrl || null,
         payment_link: product.linkPagamento || null,
         active: product.ativo ?? true,
+        is_featured: product.isFeatured ?? false,
+        show_on_products: product.showOnProducts ?? true,
       };
       
       const { data, error: insertError } = await supabase
