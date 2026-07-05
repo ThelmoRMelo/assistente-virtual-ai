@@ -18,6 +18,8 @@ export interface SupabaseProduct {
   payment_link: string | null;
   active: boolean;
   has_gallery: boolean;
+  is_featured: boolean;
+  show_on_products: boolean;
   created_at: string;
   updated_at: string;
 }
