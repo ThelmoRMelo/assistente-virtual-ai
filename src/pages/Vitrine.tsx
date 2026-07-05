@@ -127,7 +127,7 @@ export default function Vitrine() {
       // Fetch active products
       let productsQuery = supabase
         .from('products')
-        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery')
+        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, show_on_products')
         .eq('active', true)
         .order('created_at', { ascending: false });
       
