@@ -261,6 +261,38 @@ export function useProducts() {
     }
   };
 
+  // Definir produto Hero (apenas um por vez, marca também como destaque)
+  const setHeroProduct = async (id: string) => {
+    try {
+      // Remove hero de todos os outros
+      const { error: clearError } = await supabase
+        .from('products')
+        .update({ is_hero: false })
+        .neq('id', id);
+      if (clearError) {
+        console.error('[useProducts] Erro ao limpar hero:', clearError);
+      }
+      // Define este como hero + featured
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ is_hero: true, is_featured: true })
+        .eq('id', id);
+      if (updateError) {
+        console.error('[useProducts] Erro ao definir hero:', updateError);
+        toast.error('Erro ao definir Hero');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('[useProducts] Erro inesperado:', err);
+      return false;
+    }
+  };
+
+  const unsetHeroProduct = async (id: string) => {
+    return await updateProduct(id, { isHero: false });
+  };
+
   // Apenas produtos ativos
   const activeProducts = products.filter(p => p.ativo);
   const inactiveProducts = products.filter(p => !p.ativo);
@@ -275,5 +307,7 @@ export function useProducts() {
     addProduct,
     updateProduct,
     deleteProduct,
+    setHeroProduct,
+    unsetHeroProduct,
   };
 }
