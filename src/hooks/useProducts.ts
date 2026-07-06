@@ -94,6 +94,7 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.ativo !== undefined) result.active = p.ativo;
   if (p.hasGallery !== undefined) result.has_gallery = p.hasGallery;
   if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
+  if (p.isHero !== undefined) result.is_hero = p.isHero;
   if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
 
   return result;
