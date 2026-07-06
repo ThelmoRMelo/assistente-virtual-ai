@@ -186,6 +186,7 @@ export function useProducts() {
         payment_link: product.linkPagamento || null,
         active: product.ativo ?? true,
         is_featured: product.isFeatured ?? false,
+        is_hero: product.isHero ?? false,
         show_on_products: product.showOnProducts ?? true,
       };
       
