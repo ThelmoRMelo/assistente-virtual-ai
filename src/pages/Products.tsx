@@ -610,11 +610,12 @@ interface ProductCardProps {
   onReviews: () => void;
   onToggleFeatured: () => void;
   onToggleShowOnProducts: () => void;
+  onToggleHero: () => void;
   formatPrice: (value: number) => string;
   inactive?: boolean;
 }
 
-function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, onToggleShowOnProducts, formatPrice, inactive }: ProductCardProps) {
+function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, onToggleShowOnProducts, onToggleHero, formatPrice, inactive }: ProductCardProps) {
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     // Link de preview (necessário para o WhatsApp gerar o banner com Open Graph)
@@ -632,7 +633,7 @@ function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, o
   };
 
   return (
-    <div className={`glass-card rounded-xl p-4 ${inactive ? 'opacity-60' : ''}`}>
+    <div className={`glass-card rounded-xl p-4 ${inactive ? 'opacity-60' : ''} ${product.isHero ? 'ring-2 ring-yellow-500/60' : ''}`}>
       <div className="flex gap-3">
         {/* Image */}
         {product.imagemUrl && (
@@ -649,6 +650,12 @@ function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, o
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
+            {product.isHero && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/25 text-yellow-300 font-bold flex items-center gap-1 uppercase tracking-wide">
+                <Crown className="w-3 h-3 fill-current" />
+                Hero
+              </span>
+            )}
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
               {product.categoria || 'Produtos'}
             </span>
@@ -675,33 +682,31 @@ function ProductCard({ product, onEdit, onDelete, onReviews, onToggleFeatured, o
           )}
 
           {/* Visibility toggles */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <button
-              onClick={onToggleFeatured}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                product.isFeatured
-                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'
-                  : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
-              }`}
-              title={product.isFeatured ? 'Remover dos Destaques' : 'Destacar na Landing Page'}
-            >
-              <Star className={`w-3.5 h-3.5 ${product.isFeatured ? 'fill-current' : ''}`} />
-              Destaque
-            </button>
-            <button
-              onClick={onToggleShowOnProducts}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                product.showOnProducts
-                  ? 'bg-primary/20 text-primary border-primary/40'
-                  : 'bg-muted/40 text-muted-foreground border-transparent hover:bg-muted'
-              }`}
-              title={product.showOnProducts ? 'Ocultar de Nossos Produtos' : 'Exibir em Nossos Produtos'}
-            >
-              <Package className="w-3.5 h-3.5" />
-              Nossos Produtos
-            </button>
+          <div className="flex flex-col gap-2 mt-3 p-2.5 rounded-lg bg-muted/30">
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="flex items-center gap-2 text-xs font-medium">
+                <Crown className={`w-3.5 h-3.5 ${product.isHero ? 'text-yellow-400 fill-current' : 'text-muted-foreground'}`} />
+                Produto Hero
+              </span>
+              <Switch checked={product.isHero} onCheckedChange={onToggleHero} />
+            </label>
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="flex items-center gap-2 text-xs font-medium">
+                <Star className={`w-3.5 h-3.5 ${product.isFeatured ? 'text-yellow-400 fill-current' : 'text-muted-foreground'}`} />
+                Destaque
+              </span>
+              <Switch checked={product.isFeatured} onCheckedChange={onToggleFeatured} />
+            </label>
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="flex items-center gap-2 text-xs font-medium">
+                <Package className={`w-3.5 h-3.5 ${product.showOnProducts ? 'text-primary' : 'text-muted-foreground'}`} />
+                Nossos Produtos
+              </span>
+              <Switch checked={product.showOnProducts} onCheckedChange={onToggleShowOnProducts} />
+            </label>
           </div>
         </div>
+
 
 
         {/* Actions */}
