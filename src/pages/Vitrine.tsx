@@ -24,8 +24,10 @@ interface Product {
   tenant_id: string | null;
   has_gallery: boolean;
   is_featured: boolean;
+  is_hero: boolean;
   show_on_products: boolean;
 }
+
 
 interface StorefrontData {
   id: string;
@@ -127,7 +129,7 @@ export default function Vitrine() {
       // Fetch active products
       let productsQuery = supabase
         .from('products')
-        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, show_on_products')
+        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, is_hero, show_on_products')
         .eq('active', true)
         .order('created_at', { ascending: false });
       
@@ -172,10 +174,13 @@ export default function Vitrine() {
   }, [products]);
 
   // Featured products (Destaques) — independent from "Nossos Produtos"
-  const featuredProducts = useMemo(
-    () => products.filter(p => p.is_featured),
-    [products]
-  );
+  // Hero product (is_hero) is placed first; fallback to first featured when none is set.
+  const featuredProducts = useMemo(() => {
+    const featured = products.filter(p => p.is_featured);
+    const hero = featured.find(p => p.is_hero);
+    if (!hero) return featured;
+    return [hero, ...featured.filter(p => p.id !== hero.id)];
+  }, [products]);
 
   // Nossos Produtos — controlled independently via show_on_products
   const showcaseProducts = useMemo(

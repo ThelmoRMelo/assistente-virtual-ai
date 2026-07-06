@@ -19,6 +19,7 @@ export interface SupabaseProduct {
   active: boolean;
   has_gallery: boolean;
   is_featured: boolean;
+  is_hero: boolean;
   show_on_products: boolean;
   created_at: string;
   updated_at: string;
@@ -40,6 +41,7 @@ export interface Product {
   ativo: boolean;
   hasGallery: boolean;
   isFeatured: boolean;
+  isHero: boolean;
   showOnProducts: boolean;
   createdAt: string;
   updatedAt: string;
@@ -65,6 +67,7 @@ function toUIProduct(p: SupabaseProduct): Product {
     ativo: p.active,
     hasGallery: p.has_gallery || false,
     isFeatured: p.is_featured ?? false,
+    isHero: p.is_hero ?? false,
     showOnProducts: p.show_on_products ?? true,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
@@ -91,6 +94,7 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.ativo !== undefined) result.active = p.ativo;
   if (p.hasGallery !== undefined) result.has_gallery = p.hasGallery;
   if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
+  if (p.isHero !== undefined) result.is_hero = p.isHero;
   if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
 
   return result;
@@ -182,6 +186,7 @@ export function useProducts() {
         payment_link: product.linkPagamento || null,
         active: product.ativo ?? true,
         is_featured: product.isFeatured ?? false,
+        is_hero: product.isHero ?? false,
         show_on_products: product.showOnProducts ?? true,
       };
       
@@ -256,6 +261,38 @@ export function useProducts() {
     }
   };
 
+  // Definir produto Hero (apenas um por vez, marca também como destaque)
+  const setHeroProduct = async (id: string) => {
+    try {
+      // Remove hero de todos os outros
+      const { error: clearError } = await supabase
+        .from('products')
+        .update({ is_hero: false })
+        .neq('id', id);
+      if (clearError) {
+        console.error('[useProducts] Erro ao limpar hero:', clearError);
+      }
+      // Define este como hero + featured
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ is_hero: true, is_featured: true })
+        .eq('id', id);
+      if (updateError) {
+        console.error('[useProducts] Erro ao definir hero:', updateError);
+        toast.error('Erro ao definir Hero');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('[useProducts] Erro inesperado:', err);
+      return false;
+    }
+  };
+
+  const unsetHeroProduct = async (id: string) => {
+    return await updateProduct(id, { isHero: false });
+  };
+
   // Apenas produtos ativos
   const activeProducts = products.filter(p => p.ativo);
   const inactiveProducts = products.filter(p => !p.ativo);
@@ -270,5 +307,7 @@ export function useProducts() {
     addProduct,
     updateProduct,
     deleteProduct,
+    setHeroProduct,
+    unsetHeroProduct,
   };
 }
