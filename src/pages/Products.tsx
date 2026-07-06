@@ -552,8 +552,9 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
-                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured })}
+                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured, ...(product.isFeatured && product.isHero ? { isHero: false } : {}) })}
                 onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
+                onToggleHero={() => product.isHero ? unsetHeroProduct(product.id) : setHeroProduct(product.id)}
                 formatPrice={formatPrice}
               />
             ))}
