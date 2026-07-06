@@ -73,17 +73,24 @@ export function ProductSection({
               showBestSeller={index === 0}
             />
           ))}
-          
+
           {products.length > 1 && (
-            <div className="grid md:grid-cols-2 gap-4">
-              {products.slice(1, 3).map((product) => (
-                <ProductCard
+            <div
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-4 px-4"
+              style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}
+            >
+              {products.slice(1).map((product) => (
+                <div
                   key={product.id}
-                  product={product}
-                  theme={theme}
-                  variant="standard"
-                  onProductClick={onProductClick}
-                />
+                  className="snap-start shrink-0 w-[80%] sm:w-[45%] lg:w-[32%]"
+                >
+                  <ProductCard
+                    product={product}
+                    theme={theme}
+                    variant="standard"
+                    onProductClick={onProductClick}
+                  />
+                </div>
               ))}
             </div>
           )}
