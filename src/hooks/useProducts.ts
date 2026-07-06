@@ -19,6 +19,7 @@ export interface SupabaseProduct {
   active: boolean;
   has_gallery: boolean;
   is_featured: boolean;
+  is_hero: boolean;
   show_on_products: boolean;
   created_at: string;
   updated_at: string;
