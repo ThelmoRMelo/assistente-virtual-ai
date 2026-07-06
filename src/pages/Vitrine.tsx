@@ -24,6 +24,13 @@ interface Product {
   tenant_id: string | null;
   has_gallery: boolean;
   is_featured: boolean;
+  is_hero: boolean;
+  show_on_products: boolean;
+}
+
+// (dedupe helper removed below)
+type _oldEnd = {
+  is_featured: boolean;
   show_on_products: boolean;
 }
 
