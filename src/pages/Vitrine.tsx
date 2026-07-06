@@ -28,11 +28,6 @@ interface Product {
   show_on_products: boolean;
 }
 
-// (dedupe helper removed below)
-type _oldEnd = {
-  is_featured: boolean;
-  show_on_products: boolean;
-}
 
 interface StorefrontData {
   id: string;
