@@ -175,6 +175,7 @@ export default function Products() {
       ativo: form.ativo,
       hasGallery: form.galleryImages.length > 0,
       isFeatured: editingId ? (products.find(p => p.id === editingId)?.isFeatured ?? false) : false,
+      isHero: editingId ? (products.find(p => p.id === editingId)?.isHero ?? false) : false,
       showOnProducts: editingId ? (products.find(p => p.id === editingId)?.showOnProducts ?? true) : true,
     };
 
