@@ -67,6 +67,7 @@ function toUIProduct(p: SupabaseProduct): Product {
     ativo: p.active,
     hasGallery: p.has_gallery || false,
     isFeatured: p.is_featured ?? false,
+    isHero: p.is_hero ?? false,
     showOnProducts: p.show_on_products ?? true,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
