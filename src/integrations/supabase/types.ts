@@ -455,6 +455,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_featured: boolean
+          is_hero: boolean
           long_description: string | null
           min_price_allowed: number | null
           name: string
@@ -475,6 +476,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_featured?: boolean
+          is_hero?: boolean
           long_description?: string | null
           min_price_allowed?: number | null
           name: string
@@ -495,6 +497,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_featured?: boolean
+          is_hero?: boolean
           long_description?: string | null
           min_price_allowed?: number | null
           name?: string
