@@ -41,6 +41,7 @@ export interface Product {
   ativo: boolean;
   hasGallery: boolean;
   isFeatured: boolean;
+  isHero: boolean;
   showOnProducts: boolean;
   createdAt: string;
   updatedAt: string;
