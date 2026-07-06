@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2, Images, Star } from 'lucide-react';
+import { Plus, Trash2, Download, Package, Edit2, X, Image, Eye, EyeOff, Upload, Loader2, Share2, Images, Star, Crown } from 'lucide-react';
 import { ProductReviewsDialog } from '@/components/reviews/ProductReviewsDialog';
 import { PageHeader } from '@/components/PageHeader';
 import { BottomNav } from '@/components/BottomNav';
