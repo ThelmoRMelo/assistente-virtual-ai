@@ -1,5 +1,5 @@
 // useProducts.ts - Hook para CRUD de produtos no Supabase
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -261,37 +261,77 @@ export function useProducts() {
     }
   };
 
+  // Fila por produto para evitar race conditions em cliques rápidos
+  const queuesRef = useRef<Map<string, Promise<unknown>>>(new Map());
+  const enqueue = useCallback((key: string, task: () => Promise<unknown>) => {
+    const prev = queuesRef.current.get(key) ?? Promise.resolve();
+    const next = prev.catch(() => {}).then(task);
+    queuesRef.current.set(key, next);
+    return next;
+  }, []);
+
+  // Toggle otimista de flags (destaque / nossos produtos)
+  const toggleProductFlags = useCallback(
+    (id: string, patch: Partial<Product>) => {
+      let snapshot: Product | undefined;
+      setProducts((prev) => {
+        snapshot = prev.find((p) => p.id === id);
+        return prev.map((p) => (p.id === id ? { ...p, ...patch } : p));
+      });
+
+      return enqueue(id, async () => {
+        const supabaseData = toSupabaseProduct(patch);
+        const { error: updateError } = await supabase
+          .from('products')
+          .update(supabaseData)
+          .eq('id', id);
+
+        if (updateError) {
+          console.error('[useProducts] Erro ao atualizar flag:', updateError);
+          if (snapshot) {
+            const restore = snapshot;
+            setProducts((prev) => prev.map((p) => (p.id === id ? restore : p)));
+          }
+          toast.error('Não foi possível salvar a alteração');
+        }
+      });
+    },
+    [enqueue],
+  );
+
   // Definir produto Hero (apenas um por vez, marca também como destaque)
   const setHeroProduct = async (id: string) => {
-    try {
-      // Remove hero de todos os outros
+    let snapshot: Product[] = [];
+    setProducts((prev) => {
+      snapshot = prev;
+      return prev.map((p) =>
+        p.id === id ? { ...p, isHero: true, isFeatured: true } : p.isHero ? { ...p, isHero: false } : p,
+      );
+    });
+
+    return enqueue('hero', async () => {
       const { error: clearError } = await supabase
         .from('products')
         .update({ is_hero: false })
         .neq('id', id);
-      if (clearError) {
-        console.error('[useProducts] Erro ao limpar hero:', clearError);
-      }
-      // Define este como hero + featured
       const { error: updateError } = await supabase
         .from('products')
         .update({ is_hero: true, is_featured: true })
         .eq('id', id);
-      if (updateError) {
-        console.error('[useProducts] Erro ao definir hero:', updateError);
-        toast.error('Erro ao definir Hero');
+      if (clearError || updateError) {
+        console.error('[useProducts] Erro ao definir hero:', clearError || updateError);
+        setProducts(snapshot);
+        toast.error('Não foi possível salvar a alteração');
         return false;
       }
       return true;
-    } catch (err) {
-      console.error('[useProducts] Erro inesperado:', err);
-      return false;
-    }
+    });
   };
 
   const unsetHeroProduct = async (id: string) => {
-    return await updateProduct(id, { isHero: false });
+    return await toggleProductFlags(id, { isHero: false });
   };
+
 
   // Apenas produtos ativos
   const activeProducts = products.filter(p => p.ativo);
@@ -309,5 +349,6 @@ export function useProducts() {
     deleteProduct,
     setHeroProduct,
     unsetHeroProduct,
+    toggleProductFlags,
   };
 }
