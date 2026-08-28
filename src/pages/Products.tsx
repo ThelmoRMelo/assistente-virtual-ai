@@ -552,8 +552,8 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
-                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured, ...(product.isFeatured && product.isHero ? { isHero: false } : {}) })}
-                onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
+                onToggleFeatured={() => toggleProductFlags(product.id, { isFeatured: !product.isFeatured, ...(product.isFeatured && product.isHero ? { isHero: false } : {}) })}
+                onToggleShowOnProducts={() => toggleProductFlags(product.id, { showOnProducts: !product.showOnProducts })}
                 onToggleHero={() => product.isHero ? unsetHeroProduct(product.id) : setHeroProduct(product.id)}
                 formatPrice={formatPrice}
               />
@@ -579,8 +579,8 @@ export default function Products() {
                 onEdit={() => openEditForm(product)}
                 onDelete={() => handleDelete(product.id)}
                 onReviews={() => setReviewsProduct({ id: product.id, name: product.nome })}
-                onToggleFeatured={() => updateProduct(product.id, { isFeatured: !product.isFeatured, ...(product.isFeatured && product.isHero ? { isHero: false } : {}) })}
-                onToggleShowOnProducts={() => updateProduct(product.id, { showOnProducts: !product.showOnProducts })}
+                onToggleFeatured={() => toggleProductFlags(product.id, { isFeatured: !product.isFeatured, ...(product.isFeatured && product.isHero ? { isHero: false } : {}) })}
+                onToggleShowOnProducts={() => toggleProductFlags(product.id, { showOnProducts: !product.showOnProducts })}
                 onToggleHero={() => product.isHero ? unsetHeroProduct(product.id) : setHeroProduct(product.id)}
                 formatPrice={formatPrice}
                 inactive

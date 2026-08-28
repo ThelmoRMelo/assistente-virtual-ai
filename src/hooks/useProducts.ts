@@ -349,5 +349,6 @@ export function useProducts() {
     deleteProduct,
     setHeroProduct,
     unsetHeroProduct,
+    toggleProductFlags,
   };
 }
