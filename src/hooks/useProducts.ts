@@ -1,5 +1,5 @@
 // useProducts.ts - Hook para CRUD de produtos no Supabase
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
