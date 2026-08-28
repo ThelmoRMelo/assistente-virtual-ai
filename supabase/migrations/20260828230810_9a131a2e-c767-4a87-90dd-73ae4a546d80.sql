@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.products_unique_hero_per_tenant;

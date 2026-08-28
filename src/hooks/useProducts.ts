@@ -100,6 +100,8 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   return result;
 }
 
+export const MAX_HERO_PRODUCTS = 5;
+
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,33 +301,17 @@ export function useProducts() {
     [enqueue],
   );
 
-  // Definir produto Hero (apenas um por vez, marca também como destaque)
+  // Definir produto Hero (até MAX_HERO_PRODUCTS simultâneos)
   const setHeroProduct = async (id: string) => {
-    let snapshot: Product[] = [];
-    setProducts((prev) => {
-      snapshot = prev;
-      return prev.map((p) =>
-        p.id === id ? { ...p, isHero: true, isFeatured: true } : p.isHero ? { ...p, isHero: false } : p,
+    const currentHeroes = products.filter((p) => p.isHero && p.id !== id);
+    if (currentHeroes.length >= MAX_HERO_PRODUCTS) {
+      toast.error(
+        `Limite de ${MAX_HERO_PRODUCTS} produtos Hero atingido. Desative um deles para adicionar outro.`,
       );
-    });
-
-    return enqueue('hero', async () => {
-      const { error: clearError } = await supabase
-        .from('products')
-        .update({ is_hero: false })
-        .neq('id', id);
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ is_hero: true, is_featured: true })
-        .eq('id', id);
-      if (clearError || updateError) {
-        console.error('[useProducts] Erro ao definir hero:', clearError || updateError);
-        setProducts(snapshot);
-        toast.error('Não foi possível salvar a alteração');
-        return false;
-      }
-      return true;
-    });
+      return false;
+    }
+    await toggleProductFlags(id, { isHero: true, isFeatured: true });
+    return true;
   };
 
   const unsetHeroProduct = async (id: string) => {
@@ -349,6 +335,7 @@ export function useProducts() {
     deleteProduct,
     setHeroProduct,
     unsetHeroProduct,
+    heroCount: products.filter((p) => p.isHero).length,
     toggleProductFlags,
   };
 }

@@ -175,12 +175,15 @@ export default function Vitrine() {
 
   // Featured products (Destaques) — independent from "Nossos Produtos"
   // Hero product (is_hero) is placed first; fallback to first featured when none is set.
-  const featuredProducts = useMemo(() => {
-    const featured = products.filter(p => p.is_featured);
-    const hero = featured.find(p => p.is_hero);
-    if (!hero) return featured;
-    return [hero, ...featured.filter(p => p.id !== hero.id)];
-  }, [products]);
+  const heroProducts = useMemo(
+    () => products.filter(p => p.is_hero && p.is_featured).slice(0, 5),
+    [products]
+  );
+
+  const featuredProducts = useMemo(
+    () => products.filter(p => p.is_featured && !heroProducts.some(h => h.id === p.id)),
+    [products, heroProducts]
+  );
 
   // Nossos Produtos — controlled independently via show_on_products
   const showcaseProducts = useMemo(
@@ -279,10 +282,11 @@ export default function Vitrine() {
         ) : (
           <>
             {/* Destaques — controlado por is_featured */}
-            {featuredProducts.length > 0 && (
+            {(featuredProducts.length > 0 || heroProducts.length > 0) && (
               <ProductSection
                 title="Destaques"
                 products={featuredProducts}
+                heroProducts={heroProducts}
                 theme={theme}
                 onProductClick={handleProductClick}
                 layout="featured"
