@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from './ProductCard';
+import { HeroCarousel } from './HeroCarousel';
 import type { ThemeConfig } from '@/lib/themes';
 
 interface Product {
@@ -24,6 +25,8 @@ interface ProductSectionProps {
   layout?: 'grid' | 'featured' | 'list';
   showViewAll?: boolean;
   onViewAll?: () => void;
+  /** Produtos Hero (até 5) exibidos em carrossel no topo do layout "featured" */
+  heroProducts?: Product[];
 }
 
 export function ProductSection({ 
@@ -33,9 +36,10 @@ export function ProductSection({
   onProductClick,
   layout = 'grid',
   showViewAll = true,
-  onViewAll
+  onViewAll,
+  heroProducts = []
 }: ProductSectionProps) {
-  if (products.length === 0) return null;
+  if (products.length === 0 && heroProducts.length === 0) return null;
 
   return (
     <section className="py-8">
@@ -63,23 +67,31 @@ export function ProductSection({
       {/* Products */}
       {layout === 'featured' ? (
         <div className="space-y-6">
-          {products.slice(0, 1).map((product, index) => (
-            <ProductCard
-              key={product.id}
-              product={product}
+          {heroProducts.length > 0 ? (
+            <HeroCarousel
+              products={heroProducts}
               theme={theme}
-              variant="featured"
               onProductClick={onProductClick}
-              showBestSeller={index === 0}
             />
-          ))}
+          ) : (
+            products.slice(0, 1).map((product, index) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                theme={theme}
+                variant="featured"
+                onProductClick={onProductClick}
+                showBestSeller={index === 0}
+              />
+            ))
+          )}
 
-          {products.length > 1 && (
+          {(heroProducts.length > 0 ? products.length > 0 : products.length > 1) && (
             <div
               className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-4 px-4"
               style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}
             >
-              {products.slice(1).map((product) => (
+              {(heroProducts.length > 0 ? products : products.slice(1)).map((product) => (
                 <div
                   key={product.id}
                   className="snap-start shrink-0 w-[80%] sm:w-[45%] lg:w-[32%]"
