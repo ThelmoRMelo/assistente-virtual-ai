@@ -64,6 +64,8 @@ export default function Products() {
     deleteProduct,
     setHeroProduct,
     unsetHeroProduct,
+    toggleProductFlags,
+
   } = useProducts();
   
   const { uploadImage, uploading } = useProductImageUpload();
