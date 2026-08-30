@@ -448,12 +448,15 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          affiliate_url: string | null
           category: string | null
           created_at: string
           delivery_info: string | null
+          external_product_id: string | null
           has_gallery: boolean
           id: string
           image_url: string | null
+          imported_at: string | null
           is_featured: boolean
           is_hero: boolean
           long_description: string | null
@@ -464,17 +467,22 @@ export type Database = {
           price: number
           short_description: string | null
           show_on_products: boolean
+          source_platform: string | null
+          source_url: string | null
           tenant_id: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          affiliate_url?: string | null
           category?: string | null
           created_at?: string
           delivery_info?: string | null
+          external_product_id?: string | null
           has_gallery?: boolean
           id?: string
           image_url?: string | null
+          imported_at?: string | null
           is_featured?: boolean
           is_hero?: boolean
           long_description?: string | null
@@ -485,17 +493,22 @@ export type Database = {
           price: number
           short_description?: string | null
           show_on_products?: boolean
+          source_platform?: string | null
+          source_url?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          affiliate_url?: string | null
           category?: string | null
           created_at?: string
           delivery_info?: string | null
+          external_product_id?: string | null
           has_gallery?: boolean
           id?: string
           image_url?: string | null
+          imported_at?: string | null
           is_featured?: boolean
           is_hero?: boolean
           long_description?: string | null
@@ -506,6 +519,8 @@ export type Database = {
           price?: number
           short_description?: string | null
           show_on_products?: boolean
+          source_platform?: string | null
+          source_url?: string | null
           tenant_id?: string | null
           updated_at?: string
         }

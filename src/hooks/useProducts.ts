@@ -21,6 +21,11 @@ export interface SupabaseProduct {
   is_featured: boolean;
   is_hero: boolean;
   show_on_products: boolean;
+  source_platform: string | null;
+  external_product_id: string | null;
+  source_url: string | null;
+  affiliate_url: string | null;
+  imported_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +48,11 @@ export interface Product {
   isFeatured: boolean;
   isHero: boolean;
   showOnProducts: boolean;
+  sourcePlatform: string | null;
+  externalProductId: string | null;
+  sourceUrl: string | null;
+  affiliateUrl: string | null;
+  importedAt: string | null;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
