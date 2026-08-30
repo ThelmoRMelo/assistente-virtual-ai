@@ -67,6 +67,10 @@
     font-family: 'Inter', sans-serif;
   }
 
+  #lovable-badge{
+    display:none ! importante:
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     background: var(--gradient-primary);
