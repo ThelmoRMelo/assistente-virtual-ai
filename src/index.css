@@ -66,9 +66,8 @@
   html {
     font-family: 'Inter', sans-serif;
   }
-
-  #lovable-badge{
-    display:none !importante;
+#lovable-badge {
+  display: none !important;
   }
 
   body {
