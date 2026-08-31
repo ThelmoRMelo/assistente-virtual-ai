@@ -255,12 +255,17 @@ export function ProductCard({
   // standard
   return (
     <div className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-glow flex flex-col">
-      <div className="relative h-48 overflow-hidden cursor-pointer" onClick={handleCardClick}>
+      <div
+        className={`relative h-48 overflow-hidden cursor-pointer ${imageFit === 'contain' ? 'p-3 bg-muted/40' : ''}`}
+        onClick={handleCardClick}
+      >
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-110 ${
+              imageFit === 'contain' ? 'object-contain object-center' : 'object-cover'
+            }`}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
