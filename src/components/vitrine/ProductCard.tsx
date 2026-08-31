@@ -25,6 +25,7 @@ interface ProductCardProps {
   variant?: 'featured' | 'standard' | 'compact';
   onProductClick: (productId: string) => void;
   showBestSeller?: boolean;
+  imageFit?: 'cover' | 'contain';
 }
 
 export function ProductCard({
@@ -33,6 +34,7 @@ export function ProductCard({
   variant = 'standard',
   onProductClick,
   showBestSeller = false,
+  imageFit = 'cover',
 }: ProductCardProps) {
   const formatPrice = (price: number) =>
     price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
