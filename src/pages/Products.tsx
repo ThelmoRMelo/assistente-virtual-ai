@@ -36,6 +36,11 @@ interface ProductForm {
   linkPagamento: string;
   ativo: boolean;
   galleryImages: string[];
+  sourcePlatform: string | null;
+  externalProductId: string | null;
+  sourceUrl: string | null;
+  affiliateUrl: string | null;
+  importedAt: string | null;
 }
 
 const emptyForm: ProductForm = {
@@ -51,7 +56,14 @@ const emptyForm: ProductForm = {
   linkPagamento: '',
   ativo: true,
   galleryImages: [],
+  sourcePlatform: null,
+  externalProductId: null,
+  sourceUrl: null,
+  affiliateUrl: null,
+  importedAt: null,
 };
+
+type AddMode = 'manual' | 'link';
 
 export default function Products() {
   const { 
