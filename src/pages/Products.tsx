@@ -90,6 +90,7 @@ export default function Products() {
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [addMode, setAddMode] = useState<AddMode>('manual');
   const [reviewsProduct, setReviewsProduct] = useState<{ id: string; name: string } | null>(null);
 
   // Hook para galeria de imagens
