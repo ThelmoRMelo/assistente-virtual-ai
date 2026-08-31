@@ -79,6 +79,11 @@ function toUIProduct(p: SupabaseProduct): Product {
     isFeatured: p.is_featured ?? false,
     isHero: p.is_hero ?? false,
     showOnProducts: p.show_on_products ?? true,
+    sourcePlatform: p.source_platform ?? null,
+    externalProductId: p.external_product_id ?? null,
+    sourceUrl: p.source_url ?? null,
+    affiliateUrl: p.affiliate_url ?? null,
+    importedAt: p.imported_at ?? null,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     // Legado
