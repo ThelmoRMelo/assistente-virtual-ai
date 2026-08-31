@@ -210,6 +210,11 @@ export function useProducts() {
         is_featured: product.isFeatured ?? false,
         is_hero: product.isHero ?? false,
         show_on_products: product.showOnProducts ?? true,
+        source_platform: product.sourcePlatform ?? null,
+        external_product_id: product.externalProductId ?? null,
+        source_url: product.sourceUrl ?? null,
+        affiliate_url: product.affiliateUrl ?? null,
+        imported_at: product.importedAt ?? null,
       };
       
       const { data, error: insertError } = await supabase
