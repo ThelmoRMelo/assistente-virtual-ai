@@ -111,6 +111,11 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
   if (p.isHero !== undefined) result.is_hero = p.isHero;
   if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
+  if (p.sourcePlatform !== undefined) result.source_platform = p.sourcePlatform;
+  if (p.externalProductId !== undefined) result.external_product_id = p.externalProductId;
+  if (p.sourceUrl !== undefined) result.source_url = p.sourceUrl;
+  if (p.affiliateUrl !== undefined) result.affiliate_url = p.affiliateUrl;
+  if (p.importedAt !== undefined) result.imported_at = p.importedAt;
 
   return result;
 }
