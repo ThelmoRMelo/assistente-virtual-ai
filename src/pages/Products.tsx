@@ -107,6 +107,7 @@ export default function Products() {
     setForm(emptyForm);
     setImagePreview('');
     setEditingId(null);
+    setAddMode('manual');
     setFormMode('add');
   };
 
@@ -124,10 +125,39 @@ export default function Products() {
       linkPagamento: product.linkPagamento || '',
       ativo: product.ativo,
       galleryImages: [], // Será carregado pelo useEffect
+      sourcePlatform: product.sourcePlatform ?? null,
+      externalProductId: product.externalProductId ?? null,
+      sourceUrl: product.sourceUrl ?? null,
+      affiliateUrl: product.affiliateUrl ?? null,
+      importedAt: product.importedAt ?? null,
     });
     setImagePreview(product.imagemUrl || '');
     setEditingId(product.id);
     setFormMode('edit');
+  };
+
+  // Preenche o formulário atual com os dados importados (sem salvar)
+  const handleImported = (data: ImportedProductData, affiliateUrl: string) => {
+    const matchedCategory = categories.find(
+      (c) => data.category && c.toLowerCase() === data.category.toLowerCase(),
+    );
+    setForm((prev) => ({
+      ...prev,
+      nome: data.title ?? prev.nome,
+      preco: data.price != null ? data.price.toFixed(2).replace('.', ',') : prev.preco,
+      categoria: matchedCategory ?? prev.categoria,
+      descricaoCurta: data.shortDescription ?? prev.descricaoCurta,
+      descricaoDetalhada: data.longDescription ?? prev.descricaoDetalhada,
+      imagemUrl: data.coverImage ?? prev.imagemUrl,
+      linkPagamento: affiliateUrl || prev.linkPagamento,
+      galleryImages: data.galleryImages.length > 0 ? data.galleryImages.slice(0, 5) : prev.galleryImages,
+      sourcePlatform: data.platform,
+      externalProductId: data.externalId,
+      sourceUrl: data.sourceUrl,
+      affiliateUrl: affiliateUrl,
+      importedAt: new Date().toISOString(),
+    }));
+    if (data.coverImage) setImagePreview(data.coverImage);
   };
 
   const closeForm = () => {
