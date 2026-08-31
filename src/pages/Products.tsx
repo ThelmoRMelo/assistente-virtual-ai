@@ -226,6 +226,11 @@ export default function Products() {
       isFeatured: editingId ? (products.find(p => p.id === editingId)?.isFeatured ?? false) : false,
       isHero: editingId ? (products.find(p => p.id === editingId)?.isHero ?? false) : false,
       showOnProducts: editingId ? (products.find(p => p.id === editingId)?.showOnProducts ?? true) : true,
+      sourcePlatform: form.sourcePlatform,
+      externalProductId: form.externalProductId,
+      sourceUrl: form.sourceUrl,
+      affiliateUrl: form.affiliateUrl,
+      importedAt: form.importedAt,
     };
 
     try {
