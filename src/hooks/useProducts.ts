@@ -48,11 +48,11 @@ export interface Product {
   isFeatured: boolean;
   isHero: boolean;
   showOnProducts: boolean;
-  sourcePlatform: string | null;
-  externalProductId: string | null;
-  sourceUrl: string | null;
-  affiliateUrl: string | null;
-  importedAt: string | null;
+  sourcePlatform?: string | null;
+  externalProductId?: string | null;
+  sourceUrl?: string | null;
+  affiliateUrl?: string | null;
+  importedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
