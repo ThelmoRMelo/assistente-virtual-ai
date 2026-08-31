@@ -328,6 +328,42 @@ export default function Products() {
             </div>
             
             {/* Nome */}
+            {formMode === 'add' && (
+              <>
+                <div className="flex gap-2 p-1 bg-muted/50 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setAddMode('manual')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      addMode === 'manual' ? 'bg-background shadow-sm' : 'text-muted-foreground'
+                    }`}
+                  >
+                    ✏️ Cadastro manual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddMode('link')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      addMode === 'link' ? 'bg-background shadow-sm' : 'text-muted-foreground'
+                    }`}
+                  >
+                    🔗 Importar por link
+                  </button>
+                </div>
+
+                {addMode === 'link' && (
+                  <ProductImportPanel
+                    onImported={handleImported}
+                    onViewDuplicate={(id) => {
+                      const existing = products.find((p) => p.id === id);
+                      if (existing) openEditForm(existing);
+                    }}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Nome */}
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">
                 Nome do produto *
