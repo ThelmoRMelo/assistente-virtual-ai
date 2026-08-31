@@ -48,11 +48,11 @@ export interface Product {
   isFeatured: boolean;
   isHero: boolean;
   showOnProducts: boolean;
-  sourcePlatform: string | null;
-  externalProductId: string | null;
-  sourceUrl: string | null;
-  affiliateUrl: string | null;
-  importedAt: string | null;
+  sourcePlatform?: string | null;
+  externalProductId?: string | null;
+  sourceUrl?: string | null;
+  affiliateUrl?: string | null;
+  importedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   // Legado (compatibilidade)
@@ -79,6 +79,11 @@ function toUIProduct(p: SupabaseProduct): Product {
     isFeatured: p.is_featured ?? false,
     isHero: p.is_hero ?? false,
     showOnProducts: p.show_on_products ?? true,
+    sourcePlatform: p.source_platform ?? null,
+    externalProductId: p.external_product_id ?? null,
+    sourceUrl: p.source_url ?? null,
+    affiliateUrl: p.affiliate_url ?? null,
+    importedAt: p.imported_at ?? null,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
     // Legado
@@ -106,6 +111,11 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.isFeatured !== undefined) result.is_featured = p.isFeatured;
   if (p.isHero !== undefined) result.is_hero = p.isHero;
   if (p.showOnProducts !== undefined) result.show_on_products = p.showOnProducts;
+  if (p.sourcePlatform !== undefined) result.source_platform = p.sourcePlatform;
+  if (p.externalProductId !== undefined) result.external_product_id = p.externalProductId;
+  if (p.sourceUrl !== undefined) result.source_url = p.sourceUrl;
+  if (p.affiliateUrl !== undefined) result.affiliate_url = p.affiliateUrl;
+  if (p.importedAt !== undefined) result.imported_at = p.importedAt;
 
   return result;
 }
@@ -200,6 +210,11 @@ export function useProducts() {
         is_featured: product.isFeatured ?? false,
         is_hero: product.isHero ?? false,
         show_on_products: product.showOnProducts ?? true,
+        source_platform: product.sourcePlatform ?? null,
+        external_product_id: product.externalProductId ?? null,
+        source_url: product.sourceUrl ?? null,
+        affiliate_url: product.affiliateUrl ?? null,
+        imported_at: product.importedAt ?? null,
       };
       
       const { data, error: insertError } = await supabase

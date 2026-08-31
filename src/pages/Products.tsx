@@ -11,6 +11,8 @@ import { useProducts, Product } from '@/hooks/useProducts';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { useProductGallery } from '@/hooks/useProductGallery';
 import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
+import { ProductImportPanel } from '@/components/products/ProductImportPanel';
+import type { ImportedProductData } from '@/hooks/useProductImport';
 import { toast } from 'sonner';
 
 const categories = [
@@ -36,6 +38,11 @@ interface ProductForm {
   linkPagamento: string;
   ativo: boolean;
   galleryImages: string[];
+  sourcePlatform: string | null;
+  externalProductId: string | null;
+  sourceUrl: string | null;
+  affiliateUrl: string | null;
+  importedAt: string | null;
 }
 
 const emptyForm: ProductForm = {
@@ -51,7 +58,14 @@ const emptyForm: ProductForm = {
   linkPagamento: '',
   ativo: true,
   galleryImages: [],
+  sourcePlatform: null,
+  externalProductId: null,
+  sourceUrl: null,
+  affiliateUrl: null,
+  importedAt: null,
 };
+
+type AddMode = 'manual' | 'link';
 
 export default function Products() {
   const { 
@@ -76,6 +90,7 @@ export default function Products() {
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [addMode, setAddMode] = useState<AddMode>('manual');
   const [reviewsProduct, setReviewsProduct] = useState<{ id: string; name: string } | null>(null);
 
   // Hook para galeria de imagens
@@ -95,6 +110,7 @@ export default function Products() {
     setForm(emptyForm);
     setImagePreview('');
     setEditingId(null);
+    setAddMode('manual');
     setFormMode('add');
   };
 
@@ -112,10 +128,39 @@ export default function Products() {
       linkPagamento: product.linkPagamento || '',
       ativo: product.ativo,
       galleryImages: [], // Será carregado pelo useEffect
+      sourcePlatform: product.sourcePlatform ?? null,
+      externalProductId: product.externalProductId ?? null,
+      sourceUrl: product.sourceUrl ?? null,
+      affiliateUrl: product.affiliateUrl ?? null,
+      importedAt: product.importedAt ?? null,
     });
     setImagePreview(product.imagemUrl || '');
     setEditingId(product.id);
     setFormMode('edit');
+  };
+
+  // Preenche o formulário atual com os dados importados (sem salvar)
+  const handleImported = (data: ImportedProductData, affiliateUrl: string) => {
+    const matchedCategory = categories.find(
+      (c) => data.category && c.toLowerCase() === data.category.toLowerCase(),
+    );
+    setForm((prev) => ({
+      ...prev,
+      nome: data.title ?? prev.nome,
+      preco: data.price != null ? data.price.toFixed(2).replace('.', ',') : prev.preco,
+      categoria: matchedCategory ?? prev.categoria,
+      descricaoCurta: data.shortDescription ?? prev.descricaoCurta,
+      descricaoDetalhada: data.longDescription ?? prev.descricaoDetalhada,
+      imagemUrl: data.coverImage ?? prev.imagemUrl,
+      linkPagamento: affiliateUrl || prev.linkPagamento,
+      galleryImages: data.galleryImages.length > 0 ? data.galleryImages.slice(0, 5) : prev.galleryImages,
+      sourcePlatform: data.platform,
+      externalProductId: data.externalId,
+      sourceUrl: data.sourceUrl,
+      affiliateUrl: affiliateUrl,
+      importedAt: new Date().toISOString(),
+    }));
+    if (data.coverImage) setImagePreview(data.coverImage);
   };
 
   const closeForm = () => {
@@ -181,6 +226,11 @@ export default function Products() {
       isFeatured: editingId ? (products.find(p => p.id === editingId)?.isFeatured ?? false) : false,
       isHero: editingId ? (products.find(p => p.id === editingId)?.isHero ?? false) : false,
       showOnProducts: editingId ? (products.find(p => p.id === editingId)?.showOnProducts ?? true) : true,
+      sourcePlatform: form.sourcePlatform,
+      externalProductId: form.externalProductId,
+      sourceUrl: form.sourceUrl,
+      affiliateUrl: form.affiliateUrl,
+      importedAt: form.importedAt,
     };
 
     try {
@@ -277,6 +327,42 @@ export default function Products() {
               </button>
             </div>
             
+            {/* Nome */}
+            {formMode === 'add' && (
+              <>
+                <div className="flex gap-2 p-1 bg-muted/50 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setAddMode('manual')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      addMode === 'manual' ? 'bg-background shadow-sm' : 'text-muted-foreground'
+                    }`}
+                  >
+                    ✏️ Cadastro manual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddMode('link')}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      addMode === 'link' ? 'bg-background shadow-sm' : 'text-muted-foreground'
+                    }`}
+                  >
+                    🔗 Importar por link
+                  </button>
+                </div>
+
+                {addMode === 'link' && (
+                  <ProductImportPanel
+                    onImported={handleImported}
+                    onViewDuplicate={(id) => {
+                      const existing = products.find((p) => p.id === id);
+                      if (existing) openEditForm(existing);
+                    }}
+                  />
+                )}
+              </>
+            )}
+
             {/* Nome */}
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">
