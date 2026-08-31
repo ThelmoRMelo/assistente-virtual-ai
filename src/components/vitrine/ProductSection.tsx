@@ -127,6 +127,7 @@ export function ProductSection({
               product={product}
               theme={theme}
               variant="standard"
+              imageFit="contain"
               onProductClick={onProductClick}
             />
           ))}
