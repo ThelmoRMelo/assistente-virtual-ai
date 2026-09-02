@@ -281,11 +281,11 @@ export function ProductCard({
     <div className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-glow flex flex-col">
       
       {/* Product Image */}
-      <div
-        className={`relative h-52 sm:h-56 overflow-hidden cursor-pointer ${
-          imageFit === 'contain' ? 'bg-muted/40' : ''
-        }`}
-        onClick={handleCardClick}
+<div
+  className={`relative aspect-[4/3] w-full overflow-hidden cursor-pointer ${
+    imageFit === 'contain' ? 'bg-muted/40' : ''
+  }`}
+  onClick={handleCardClick}
       >
         {product.image_url ? (
           <img
