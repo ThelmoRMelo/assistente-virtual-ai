@@ -84,7 +84,7 @@ export function ProductCard({
   const benefits = product.short_description?.split('\n').filter((l) => l.trim()) || [];
 
   const ActionButtons = ({ size = 'default' as 'default' | 'lg' | 'sm' }) => (
-    <div className={`flex flex-col sm:flex-row gap-2 w-full`}>
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
       <Button
         size={size}
         variant={hasPaymentLink ? 'outline' : 'default'}
@@ -98,6 +98,7 @@ export function ProductCard({
         Quero saber mais
         <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
+
       {hasPaymentLink && (
         <Button
           size={size}
@@ -113,10 +114,9 @@ export function ProductCard({
 
   if (variant === 'featured') {
     return (
-      <div
-        className="group relative glass-card rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-glow"
-      >
+      <div className="group relative glass-card rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-glow">
         <div className="grid md:grid-cols-2 gap-0">
+
           {/* Content */}
           <div className="p-6 md:p-8 flex flex-col justify-center order-2 md:order-1">
             {showBestSeller && (
@@ -132,6 +132,7 @@ export function ProductCard({
             >
               {product.name}
             </h3>
+
             <ProductRatingSummary productId={product.id} className="mb-4" />
 
             {product.long_description && (
@@ -146,7 +147,9 @@ export function ProductCard({
                 {benefits.slice(0, 6).map((b, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0" />
-                    <span className="line-clamp-1">{b.replace(/^[-•✓✨]/g, '').trim()}</span>
+                    <span className="line-clamp-1">
+                      {b.replace(/^[-•✓✨]/g, '').trim()}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -154,13 +157,17 @@ export function ProductCard({
 
             {/* Avaliações compactas - acima dos botões */}
             <div className="mb-6">
-              <ReviewsSummaryModal productId={product.id} tenantId={product.tenant_id ?? null} />
+              <ReviewsSummaryModal
+                productId={product.id}
+                tenantId={product.tenant_id ?? null}
+              />
             </div>
 
             <div className="flex items-center gap-3 mt-auto">
               <div className="flex-1">
                 <ActionButtons size="lg" />
               </div>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -173,7 +180,10 @@ export function ProductCard({
           </div>
 
           {/* Image */}
-          <div className="relative h-64 md:h-full min-h-[300px] order-1 md:order-2 cursor-pointer" onClick={handleCardClick}>
+          <div
+            className="relative h-64 md:h-full min-h-[300px] order-1 md:order-2 cursor-pointer"
+            onClick={handleCardClick}
+          >
             {product.image_url ? (
               <img
                 src={product.image_url}
@@ -213,7 +223,11 @@ export function ProductCard({
         <div className="flex gap-4 p-4">
           <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
             {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                 <span className="text-xl opacity-50">📦</span>
@@ -228,8 +242,12 @@ export function ProductCard({
             >
               {product.name}
             </h4>
+
             <ProductRatingSummary productId={product.id} className="mt-0.5" />
-            <span className="text-sm font-bold text-primary block mt-1">{formatPrice(product.price)}</span>
+
+            <span className="text-sm font-bold text-primary block mt-1">
+              {formatPrice(product.price)}
+            </span>
           </div>
 
           <div className="flex flex-col items-end justify-between shrink-0 gap-1">
@@ -243,7 +261,13 @@ export function ProductCard({
                 Adquirir
               </Button>
             )}
-            <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleShare}>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-7 h-7"
+              onClick={handleShare}
+            >
               <Share2 className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -255,16 +279,22 @@ export function ProductCard({
   // standard
   return (
     <div className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-glow flex flex-col">
+      
+      {/* Product Image */}
       <div
-        className={`relative h-48 overflow-hidden cursor-pointer ${imageFit === 'contain' ? 'p-3 bg-muted/40' : ''}`}
+        className={`relative h-52 sm:h-56 overflow-hidden cursor-pointer ${
+          imageFit === 'contain' ? 'bg-muted/40' : ''
+        }`}
         onClick={handleCardClick}
       >
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className={`w-full h-full transition-transform duration-500 group-hover:scale-110 ${
-              imageFit === 'contain' ? 'object-contain object-center' : 'object-cover'
+            className={`w-full h-full transition-transform duration-500 ${
+              imageFit === 'contain'
+                ? 'object-contain object-center p-0 scale-[1.05] group-hover:scale-[1.08]'
+                : 'object-cover group-hover:scale-110'
             }`}
           />
         ) : (
@@ -294,6 +324,7 @@ export function ProductCard({
         </Button>
       </div>
 
+      {/* Product Information */}
       <div className="p-5 flex-1 flex flex-col">
         <h4
           className="font-bold text-lg mb-1 cursor-pointer hover:text-primary transition-colors line-clamp-2"
@@ -302,14 +333,20 @@ export function ProductCard({
         >
           {product.name}
         </h4>
+
         <ProductRatingSummary productId={product.id} className="mb-2" />
 
         {benefits.length > 0 && (
           <div className="space-y-1 mb-4">
             {benefits.slice(0, 3).map((b, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div
+                key={i}
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+              >
                 <Check className="w-4 h-4 text-primary shrink-0" />
-                <span className="line-clamp-1">{b.replace(/^[-•✓✨]/g, '').trim()}</span>
+                <span className="line-clamp-1">
+                  {b.replace(/^[-•✓✨]/g, '').trim()}
+                </span>
               </div>
             ))}
           </div>
