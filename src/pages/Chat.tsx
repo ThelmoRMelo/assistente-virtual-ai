@@ -572,6 +572,33 @@ export default function Chat() {
           boxShadow: '0 -8px 32px -8px hsl(230 50% 3% / 0.6)',
         }}
       >
+        {voice.status !== 'idle' && (
+          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 px-4 py-2 rounded-full text-[13px] text-foreground/90 border border-white/10"
+            style={{ background: 'hsl(230 40% 12% / 0.9)' }}
+          >
+            {voice.status === 'recording' ? (
+              <>
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <span className="font-medium">Gravando {formatTimer(voice.seconds)}</span>
+                <span className="text-muted-foreground text-[11px]">/ {formatTimer(voice.maxSeconds)}</span>
+                <button
+                  type="button"
+                  onClick={voice.cancelRecording}
+                  aria-label="Cancelar gravação"
+                  title="Cancelar gravação"
+                  className="ml-auto flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" /> Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span className="font-medium">Transcrevendo...</span>
+              </>
+            )}
+          </div>
+        )}
         <div className="flex gap-2.5 max-w-3xl mx-auto items-center">
           <div
             className="relative flex-1 rounded-full p-[1.5px] transition-all duration-300"
@@ -585,11 +612,33 @@ export default function Chat() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Digite sua mensagem para a ANIA..."
+              placeholder={voice.status === 'recording' ? 'Gravando mensagem de voz...' : 'Digite sua mensagem para a ANIA...'}
               disabled={isTyping}
-              className="flex-1 h-14 w-full rounded-full border-0 px-5 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              className="flex-1 h-14 w-full rounded-full border-0 pl-5 pr-14 text-[15px] text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
               style={{ backgroundColor: chatInputBg || 'hsl(230 40% 10% / 0.95)' }}
             />
+            {voice.isSupported && (
+              <button
+                type="button"
+                onClick={voice.status === 'recording' ? voice.stopRecording : voice.startRecording}
+                disabled={isTyping || voice.status === 'transcribing'}
+                aria-label={voice.status === 'recording' ? 'Parar gravação' : 'Gravar mensagem de voz'}
+                title={voice.status === 'recording' ? 'Parar gravação' : 'Gravar mensagem de voz'}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 disabled:opacity-50"
+                style={{
+                  background: voice.status === 'recording' ? 'hsl(0 80% 55% / 0.2)' : 'transparent',
+                  color: voice.status === 'recording' ? 'hsl(0 85% 65%)' : undefined,
+                }}
+              >
+                {voice.status === 'transcribing' ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : voice.status === 'recording' ? (
+                  <Square className="w-4 h-4 fill-current" />
+                ) : (
+                  <Mic className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            )}
           </div>
           <Button
             onClick={handleSend}
