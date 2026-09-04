@@ -77,6 +77,18 @@ export default function Chat() {
   // re-renders, async timing of addMessage, or multiple effect runs after clearing.
   const initializedConvRef = useRef<string | null>(null);
   const isInitializingRef = useRef(false);
+
+  // Gravação de voz -> transcrição preenche o campo de texto (usuário revisa e envia)
+  const voice = useVoiceRecorder({
+    onTranscript: (text) => {
+      setInputValue((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+      inputRef.current?.focus();
+    },
+    onError: (message) => toast.error(message),
+  });
+  const formatTimer = (total: number) =>
+    `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+
   const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
   
