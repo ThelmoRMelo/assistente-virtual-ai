@@ -534,6 +534,10 @@ export default function Chat() {
                 <div className="text-[15px] leading-relaxed [&_a]:text-[var(--chat-link,inherit)]">
                   <MarkdownMessage content={message.content} />
                 </div>
+                {message.sender === 'bot' && (
+                  <SpeakButton messageId={message.id} text={message.content} />
+                )}
+
                 <span className={`text-[10px] mt-1 block text-right ${
                   message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
                 }`}>
