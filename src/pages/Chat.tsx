@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
 import { CatalogCards } from '@/components/chat/CatalogCards';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
+import { SpeakButton } from '@/components/chat/SpeakButton';
+
 
 const CATALOG_MARKER = '__CATALOG__';
 const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
@@ -534,6 +536,10 @@ export default function Chat() {
                 <div className="text-[15px] leading-relaxed [&_a]:text-[var(--chat-link,inherit)]">
                   <MarkdownMessage content={message.content} />
                 </div>
+                {message.sender === 'bot' && (
+                  <SpeakButton messageId={message.id} text={message.content} />
+                )}
+
                 <span className={`text-[10px] mt-1 block text-right ${
                   message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
                 }`}>
