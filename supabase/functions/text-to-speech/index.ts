@@ -5,7 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 // ---- Configuração de voz (fácil de alterar) ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const TTS_VOICE = 'Ballad'; // voz feminina, calorosa
+const TTS_VOICE = 'Dola'; // voz feminina, calorosa
 const TTS_INSTRUCTIONS =
   'Fale em português do Brasil com uma voz feminina jovem, adolescente, espontânea e muito natural. Soe como uma jovem conversando de verdade, com personalidade e carisma, e não como uma narradora ou assistente virtual lendo um texto. Use entonação expressiva, ritmo conversacional, pequenas pausas naturais e variações sutis de energia. Seja leve, simpática, divertida e acolhedora. Evite monotonia, cadência mecânica, excesso de formalidade e pronúncia artificial.';
 const TTS_FORMAT = 'mp3';
