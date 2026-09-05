@@ -5,7 +5,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 // ---- Configuração de voz (fácil de alterar) ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const TTS_VOICE = 'coral'; // voz feminina, calorosa
+const TTS_VOICE = 'nova'; // voz feminina, calorosa
 const TTS_INSTRUCTIONS =
   'Fale em português do Brasil, com voz feminina jovem, natural, clara, amigável e acolhedora, como uma assistente virtual de vendas. Ritmo natural, sem pressa.';
 const TTS_FORMAT = 'mp3';
