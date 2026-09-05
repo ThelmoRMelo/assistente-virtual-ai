@@ -2,7 +2,6 @@
 // Recebe { text } e devolve { audio: base64 mp3, mimeType }
 // A chave da API nunca sai do servidor.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { encode as base64Encode } from 'https://deno.land/std@0.224.0/encoding/base64.ts';
 
 // ---- Configuração de voz (fácil de alterar) ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
@@ -13,6 +12,16 @@ const TTS_FORMAT = 'mp3';
 // ------------------------------------------------
 
 const MAX_CHARS = 1200;
+
+function base64Encode(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
