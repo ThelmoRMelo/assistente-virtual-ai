@@ -5,9 +5,9 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 // ---- Configuração de voz (fácil de alterar) ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const TTS_VOICE = 'shimmer'; // voz feminina, calorosa
+const TTS_VOICE = 'sage'; // voz feminina, calorosa
 const TTS_INSTRUCTIONS =
-  'Fale em português do Brasil como uma jovem brasileira conversando naturalmente com outra pessoa. Use uma voz feminina jovem, espontânea, calorosa, simpática e expressiva. Varie levemente a entonação e o ritmo conforme o sentido da frase. Faça pausas curtas e naturais entre ideias, sem parecer que está lendo um texto. Evite cadência mecânica, monotonia ou pronúncia excessivamente formal. Demonstre naturalidade, simpatia e personalidade, mantendo clareza e profissionalismo.';
+  'Fale em português do Brasil com uma voz feminina jovem, adolescente, espontânea e muito natural. Soe como uma jovem conversando de verdade, com personalidade e carisma, e não como uma narradora ou assistente virtual lendo um texto. Use entonação expressiva, ritmo conversacional, pequenas pausas naturais e variações sutis de energia. Seja leve, simpática, divertida e acolhedora. Evite monotonia, cadência mecânica, excesso de formalidade e pronúncia artificial.';
 const TTS_FORMAT = 'mp3';
 // ------------------------------------------------
 
