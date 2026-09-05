@@ -3,11 +3,11 @@
 // A chave da API nunca sai do servidor.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-// ---- Configuração de voz (fácil de alterar) ----
+// ---- 🎙️ CONFIGURAÇÃO DE VOZ IGUAL A DOLA ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const TTS_VOICE = 'nova'; // voz feminina, calorosa
+const TTS_VOICE = 'nova'; // Voz feminina, calorosa e suave
 const TTS_INSTRUCTIONS =
-  'Fale em português do Brasil com uma voz feminina jovem, infantil, espontânea e muito natural. Soe como uma criança conversando de verdade, com personalidade e carisma, e não como uma narradora ou assistente virtual lendo um texto. Use entonação expressiva, ritmo conversacional, pequenas pausas naturais e variações sutis de energia. Seja leve, simpática, divertida e acolhedora. Evite monotonia, cadência mecânica, excesso de formalidade e pronúncia artificial.';
+  'Fale em português do Brasil com uma voz feminina, suave, calorosa e acolhedora. Tom jovem-adulto, sereno e expressivo. Fale de forma natural, conversacional, com ritmo calmo e agradável, como uma assistente amigável conversando de verdade. Use entonação leve, pausas naturais e variação de tom. Não soe robótica, nem muito rápida, nem infantil. Seja clara, simpática e atenciosa em cada frase.';
 const TTS_FORMAT = 'mp3';
 // ------------------------------------------------
 
