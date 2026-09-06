@@ -112,7 +112,7 @@ export function SpeakButton({ messageId, text, voice, instructions, speed }: Spe
       if (!base64) throw new Error('sem áudio');
 
       const src = `data:audio/mpeg;base64,${base64}`;
-      audioCache.set(messageId, src);
+      audioCache.set(cacheKey, src);
       const audio = new Audio(src);
       audioRef.current = audio;
       attach(audio);
