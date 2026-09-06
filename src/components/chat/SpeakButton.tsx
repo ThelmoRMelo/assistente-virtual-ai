@@ -29,7 +29,12 @@ export function cleanTextForSpeech(raw: string): string {
 interface SpeakButtonProps {
   messageId: string;
   text: string;
+  /** Configurações de voz já carregadas pela aplicação (sem nova consulta ao banco). */
+  voice?: string | null;
+  instructions?: string | null;
+  speed?: number | null;
 }
+
 
 export function SpeakButton({ messageId, text }: SpeakButtonProps) {
   const [state, setState] = useState<State>('idle');
