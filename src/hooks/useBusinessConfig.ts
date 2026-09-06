@@ -33,6 +33,11 @@ export interface BusinessConfig {
   accent_color: string | null;
   // Ícone oficial (usado em splash, favicon, PWA/manifest)
   official_icon_url?: string | null;
+  // Voz da ANIA (TTS)
+  assistant_voice?: string | null;
+  assistant_voice_style?: string | null;
+  assistant_voice_speed?: number | null;
+
   // Splash screen
   splash_enabled?: boolean | null;
   splash_image_url?: string | null;

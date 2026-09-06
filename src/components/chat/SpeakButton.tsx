@@ -29,9 +29,14 @@ export function cleanTextForSpeech(raw: string): string {
 interface SpeakButtonProps {
   messageId: string;
   text: string;
+  /** Configurações de voz já carregadas pela aplicação (sem nova consulta ao banco). */
+  voice?: string | null;
+  instructions?: string | null;
+  speed?: number | null;
 }
 
-export function SpeakButton({ messageId, text }: SpeakButtonProps) {
+
+export function SpeakButton({ messageId, text, voice, instructions, speed }: SpeakButtonProps) {
   const [state, setState] = useState<State>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -77,7 +82,9 @@ export function SpeakButton({ messageId, text }: SpeakButtonProps) {
       return;
     }
 
-    const cached = audioCache.get(messageId);
+    // Cache por mensagem + configuração de voz atual
+    const cacheKey = `${messageId}|${voice || 'coral'}|${speed ?? 1}|${(instructions || '').length}`;
+    const cached = audioCache.get(cacheKey);
     if (cached) {
       const audio = new Audio(cached);
       audioRef.current = audio;
@@ -92,14 +99,20 @@ export function SpeakButton({ messageId, text }: SpeakButtonProps) {
     setState('loading');
     try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: spoken },
+        body: {
+          text: spoken,
+          ...(voice ? { voice } : {}),
+          ...(instructions ? { instructions } : {}),
+          ...(speed ? { speed } : {}),
+        },
       });
+
       if (error) throw error;
       const base64 = (data as { audio?: string })?.audio;
       if (!base64) throw new Error('sem áudio');
 
       const src = `data:audio/mpeg;base64,${base64}`;
-      audioCache.set(messageId, src);
+      audioCache.set(cacheKey, src);
       const audio = new Audio(src);
       audioRef.current = audio;
       attach(audio);

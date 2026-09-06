@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAniaSettings, type AniaSettings } from '@/hooks/useAniaSettings';
+import { VoiceSettingsSection } from '@/components/ania/VoiceSettingsSection';
 import { toast } from 'sonner';
+
 
 export default function AniaSettingsPage() {
   const { settings, loading, updateSettings } = useAniaSettings();
@@ -76,6 +78,11 @@ export default function AniaSettingsPage() {
             />
           </div>
         </section>
+
+        {/* Voz da ANIA */}
+        <VoiceSettingsSection />
+
+
 
         {/* Prompt mestre */}
         <section className="glass-card rounded-2xl p-5 space-y-4">

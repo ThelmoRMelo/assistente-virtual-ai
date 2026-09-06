@@ -3,15 +3,36 @@
 // A chave da API nunca sai do servidor.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
-// ---- 🎙️ CONFIGURAÇÃO DE VOZ IGUAL A DOLA ----
+// ---- 🎙️ CONFIGURAÇÃO DE VOZ PADRÃO DA ANIA ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const TTS_VOICE = 'nova'; // Voz feminina, calorosa e suave
-const TTS_INSTRUCTIONS =
+const DEFAULT_VOICE = 'coral'; // Voz feminina, calorosa e suave
+const DEFAULT_INSTRUCTIONS =
   'Fale em português do Brasil com uma voz feminina, suave, calorosa e acolhedora. Tom jovem-adulto, sereno e expressivo. Fale de forma natural, conversacional, com ritmo calmo e agradável, como uma assistente amigável conversando de verdade. Use entonação leve, pausas naturais e variação de tom. Não soe robótica, nem muito rápida, nem infantil. Seja clara, simpática e atenciosa em cada frase.';
+const DEFAULT_SPEED = 1;
 const TTS_FORMAT = 'mp3';
+
+// Vozes realmente suportadas pelo modelo acima
+const ALLOWED_VOICES = new Set([
+  'alloy',
+  'ash',
+  'ballad',
+  'coral',
+  'echo',
+  'fable',
+  'nova',
+  'onyx',
+  'sage',
+  'shimmer',
+  'verse',
+]);
+
+const SPEED_MIN = 0.5;
+const SPEED_MAX = 2;
+const MAX_INSTRUCTIONS_CHARS = 1500;
 // ------------------------------------------------
 
 const MAX_CHARS = 1200;
+
 
 function base64Encode(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -45,9 +66,34 @@ Deno.serve(async (req) => {
   }
 
   let text = '';
+  let voice = DEFAULT_VOICE;
+  let instructions = DEFAULT_INSTRUCTIONS;
+  let speed = DEFAULT_SPEED;
+
   try {
     const body = await req.json();
     text = typeof body?.text === 'string' ? body.text.trim() : '';
+
+    // Parâmetros opcionais — chamadas antigas (somente { text }) continuam válidas
+    if (typeof body?.voice === 'string') {
+      const v = body.voice.trim().toLowerCase();
+      if (!ALLOWED_VOICES.has(v)) {
+        return json({ error: 'Voz não suportada.' }, 400);
+      }
+      voice = v;
+    }
+
+    if (typeof body?.instructions === 'string' && body.instructions.trim()) {
+      instructions = body.instructions.trim().slice(0, MAX_INSTRUCTIONS_CHARS);
+    }
+
+    if (body?.speed !== undefined && body?.speed !== null) {
+      const s = Number(body.speed);
+      if (!Number.isFinite(s)) {
+        return json({ error: 'Velocidade inválida.' }, 400);
+      }
+      speed = Math.min(SPEED_MAX, Math.max(SPEED_MIN, s));
+    }
   } catch {
     return json({ error: 'Corpo da requisição inválido.' }, 400);
   }
@@ -65,12 +111,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: TTS_MODEL,
         input: text,
-        voice: TTS_VOICE,
-        instructions: TTS_INSTRUCTIONS,
+        voice,
+        instructions,
+        speed,
         response_format: TTS_FORMAT,
         stream_format: 'audio',
       }),
     });
+
 
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
