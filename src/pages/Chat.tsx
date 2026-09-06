@@ -537,8 +537,15 @@ export default function Chat() {
                   <MarkdownMessage content={message.content} />
                 </div>
                 {message.sender === 'bot' && (
-                  <SpeakButton messageId={message.id} text={message.content} />
+                  <SpeakButton
+                    messageId={message.id}
+                    text={message.content}
+                    voice={config?.assistant_voice}
+                    instructions={config?.assistant_voice_style}
+                    speed={config?.assistant_voice_speed}
+                  />
                 )}
+
 
                 <span className={`text-[10px] mt-1 block text-right ${
                   message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'
