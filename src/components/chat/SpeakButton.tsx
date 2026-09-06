@@ -36,7 +36,7 @@ interface SpeakButtonProps {
 }
 
 
-export function SpeakButton({ messageId, text }: SpeakButtonProps) {
+export function SpeakButton({ messageId, text, voice, instructions, speed }: SpeakButtonProps) {
   const [state, setState] = useState<State>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
