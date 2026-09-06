@@ -66,22 +66,37 @@ export interface BusinessConfig {
   updated_at: string;
 }
 
-export function useBusinessConfig() {
+export function useBusinessConfig(tenantId?: string | null) {
   const [config, setConfig] = useState<BusinessConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConfig = useCallback(async () => {
+    // Em rotas públicas por slug, aguarda a resolução do tenant antes de consultar.
+    // Isso impede o fallback global de exibir a configuração de outra empresa.
+    if (tenantId === null) {
+      setConfig(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
+      const query = supabase
         .from('business_config')
-        .select('*')
-        .limit(1)
-        .single();
+        .select('*');
+
+      const { data, error: fetchError } = tenantId
+        ? await query.eq('tenant_id', tenantId).single()
+        : await query.limit(1).single();
 
       if (fetchError) {
         if (fetchError.code === 'PGRST116') {
+          // Uma vitrine de tenant não deve criar uma configuração global como fallback.
+          if (tenantId) {
+            setConfig(null);
+            return;
+          }
           const { data: newConfig, error: insertError } = await supabase
             .from('business_config')
             .insert({ business_name: 'Minha Loja', sale_mode: 'vendedora' })
@@ -100,7 +115,7 @@ export function useBusinessConfig() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tenantId]);
 
   const updateConfig = useCallback(async (updates: Partial<BusinessConfig>) => {
     if (!config?.id) return;

@@ -51,7 +51,8 @@ export default function Chat() {
   
   const { productId, slug } = useParams<{ productId?: string; slug?: string }>();
   const { business } = useApp();
-  const { config } = useBusinessConfig();
+  const [storefront, setStorefront] = useState<StorefrontData | null>(null);
+  const { config } = useBusinessConfig(storefront?.tenant_id ?? (slug ? null : undefined));
   
   const {
     conversationId,
@@ -91,7 +92,6 @@ export default function Chat() {
   const formatTimer = (total: number) =>
     `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
-  const [storefront, setStorefront] = useState<StorefrontData | null>(null);
   const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
   
   // Gallery state
