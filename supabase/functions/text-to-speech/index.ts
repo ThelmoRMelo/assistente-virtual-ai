@@ -4,7 +4,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 // ---- 🎙️ CONFIGURAÇÃO DE VOZ PADRÃO DA ANIA ----
-const TTS_MODEL = 'openai/gpt-4o-mini-tts';
+const TTS_MODEL = 'gpt-4o-mini-tts';
 const DEFAULT_VOICE = 'coral'; // Voz feminina, calorosa e suave
 const DEFAULT_INSTRUCTIONS =
   'Fale em português do Brasil com uma voz feminina, suave, calorosa e acolhedora. Tom jovem-adulto, sereno e expressivo. Fale de forma natural, conversacional, com ritmo calmo e agradável, como uma assistente amigável conversando de verdade. Use entonação leve, pausas naturais e variação de tom. Não soe robótica, nem muito rápida, nem infantil. Seja clara, simpática e atenciosa em cada frase.';
@@ -59,9 +59,9 @@ Deno.serve(async (req) => {
     return json({ error: 'Método não permitido' }, 405);
   }
 
-  const apiKey = Deno.env.get('LOVABLE_API_KEY');
+  const apiKey = Deno.env.get('OPENAI_API_KEY');
   if (!apiKey) {
-    console.error('[text-to-speech] LOVABLE_API_KEY ausente');
+    console.error('[text-to-speech] OPENAI_API_KEY ausente');
     return json({ error: 'Serviço de voz não configurado.' }, 500);
   }
 
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
   if (text.length > MAX_CHARS) text = text.slice(0, MAX_CHARS);
 
   try {
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/audio/speech', {
+    const res = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
