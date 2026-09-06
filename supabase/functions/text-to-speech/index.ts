@@ -66,9 +66,34 @@ Deno.serve(async (req) => {
   }
 
   let text = '';
+  let voice = DEFAULT_VOICE;
+  let instructions = DEFAULT_INSTRUCTIONS;
+  let speed = DEFAULT_SPEED;
+
   try {
     const body = await req.json();
     text = typeof body?.text === 'string' ? body.text.trim() : '';
+
+    // Parâmetros opcionais — chamadas antigas (somente { text }) continuam válidas
+    if (typeof body?.voice === 'string') {
+      const v = body.voice.trim().toLowerCase();
+      if (!ALLOWED_VOICES.has(v)) {
+        return json({ error: 'Voz não suportada.' }, 400);
+      }
+      voice = v;
+    }
+
+    if (typeof body?.instructions === 'string' && body.instructions.trim()) {
+      instructions = body.instructions.trim().slice(0, MAX_INSTRUCTIONS_CHARS);
+    }
+
+    if (body?.speed !== undefined && body?.speed !== null) {
+      const s = Number(body.speed);
+      if (!Number.isFinite(s)) {
+        return json({ error: 'Velocidade inválida.' }, 400);
+      }
+      speed = Math.min(SPEED_MAX, Math.max(SPEED_MIN, s));
+    }
   } catch {
     return json({ error: 'Corpo da requisição inválido.' }, 400);
   }
@@ -86,12 +111,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: TTS_MODEL,
         input: text,
-        voice: TTS_VOICE,
-        instructions: TTS_INSTRUCTIONS,
+        voice,
+        instructions,
+        speed,
         response_format: TTS_FORMAT,
         stream_format: 'audio',
       }),
     });
+
 
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
