@@ -80,6 +80,9 @@ export type Database = {
           assistant_position_axis: string | null
           assistant_position_value: number | null
           assistant_size: number | null
+          assistant_voice: string | null
+          assistant_voice_speed: number | null
+          assistant_voice_style: string | null
           business_category: string | null
           business_name: string | null
           button_color: string | null
@@ -137,6 +140,9 @@ export type Database = {
           assistant_position_axis?: string | null
           assistant_position_value?: number | null
           assistant_size?: number | null
+          assistant_voice?: string | null
+          assistant_voice_speed?: number | null
+          assistant_voice_style?: string | null
           business_category?: string | null
           business_name?: string | null
           button_color?: string | null
@@ -194,6 +200,9 @@ export type Database = {
           assistant_position_axis?: string | null
           assistant_position_value?: number | null
           assistant_size?: number | null
+          assistant_voice?: string | null
+          assistant_voice_speed?: number | null
+          assistant_voice_style?: string | null
           business_category?: string | null
           business_name?: string | null
           button_color?: string | null
