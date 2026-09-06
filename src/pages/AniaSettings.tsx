@@ -79,6 +79,11 @@ export default function AniaSettingsPage() {
           </div>
         </section>
 
+        {/* Voz da ANIA */}
+        <VoiceSettingsSection />
+
+
+
         {/* Prompt mestre */}
         <section className="glass-card rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-3 mb-2">
