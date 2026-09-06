@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useAniaSettings, type AniaSettings } from '@/hooks/useAniaSettings';
+import { VoiceSettingsSection } from '@/components/ania/VoiceSettingsSection';
 import { toast } from 'sonner';
+
 
 export default function AniaSettingsPage() {
   const { settings, loading, updateSettings } = useAniaSettings();
