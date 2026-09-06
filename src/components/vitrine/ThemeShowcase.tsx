@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
 import { Heart, Briefcase, Smartphone, GraduationCap, MessageCircle, Stethoscope } from 'lucide-react';
 import type { ThemeConfig } from '@/lib/themes';
 
 interface ThemeShowcaseProps {
   theme: ThemeConfig;
+  chatPath: string;
 }
 
 const niches = [
@@ -14,7 +16,7 @@ const niches = [
   { name: 'Atendimento', icon: MessageCircle, color: 'hsl(190, 100%, 50%)' },
 ];
 
-export function ThemeShowcase({ theme }: ThemeShowcaseProps) {
+export function ThemeShowcase({ theme, chatPath }: ThemeShowcaseProps) {
   return (
     <section className="py-12 md:py-16">
       <div className="text-center mb-10">
@@ -35,25 +37,44 @@ export function ThemeShowcase({ theme }: ThemeShowcaseProps) {
       </div>
 
       <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-        {niches.map((niche) => (
-          <div 
-            key={niche.name}
-            className="flex flex-col items-center gap-3 group cursor-pointer"
-          >
-            <div 
-              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-glow"
-              style={{ backgroundColor: `${niche.color}20` }}
-            >
-              <niche.icon 
-                className="w-8 h-8 md:w-10 md:h-10 transition-colors" 
-                style={{ color: niche.color }}
-              />
-            </div>
-            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              {niche.name}
-            </span>
-          </div>
-        ))}
+          {niches.map((niche) =>
+            niche.name === 'Atendimento' ? (
+              <Link key={niche.name} to={chatPath}>
+                <div className="flex flex-col items-center gap-3 group cursor-pointer">
+                  <div
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-glow"
+                    style={{ backgroundColor: `${niche.color}20` }}
+                  >
+                    <niche.icon
+                      className="w-8 h-8 md:w-10 md:h-10 transition-colors"
+                      style={{ color: niche.color }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    {niche.name}
+                  </span>
+                </div>
+              </Link>
+            ) : (
+              <div
+                key={niche.name}
+                className="flex flex-col items-center gap-3 group cursor-pointer"
+              >
+                <div
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-glow"
+                  style={{ backgroundColor: `${niche.color}20` }}
+                >
+                  <niche.icon
+                    className="w-8 h-8 md:w-10 md:h-10 transition-colors"
+                    style={{ color: niche.color }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                  {niche.name}
+                </span>
+              </div>
+            )
+          )}
       </div>
     </section>
   );

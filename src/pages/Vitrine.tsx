@@ -308,7 +308,7 @@ export default function Vitrine() {
 
 
         {/* Theme showcase */}
-        <ThemeShowcase theme={theme} />
+        <ThemeShowcase theme={theme} chatPath={chatPath} />
       </main>
 
       <VitrineFooter footerText={business?.footer_text} />
