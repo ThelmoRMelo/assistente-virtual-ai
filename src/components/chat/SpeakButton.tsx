@@ -82,7 +82,9 @@ export function SpeakButton({ messageId, text, voice, instructions, speed }: Spe
       return;
     }
 
-    const cached = audioCache.get(messageId);
+    // Cache por mensagem + configuração de voz atual
+    const cacheKey = `${messageId}|${voice || 'coral'}|${speed ?? 1}|${(instructions || '').length}`;
+    const cached = audioCache.get(cacheKey);
     if (cached) {
       const audio = new Audio(cached);
       audioRef.current = audio;
@@ -97,8 +99,14 @@ export function SpeakButton({ messageId, text, voice, instructions, speed }: Spe
     setState('loading');
     try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text: spoken },
+        body: {
+          text: spoken,
+          ...(voice ? { voice } : {}),
+          ...(instructions ? { instructions } : {}),
+          ...(speed ? { speed } : {}),
+        },
       });
+
       if (error) throw error;
       const base64 = (data as { audio?: string })?.audio;
       if (!base64) throw new Error('sem áudio');
