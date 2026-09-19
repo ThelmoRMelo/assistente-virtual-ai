@@ -9,6 +9,7 @@ export interface SupabaseProduct {
   name: string;
   price: number;
   category: string | null;
+  niche_id: string | null;
   short_description: string | null;
   long_description: string | null;
   min_price_allowed: number | null;
@@ -36,6 +37,7 @@ export interface Product {
   nome: string;
   preco: number;
   categoria: string;
+  nicheId: string | null;
   descricaoCurta: string;
   descricaoDetalhada: string;
   precoMinimoPermitido: number | null;
@@ -67,6 +69,7 @@ function toUIProduct(p: SupabaseProduct): Product {
     nome: p.name,
     preco: Number(p.price),
     categoria: p.category || 'Produtos',
+    nicheId: p.niche_id ?? null,
     descricaoCurta: p.short_description || '',
     descricaoDetalhada: p.long_description || '',
     precoMinimoPermitido: p.min_price_allowed,
@@ -99,6 +102,7 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   if (p.nome !== undefined) result.name = p.nome;
   if (p.preco !== undefined) result.price = Number(p.preco);
   if (p.categoria !== undefined) result.category = p.categoria;
+  if (p.nicheId !== undefined) result.niche_id = p.nicheId || null;
   if (p.descricaoCurta !== undefined) result.short_description = p.descricaoCurta;
   if (p.descricaoDetalhada !== undefined) result.long_description = p.descricaoDetalhada;
   if (p.precoMinimoPermitido !== undefined) result.min_price_allowed = p.precoMinimoPermitido;
@@ -199,6 +203,7 @@ export function useProducts() {
         name: product.nome,
         price: Number(product.preco),
         category: product.categoria || null,
+        niche_id: product.nicheId || null,
         short_description: product.descricaoCurta || null,
         long_description: product.descricaoDetalhada || null,
         min_price_allowed: product.precoMinimoPermitido || null,
