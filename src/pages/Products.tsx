@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useProducts, Product } from '@/hooks/useProducts';
+import { useNiches } from '@/hooks/useNiches';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { useProductGallery } from '@/hooks/useProductGallery';
 import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
@@ -29,6 +30,7 @@ interface ProductForm {
   nome: string;
   preco: string;
   categoria: string;
+  nicheId: string | null;
   descricaoCurta: string;
   descricaoDetalhada: string;
   precoMinimoPermitido: string;
@@ -49,6 +51,7 @@ const emptyForm: ProductForm = {
   nome: '',
   preco: '',
   categoria: 'Produtos',
+  nicheId: null,
   descricaoCurta: '',
   descricaoDetalhada: '',
   precoMinimoPermitido: '',
