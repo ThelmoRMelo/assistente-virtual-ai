@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Loader2, ShoppingBag, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { themes, getThemeForCategory, type ThemeConfig } from '@/lib/themes';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
+import { useNiches } from '@/hooks/useNiches';
 
 // Vitrine components
 import { VitrineHeader } from '@/components/vitrine/VitrineHeader';
@@ -26,6 +28,7 @@ interface Product {
   is_featured: boolean;
   is_hero: boolean;
   show_on_products: boolean;
+  niche_id: string | null;
 }
 
 
