@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useProducts, Product } from '@/hooks/useProducts';
+import { useNiches } from '@/hooks/useNiches';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { useProductGallery } from '@/hooks/useProductGallery';
 import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
@@ -29,6 +30,7 @@ interface ProductForm {
   nome: string;
   preco: string;
   categoria: string;
+  nicheId: string | null;
   descricaoCurta: string;
   descricaoDetalhada: string;
   precoMinimoPermitido: string;
@@ -49,6 +51,7 @@ const emptyForm: ProductForm = {
   nome: '',
   preco: '',
   categoria: 'Produtos',
+  nicheId: null,
   descricaoCurta: '',
   descricaoDetalhada: '',
   precoMinimoPermitido: '',
@@ -82,6 +85,7 @@ export default function Products() {
 
   } = useProducts();
   
+  const { niches } = useNiches();
   const { uploadImage, uploading } = useProductImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -119,6 +123,7 @@ export default function Products() {
       nome: product.nome,
       preco: product.preco.toString().replace('.', ','),
       categoria: product.categoria || 'Produtos',
+      nicheId: product.nicheId ?? null,
       descricaoCurta: product.descricaoCurta || '',
       descricaoDetalhada: product.descricaoDetalhada || '',
       precoMinimoPermitido: product.precoMinimoPermitido?.toString().replace('.', ',') || '',
@@ -214,6 +219,7 @@ export default function Products() {
       nome: form.nome.trim(),
       preco: precoValue,
       categoria: form.categoria,
+      nicheId: form.nicheId,
       descricaoCurta: form.descricaoCurta.trim(),
       descricaoDetalhada: form.descricaoDetalhada.trim(),
       precoMinimoPermitido: precoMinimoValue,
@@ -434,6 +440,41 @@ export default function Products() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Nicho do produto */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Nicho do produto
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setForm(prev => ({ ...prev, nicheId: null }))}
+                  className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                    !form.nicheId
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Sem nicho
+                </button>
+                {niches.map((niche) => (
+                  <button
+                    key={niche.id}
+                    onClick={() => setForm(prev => ({ ...prev, nicheId: niche.id }))}
+                    className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                      form.nicheId === niche.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {niche.name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                🎯 Usado para filtrar os produtos por nicho na vitrine
+              </p>
             </div>
 
             {/* Descrição curta */}

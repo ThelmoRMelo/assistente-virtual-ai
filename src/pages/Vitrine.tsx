@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Loader2, ShoppingBag, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { themes, getThemeForCategory, type ThemeConfig } from '@/lib/themes';
 import { usePWABlocker } from '@/hooks/usePWABlocker';
+import { useNiches } from '@/hooks/useNiches';
 
 // Vitrine components
 import { VitrineHeader } from '@/components/vitrine/VitrineHeader';
@@ -26,6 +28,7 @@ interface Product {
   is_featured: boolean;
   is_hero: boolean;
   show_on_products: boolean;
+  niche_id: string | null;
 }
 
 
@@ -66,6 +69,9 @@ export default function Vitrine() {
   
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { niches } = useNiches();
+  const selectedNicheSlug = searchParams.get('nicho');
   
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -129,7 +135,7 @@ export default function Vitrine() {
       // Fetch active products
       let productsQuery = supabase
         .from('products')
-        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, is_hero, show_on_products')
+        .select('id, name, price, short_description, long_description, image_url, category, payment_link, tenant_id, has_gallery, is_featured, is_hero, show_on_products, niche_id')
         .eq('active', true)
         .order('created_at', { ascending: false });
       
@@ -173,22 +179,50 @@ export default function Vitrine() {
     return grouped;
   }, [products]);
 
+  // Nicho selecionado via URL (?nicho=slug)
+  const selectedNiche = useMemo(
+    () => niches.find(n => n.slug === selectedNicheSlug) ?? null,
+    [niches, selectedNicheSlug]
+  );
+
+  const handleSelectNiche = (nicheSlug: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedNicheSlug === nicheSlug) {
+      next.delete('nicho');
+    } else {
+      next.set('nicho', nicheSlug);
+    }
+    setSearchParams(next, { replace: false });
+  };
+
+  const clearNiche = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('nicho');
+    setSearchParams(next, { replace: false });
+  };
+
+  // Produtos visíveis, já respeitando o nicho selecionado
+  const visibleProducts = useMemo(() => {
+    if (!selectedNiche) return products;
+    return products.filter(p => p.niche_id === selectedNiche.id);
+  }, [products, selectedNiche]);
+
   // Featured products (Destaques) — independent from "Nossos Produtos"
   // Hero product (is_hero) is placed first; fallback to first featured when none is set.
   const heroProducts = useMemo(
-    () => products.filter(p => p.is_hero && p.is_featured).slice(0, 5),
-    [products]
+    () => visibleProducts.filter(p => p.is_hero && p.is_featured).slice(0, 5),
+    [visibleProducts]
   );
 
   const featuredProducts = useMemo(
-    () => products.filter(p => p.is_featured && !heroProducts.some(h => h.id === p.id)),
-    [products, heroProducts]
+    () => visibleProducts.filter(p => p.is_featured && !heroProducts.some(h => h.id === p.id)),
+    [visibleProducts, heroProducts]
   );
 
   // Nossos Produtos — controlled independently via show_on_products
   const showcaseProducts = useMemo(
-    () => products.filter(p => p.show_on_products),
-    [products]
+    () => visibleProducts.filter(p => p.show_on_products),
+    [visibleProducts]
   );
 
 
@@ -271,12 +305,40 @@ export default function Vitrine() {
       />
 
       <main className="max-w-7xl mx-auto px-4">
-        {products.length === 0 ? (
+        {/* Indicador do nicho selecionado */}
+        {selectedNiche && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-8">
+            <div>
+              <p className="text-sm text-muted-foreground">Nicho selecionado</p>
+              <h2
+                className="text-2xl md:text-3xl font-bold"
+                style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
+              >
+                {selectedNiche.name}
+              </h2>
+            </div>
+            <Button variant="outline" onClick={clearNiche} className="rounded-full">
+              <X className="w-4 h-4 mr-1" />
+              Ver todos os produtos
+            </Button>
+          </div>
+        )}
+
+        {visibleProducts.length === 0 ? (
           <div className="py-20 text-center">
             <div className="glass-card rounded-3xl p-12 max-w-md mx-auto">
               <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Nenhum produto disponível</h3>
-              <p className="text-muted-foreground">Em breve teremos novidades!</p>
+              <h3 className="text-xl font-semibold mb-2">
+                {selectedNiche
+                  ? `Ainda não há produtos em ${selectedNiche.name}`
+                  : 'Nenhum produto disponível'}
+              </h3>
+              <p className="text-muted-foreground mb-4">Em breve teremos novidades!</p>
+              {selectedNiche && (
+                <Button variant="outline" onClick={clearNiche} className="rounded-full">
+                  Ver todos os produtos
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -308,7 +370,13 @@ export default function Vitrine() {
 
 
         {/* Theme showcase */}
-        <ThemeShowcase theme={theme} chatPath={chatPath} />
+        <ThemeShowcase
+          theme={theme}
+          chatPath={chatPath}
+          niches={niches}
+          selectedNicheSlug={selectedNicheSlug}
+          onSelectNiche={handleSelectNiche}
+        />
       </main>
 
       <VitrineFooter footerText={business?.footer_text} />

@@ -333,6 +333,45 @@ export type Database = {
           },
         ]
       }
+      niches: {
+        Row: {
+          color: string | null
+          created_at: string
+          display_order: number
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          display_order?: number
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_click_events: {
         Row: {
           click_type: string
@@ -471,6 +510,7 @@ export type Database = {
           long_description: string | null
           min_price_allowed: number | null
           name: string
+          niche_id: string | null
           payment_link: string | null
           payment_methods: string[] | null
           price: number
@@ -497,6 +537,7 @@ export type Database = {
           long_description?: string | null
           min_price_allowed?: number | null
           name: string
+          niche_id?: string | null
           payment_link?: string | null
           payment_methods?: string[] | null
           price: number
@@ -523,6 +564,7 @@ export type Database = {
           long_description?: string | null
           min_price_allowed?: number | null
           name?: string
+          niche_id?: string | null
           payment_link?: string | null
           payment_methods?: string[] | null
           price?: number
@@ -533,7 +575,15 @@ export type Database = {
           tenant_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_niche_id_fkey"
+            columns: ["niche_id"]
+            isOneToOne: false
+            referencedRelation: "niches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
