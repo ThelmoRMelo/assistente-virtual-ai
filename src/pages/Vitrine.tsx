@@ -69,6 +69,9 @@ export default function Vitrine() {
   
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { niches } = useNiches();
+  const selectedNicheSlug = searchParams.get('nicho');
   
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -176,22 +179,50 @@ export default function Vitrine() {
     return grouped;
   }, [products]);
 
+  // Nicho selecionado via URL (?nicho=slug)
+  const selectedNiche = useMemo(
+    () => niches.find(n => n.slug === selectedNicheSlug) ?? null,
+    [niches, selectedNicheSlug]
+  );
+
+  const handleSelectNiche = (nicheSlug: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (selectedNicheSlug === nicheSlug) {
+      next.delete('nicho');
+    } else {
+      next.set('nicho', nicheSlug);
+    }
+    setSearchParams(next, { replace: false });
+  };
+
+  const clearNiche = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('nicho');
+    setSearchParams(next, { replace: false });
+  };
+
+  // Produtos visíveis, já respeitando o nicho selecionado
+  const visibleProducts = useMemo(() => {
+    if (!selectedNiche) return products;
+    return products.filter(p => p.niche_id === selectedNiche.id);
+  }, [products, selectedNiche]);
+
   // Featured products (Destaques) — independent from "Nossos Produtos"
   // Hero product (is_hero) is placed first; fallback to first featured when none is set.
   const heroProducts = useMemo(
-    () => products.filter(p => p.is_hero && p.is_featured).slice(0, 5),
-    [products]
+    () => visibleProducts.filter(p => p.is_hero && p.is_featured).slice(0, 5),
+    [visibleProducts]
   );
 
   const featuredProducts = useMemo(
-    () => products.filter(p => p.is_featured && !heroProducts.some(h => h.id === p.id)),
-    [products, heroProducts]
+    () => visibleProducts.filter(p => p.is_featured && !heroProducts.some(h => h.id === p.id)),
+    [visibleProducts, heroProducts]
   );
 
   // Nossos Produtos — controlled independently via show_on_products
   const showcaseProducts = useMemo(
-    () => products.filter(p => p.show_on_products),
-    [products]
+    () => visibleProducts.filter(p => p.show_on_products),
+    [visibleProducts]
   );
 
 
