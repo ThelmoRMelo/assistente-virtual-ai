@@ -85,6 +85,7 @@ export default function Products() {
 
   } = useProducts();
   
+  const { niches } = useNiches();
   const { uploadImage, uploading } = useProductImageUpload();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -439,6 +440,41 @@ export default function Products() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Nicho do produto */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">
+                Nicho do produto
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setForm(prev => ({ ...prev, nicheId: null }))}
+                  className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                    !form.nicheId
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  Sem nicho
+                </button>
+                {niches.map((niche) => (
+                  <button
+                    key={niche.id}
+                    onClick={() => setForm(prev => ({ ...prev, nicheId: niche.id }))}
+                    className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                      form.nicheId === niche.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {niche.name}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                🎯 Usado para filtrar os produtos por nicho na vitrine
+              </p>
             </div>
 
             {/* Descrição curta */}
