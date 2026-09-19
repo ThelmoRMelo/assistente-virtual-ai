@@ -305,12 +305,40 @@ export default function Vitrine() {
       />
 
       <main className="max-w-7xl mx-auto px-4">
-        {products.length === 0 ? (
+        {/* Indicador do nicho selecionado */}
+        {selectedNiche && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-8">
+            <div>
+              <p className="text-sm text-muted-foreground">Nicho selecionado</p>
+              <h2
+                className="text-2xl md:text-3xl font-bold"
+                style={{ fontFamily: `'${theme.fonts.heading}', sans-serif` }}
+              >
+                {selectedNiche.name}
+              </h2>
+            </div>
+            <Button variant="outline" onClick={clearNiche} className="rounded-full">
+              <X className="w-4 h-4 mr-1" />
+              Ver todos os produtos
+            </Button>
+          </div>
+        )}
+
+        {visibleProducts.length === 0 ? (
           <div className="py-20 text-center">
             <div className="glass-card rounded-3xl p-12 max-w-md mx-auto">
               <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Nenhum produto disponível</h3>
-              <p className="text-muted-foreground">Em breve teremos novidades!</p>
+              <h3 className="text-xl font-semibold mb-2">
+                {selectedNiche
+                  ? `Ainda não há produtos em ${selectedNiche.name}`
+                  : 'Nenhum produto disponível'}
+              </h3>
+              <p className="text-muted-foreground mb-4">Em breve teremos novidades!</p>
+              {selectedNiche && (
+                <Button variant="outline" onClick={clearNiche} className="rounded-full">
+                  Ver todos os produtos
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -342,7 +370,13 @@ export default function Vitrine() {
 
 
         {/* Theme showcase */}
-        <ThemeShowcase theme={theme} chatPath={chatPath} />
+        <ThemeShowcase
+          theme={theme}
+          chatPath={chatPath}
+          niches={niches}
+          selectedNicheSlug={selectedNicheSlug}
+          onSelectNiche={handleSelectNiche}
+        />
       </main>
 
       <VitrineFooter footerText={business?.footer_text} />
