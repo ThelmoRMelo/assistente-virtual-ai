@@ -48,6 +48,7 @@ const STEPS = [
   '📦 Localizando produto...',
   '📝 Obtendo informações...',
   '🖼️ Obtendo imagens...',
+  '⭐ Buscando avaliações...',
 ];
 
 export function useProductImport() {
