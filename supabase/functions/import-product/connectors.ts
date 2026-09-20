@@ -286,6 +286,27 @@ export function withMissing(p: NormalizedProduct): NormalizedProduct {
 
 // ---------------------- Mercado Livre ----------------------
 
+/** Avaliações públicas do Mercado Livre (API pública de reviews, sem credenciais). */
+async function fetchMercadoLivreReviews(itemId: string, sourceUrl: string): Promise<NormalizedReview[]> {
+  try {
+    const res = await fetch(`https://api.mercadolibre.com/reviews/item/${itemId}?limit=20`, {
+      headers: { Accept: "application/json", "User-Agent": UA },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const list = Array.isArray(data?.reviews) ? data.reviews : [];
+    const raw = list.map((r: Record<string, unknown>) => ({
+      customerName: (r.reviewer_name ?? (r.reviewer as Record<string, unknown> | undefined)?.nickname) as unknown,
+      comment: [r.title, r.content].filter((v) => typeof v === "string" && v.trim()).join(" — "),
+      stars: r.rate ?? r.rating,
+    }));
+    return normalizeReviews(raw, "mercado_livre", "Mercado Livre", sourceUrl);
+  } catch (e) {
+    console.error("[import-product] reviews extraction failed (ML)", e);
+    return [];
+  }
+}
+
 const mercadoLivre: Connector = {
   id: "mercado_livre",
   label: "Mercado Livre",
