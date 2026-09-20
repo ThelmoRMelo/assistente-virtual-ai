@@ -150,6 +150,7 @@ Deno.serve(async (req) => {
         coverImage: cover,
         galleryImages: gallery,
         missingFields: product.missingFields,
+        reviews: Array.isArray(product.reviews) ? product.reviews.slice(0, 5) : [],
       },
     });
   } catch (e) {
