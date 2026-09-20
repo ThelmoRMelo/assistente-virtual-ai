@@ -341,6 +341,16 @@ export default function Vitrine() {
               )}
             </div>
           </div>
+        ) : selectedNiche ? (
+          /* Visão de nicho: todos os produtos do nicho, independente dos selos */
+          <ProductSection
+            title={selectedNiche.name}
+            products={visibleProducts}
+            theme={theme}
+            onProductClick={handleProductClick}
+            layout="grid"
+            showViewAll={false}
+          />
         ) : (
           <>
             {/* Destaques — controlado por is_featured */}
