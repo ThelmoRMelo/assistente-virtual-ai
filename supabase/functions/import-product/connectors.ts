@@ -232,6 +232,7 @@ export function fromPublicMetadata(
     coverImage: null,
     galleryImages: [],
     missingFields: [],
+    reviews: [],
   };
 
   if (html) {
@@ -255,6 +256,13 @@ export function fromPublicMetadata(
     const images = uniq([...ldImages, ...allMetaImages(html)]);
     base.coverImage = images[0] ?? null;
     base.galleryImages = images.slice(1, 6);
+
+    try {
+      base.reviews = normalizeReviews(reviewsFromJsonLd(html), platform, platformLabel, finalUrl);
+    } catch (e) {
+      console.error("[import-product] reviews extraction failed", e);
+      base.reviews = [];
+    }
   }
 
   return withMissing(base);
@@ -328,6 +336,7 @@ const mercadoLivre: Connector = {
             coverImage: pics[0] ?? item.thumbnail ?? null,
             galleryImages: pics.slice(1, 6),
             missingFields: [],
+            reviews: await fetchMercadoLivreReviews(itemId, item.permalink || finalUrl),
           });
         }
       } catch (_e) { /* cai no fallback de metadados */ }
