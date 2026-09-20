@@ -18,6 +18,10 @@ export interface ProductReview {
   helpful_count: number;
   is_pinned: boolean;
   is_reported: boolean;
+  is_imported?: boolean | null;
+  source_platform?: string | null;
+  source_url?: string | null;
+  imported_at?: string | null;
   created_at: string;
   updated_at: string;
 }

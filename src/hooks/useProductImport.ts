@@ -2,6 +2,14 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ImportedReview {
+  customerName: string;
+  comment: string;
+  stars: number;
+  sourceUrl: string | null;
+  sourcePlatform: string | null;
+}
+
 export interface ImportedProductData {
   platform: string;
   platformLabel: string;
@@ -15,6 +23,7 @@ export interface ImportedProductData {
   coverImage: string | null;
   galleryImages: string[];
   missingFields: string[];
+  reviews: ImportedReview[];
 }
 
 export interface ImportResult {
@@ -39,6 +48,7 @@ const STEPS = [
   '📦 Localizando produto...',
   '📝 Obtendo informações...',
   '🖼️ Obtendo imagens...',
+  '⭐ Buscando avaliações...',
 ];
 
 export function useProductImport() {

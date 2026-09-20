@@ -439,9 +439,13 @@ export type Database = {
           customer_name: string
           helpful_count: number
           id: string
+          imported_at: string | null
+          is_imported: boolean
           is_pinned: boolean
           is_reported: boolean
           product_id: string
+          source_platform: string | null
+          source_url: string | null
           stars: number
           status: string
           tenant_id: string | null
@@ -457,9 +461,13 @@ export type Database = {
           customer_name: string
           helpful_count?: number
           id?: string
+          imported_at?: string | null
+          is_imported?: boolean
           is_pinned?: boolean
           is_reported?: boolean
           product_id: string
+          source_platform?: string | null
+          source_url?: string | null
           stars: number
           status?: string
           tenant_id?: string | null
@@ -475,9 +483,13 @@ export type Database = {
           customer_name?: string
           helpful_count?: number
           id?: string
+          imported_at?: string | null
+          is_imported?: boolean
           is_pinned?: boolean
           is_reported?: boolean
           product_id?: string
+          source_platform?: string | null
+          source_url?: string | null
           stars?: number
           status?: string
           tenant_id?: string | null

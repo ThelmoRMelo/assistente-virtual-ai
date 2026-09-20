@@ -1,6 +1,14 @@
 // Conectores modulares por plataforma.
 // Cada conector: detecta o link, resolve o produto e normaliza os dados.
 
+export interface NormalizedReview {
+  customerName: string;
+  comment: string;
+  stars: number;
+  sourceUrl: string | null;
+  sourcePlatform: string | null;
+}
+
 export interface NormalizedProduct {
   platform: string;
   platformLabel: string;
@@ -14,6 +22,89 @@ export interface NormalizedProduct {
   coverImage: string | null;
   galleryImages: string[];
   missingFields: string[];
+  reviews: NormalizedReview[];
+}
+
+export const MAX_IMPORTED_REVIEWS = 5;
+
+interface RawReview {
+  customerName?: unknown;
+  comment?: unknown;
+  stars?: unknown;
+}
+
+/** Normaliza avaliações encontradas na fonte. Nunca inventa dados. */
+export function normalizeReviews(
+  raw: RawReview[],
+  platform: string,
+  platformLabel: string,
+  sourceUrl: string | null,
+): NormalizedReview[] {
+  const out: NormalizedReview[] = [];
+  const seen = new Set<string>();
+
+  for (const r of raw ?? []) {
+    const comment = typeof r.comment === "string" ? decodeEntities(r.comment).replace(/\s+/g, " ").trim() : "";
+    if (!comment) continue;
+
+    const starsNum = typeof r.stars === "number" ? r.stars : parseFloat(String(r.stars ?? ""));
+    if (!Number.isFinite(starsNum)) continue; // sem nota real: ignora (não inventa)
+    const stars = Math.max(1, Math.min(5, Math.round(starsNum)));
+
+    const rawName = typeof r.customerName === "string" ? decodeEntities(r.customerName).replace(/\s+/g, " ").trim() : "";
+    const customerName = (rawName || "Cliente").slice(0, 60);
+
+    const key = `${customerName.toLowerCase()}|${comment.toLowerCase().slice(0, 120)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push({
+      customerName,
+      comment: comment.slice(0, 1000),
+      stars,
+      sourceUrl,
+      sourcePlatform: platformLabel || platform,
+    });
+
+    if (out.length >= MAX_IMPORTED_REVIEWS) break;
+  }
+
+  return out;
+}
+
+/** Avaliações reais presentes em dados estruturados (JSON-LD) da página pública. */
+export function reviewsFromJsonLd(html: string | null): RawReview[] {
+  if (!html) return [];
+  const out: RawReview[] = [];
+  const re = /<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(m[1].trim());
+    } catch (_e) {
+      continue;
+    }
+    const nodes = Array.isArray(parsed)
+      ? parsed
+      : [parsed, ...(((parsed as Record<string, unknown>)?.["@graph"] as unknown[]) ?? [])];
+    for (const node of nodes) {
+      if (!node || typeof node !== "object") continue;
+      const obj = node as Record<string, unknown>;
+      const list = [obj.review, obj.reviews].flat().filter(Boolean) as Record<string, unknown>[];
+      for (const rv of list) {
+        if (!rv || typeof rv !== "object") continue;
+        const author = rv.author as Record<string, unknown> | string | undefined;
+        const rating = rv.reviewRating as Record<string, unknown> | undefined;
+        out.push({
+          customerName: typeof author === "string" ? author : (author?.name as string | undefined),
+          comment: (rv.reviewBody ?? rv.description ?? rv.name) as string | undefined,
+          stars: (rating?.ratingValue ?? rv.ratingValue) as string | number | undefined,
+        });
+      }
+    }
+  }
+  return out;
 }
 
 export interface Connector {
@@ -141,6 +232,7 @@ export function fromPublicMetadata(
     coverImage: null,
     galleryImages: [],
     missingFields: [],
+    reviews: [],
   };
 
   if (html) {
@@ -164,6 +256,13 @@ export function fromPublicMetadata(
     const images = uniq([...ldImages, ...allMetaImages(html)]);
     base.coverImage = images[0] ?? null;
     base.galleryImages = images.slice(1, 6);
+
+    try {
+      base.reviews = normalizeReviews(reviewsFromJsonLd(html), platform, platformLabel, finalUrl);
+    } catch (e) {
+      console.error("[import-product] reviews extraction failed", e);
+      base.reviews = [];
+    }
   }
 
   return withMissing(base);
@@ -186,6 +285,27 @@ export function withMissing(p: NormalizedProduct): NormalizedProduct {
 }
 
 // ---------------------- Mercado Livre ----------------------
+
+/** Avaliações públicas do Mercado Livre (API pública de reviews, sem credenciais). */
+async function fetchMercadoLivreReviews(itemId: string, sourceUrl: string): Promise<NormalizedReview[]> {
+  try {
+    const res = await fetch(`https://api.mercadolibre.com/reviews/item/${itemId}?limit=20`, {
+      headers: { Accept: "application/json", "User-Agent": UA },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const list = Array.isArray(data?.reviews) ? data.reviews : [];
+    const raw = list.map((r: Record<string, unknown>) => ({
+      customerName: (r.reviewer_name ?? (r.reviewer as Record<string, unknown> | undefined)?.nickname) as unknown,
+      comment: [r.title, r.content].filter((v) => typeof v === "string" && v.trim()).join(" — "),
+      stars: r.rate ?? r.rating,
+    }));
+    return normalizeReviews(raw, "mercado_livre", "Mercado Livre", sourceUrl);
+  } catch (e) {
+    console.error("[import-product] reviews extraction failed (ML)", e);
+    return [];
+  }
+}
 
 const mercadoLivre: Connector = {
   id: "mercado_livre",
@@ -237,6 +357,7 @@ const mercadoLivre: Connector = {
             coverImage: pics[0] ?? item.thumbnail ?? null,
             galleryImages: pics.slice(1, 6),
             missingFields: [],
+            reviews: await fetchMercadoLivreReviews(itemId, item.permalink || finalUrl),
           });
         }
       } catch (_e) { /* cai no fallback de metadados */ }
