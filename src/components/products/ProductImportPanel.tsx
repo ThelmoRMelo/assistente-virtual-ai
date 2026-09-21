@@ -102,6 +102,7 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
 
     toast.success('✅ Produto encontrado!');
     onImported(result.product, url);
+    applyFoundReviews(result.product.reviews ?? []);
   };
 
   return (
@@ -186,6 +187,7 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
               className="flex-1"
               onClick={() => {
                 onImported(pending, link.trim());
+                applyFoundReviews(pending.reviews ?? []);
                 setDuplicate(null);
                 setPending(null);
               }}
@@ -204,6 +206,18 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
               {n}
             </p>
           ))}
+        </div>
+      )}
+
+      {showReviews && (
+        <div className="rounded-lg bg-background/40 p-3">
+          <ImportedReviewsPicker
+            reviews={foundReviews}
+            selected={selected}
+            onToggle={toggle}
+            onSelectAll={selectAll}
+            onClearAll={clearAll}
+          />
         </div>
       )}
     </div>
