@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, Pin, PinOff, Trash2, Sparkles, MessageSquare, Loader2 } from 'lucide-react';
+import { Check, X, Pin, PinOff, Trash2, Sparkles, MessageSquare, Loader2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ReviewStars } from './ReviewStars';
@@ -83,6 +83,25 @@ export function AdminReviewItem({
               <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary">
                 <Pin className="w-3 h-3" /> Fixada
               </span>
+            )}
+            {review.is_imported && (
+              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-secondary/20 text-secondary-foreground">
+                <Download className="w-3 h-3" /> Importada
+              </span>
+            )}
+            {review.is_imported && review.source_platform && (
+              review.source_url ? (
+                <a
+                  href={review.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] underline text-muted-foreground hover:text-primary"
+                >
+                  Fonte: {review.source_platform}
+                </a>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">Fonte: {review.source_platform}</span>
+              )
             )}
           </div>
           <div className="flex items-center gap-2 mt-1">
