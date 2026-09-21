@@ -29,7 +29,11 @@ export interface ImportedProductData {
 export interface ImportResult {
   ok?: true;
   product?: ImportedProductData;
-  duplicate?: { id: string; name: string } | null;
+  duplicate?: {
+  id: string;
+  name: string;
+  reason?: 'same_source_link' | 'same_external_product';
+} | null;
   warnings?: string[];
   error?: string;
   code?: string;
