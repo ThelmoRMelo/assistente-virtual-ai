@@ -3,15 +3,17 @@ import { useState } from 'react';
 import { Link2, Search, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { IMPORT_PLATFORMS, useProductImport, type ImportedProductData } from '@/hooks/useProductImport';
+import { IMPORT_PLATFORMS, useProductImport, type ImportedProductData, type ImportedReview } from '@/hooks/useProductImport';
+import { ImportedReviewsPicker } from './ImportedReviewsPicker';
 import { toast } from 'sonner';
 
 interface Props {
   onImported: (data: ImportedProductData, affiliateUrl: string) => void;
   onViewDuplicate?: (productId: string) => void;
+  onReviewsChange?: (reviews: ImportedReview[]) => void;
 }
 
-export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
+export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChange }: Props) {
   const { importFromLink, importing, step } = useProductImport();
   const [link, setLink] = useState('');
   const [manualPlatform, setManualPlatform] = useState<string | null>(null);
@@ -20,6 +22,40 @@ export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
   const [notice, setNotice] = useState<string[]>([]);
   const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
   const [pending, setPending] = useState<ImportedProductData | null>(null);
+  const [foundReviews, setFoundReviews] = useState<ImportedReview[]>([]);
+  const [selected, setSelected] = useState<boolean[]>([]);
+  const [showReviews, setShowReviews] = useState(false);
+
+  const emitReviews = (reviews: ImportedReview[], flags: boolean[]) => {
+    onReviewsChange?.(reviews.filter((_, i) => flags[i]));
+  };
+
+  const applyFoundReviews = (reviews: ImportedReview[]) => {
+    const list = reviews.slice(0, 5);
+    const flags = list.map(() => true);
+    setFoundReviews(list);
+    setSelected(flags);
+    setShowReviews(true);
+    emitReviews(list, flags);
+  };
+
+  const toggle = (index: number) => {
+    const flags = selected.map((v, i) => (i === index ? !v : v));
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
+
+  const selectAll = () => {
+    const flags = foundReviews.map(() => true);
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
+
+  const clearAll = () => {
+    const flags = foundReviews.map(() => false);
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
 
   const run = async (platform?: string | null) => {
     const url = link.trim();
@@ -27,6 +63,10 @@ export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
     setNotice([]);
     setDuplicate(null);
     setPending(null);
+    setShowReviews(false);
+    setFoundReviews([]);
+    setSelected([]);
+    onReviewsChange?.([]);
 
     if (!/^https?:\/\/\S+\.\S+/i.test(url)) {
       setErrorMsg('Esse link não parece ser válido.');
@@ -62,6 +102,7 @@ export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
 
     toast.success('✅ Produto encontrado!');
     onImported(result.product, url);
+    applyFoundReviews(result.product.reviews ?? []);
   };
 
   return (
@@ -146,6 +187,7 @@ export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
               className="flex-1"
               onClick={() => {
                 onImported(pending, link.trim());
+                applyFoundReviews(pending.reviews ?? []);
                 setDuplicate(null);
                 setPending(null);
               }}
@@ -164,6 +206,18 @@ export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
               {n}
             </p>
           ))}
+        </div>
+      )}
+
+      {showReviews && (
+        <div className="rounded-lg bg-background/40 p-3">
+          <ImportedReviewsPicker
+            reviews={foundReviews}
+            selected={selected}
+            onToggle={toggle}
+            onSelectAll={selectAll}
+            onClearAll={clearAll}
+          />
         </div>
       )}
     </div>

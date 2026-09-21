@@ -13,7 +13,7 @@ import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { useProductGallery } from '@/hooks/useProductGallery';
 import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
 import { ProductImportPanel } from '@/components/products/ProductImportPanel';
-import type { ImportedProductData } from '@/hooks/useProductImport';
+import type { ImportedProductData, ImportedReview } from '@/hooks/useProductImport';
 import { toast } from 'sonner';
 
 const categories = [
@@ -96,6 +96,49 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [addMode, setAddMode] = useState<AddMode>('manual');
   const [reviewsProduct, setReviewsProduct] = useState<{ id: string; name: string } | null>(null);
+  const [importedReviews, setImportedReviews] = useState<ImportedReview[]>([]);
+
+  // Salva as avaliações importadas como PENDENTES, sem duplicar as já existentes
+  const saveImportedReviews = async (productId: string): Promise<number> => {
+    if (importedReviews.length === 0) return 0;
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: existing } = await supabase
+        .from('product_reviews')
+        .select('customer_name, comment')
+        .eq('product_id', productId);
+
+      const seen = new Set(
+        (existing ?? []).map((r: { customer_name: string; comment: string }) =>
+          `${r.customer_name.trim().toLowerCase()}|${r.comment.trim().toLowerCase().slice(0, 120)}`,
+        ),
+      );
+
+      const rows = importedReviews
+        .filter((r) => !seen.has(`${r.customerName.trim().toLowerCase()}|${r.comment.trim().toLowerCase().slice(0, 120)}`))
+        .slice(0, 5)
+        .map((r) => ({
+          product_id: productId,
+          customer_name: r.customerName.slice(0, 80),
+          comment: r.comment.slice(0, 1000),
+          stars: Math.max(1, Math.min(5, Math.round(r.stars))),
+          status: 'pending',
+          is_imported: true,
+          source_platform: r.sourcePlatform,
+          source_url: r.sourceUrl,
+          imported_at: new Date().toISOString(),
+        }));
+
+      if (rows.length === 0) return 0;
+      const { error } = await supabase.from('product_reviews').insert(rows);
+      if (error) throw error;
+      return rows.length;
+    } catch (err) {
+      console.error('Erro ao salvar avaliações importadas:', err);
+      toast.error('Não foi possível salvar as avaliações importadas.');
+      return 0;
+    }
+  };
 
   // Hook para galeria de imagens
   const { images: galleryImages, saveGallery, fetchImages } = useProductGallery(editingId);
@@ -115,6 +158,7 @@ export default function Products() {
     setImagePreview('');
     setEditingId(null);
     setAddMode('manual');
+    setImportedReviews([]);
     setFormMode('add');
   };
 
@@ -172,6 +216,7 @@ export default function Products() {
     setForm(emptyForm);
     setImagePreview('');
     setEditingId(null);
+    setImportedReviews([]);
     setFormMode('closed');
   };
 
@@ -272,7 +317,17 @@ export default function Products() {
         }
         toast.success('Produto salvo com sucesso!');
       }
-      
+
+      // Avaliações importadas: salvas como PENDENTES (nunca publicadas automaticamente)
+      if (savedProductId && importedReviews.length > 0) {
+        const saved = await saveImportedReviews(savedProductId);
+        if (saved > 0) {
+          toast.success(
+            `${saved} ${saved === 1 ? 'avaliação foi importada e está' : 'avaliações foram importadas e estão'} aguardando sua aprovação.`,
+          );
+        }
+      }
+
       closeForm();
     } catch (err) {
       console.error('Erro ao salvar:', err);
@@ -360,6 +415,7 @@ export default function Products() {
                 {addMode === 'link' && (
                   <ProductImportPanel
                     onImported={handleImported}
+                    onReviewsChange={setImportedReviews}
                     onViewDuplicate={(id) => {
                       const existing = products.find((p) => p.id === id);
                       if (existing) openEditForm(existing);
