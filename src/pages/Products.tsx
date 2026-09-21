@@ -158,6 +158,7 @@ export default function Products() {
     setImagePreview('');
     setEditingId(null);
     setAddMode('manual');
+    setImportedReviews([]);
     setFormMode('add');
   };
 
@@ -215,6 +216,7 @@ export default function Products() {
     setForm(emptyForm);
     setImagePreview('');
     setEditingId(null);
+    setImportedReviews([]);
     setFormMode('closed');
   };
 
@@ -315,7 +317,17 @@ export default function Products() {
         }
         toast.success('Produto salvo com sucesso!');
       }
-      
+
+      // Avaliações importadas: salvas como PENDENTES (nunca publicadas automaticamente)
+      if (savedProductId && importedReviews.length > 0) {
+        const saved = await saveImportedReviews(savedProductId);
+        if (saved > 0) {
+          toast.success(
+            `${saved} ${saved === 1 ? 'avaliação foi importada e está' : 'avaliações foram importadas e estão'} aguardando sua aprovação.`,
+          );
+        }
+      }
+
       closeForm();
     } catch (err) {
       console.error('Erro ao salvar:', err);
@@ -403,6 +415,7 @@ export default function Products() {
                 {addMode === 'link' && (
                   <ProductImportPanel
                     onImported={handleImported}
+                    onReviewsChange={setImportedReviews}
                     onViewDuplicate={(id) => {
                       const existing = products.find((p) => p.id === id);
                       if (existing) openEditForm(existing);
