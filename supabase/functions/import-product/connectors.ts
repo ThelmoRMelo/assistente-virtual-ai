@@ -162,6 +162,14 @@ function decodeEntities(s: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&([aeiouAEIOU])(acute|grave|circ|uml|tilde);/g, (_m, l: string, t: string) => {
+      const marks: Record<string, string> = { acute: "\u0301", grave: "\u0300", circ: "\u0302", uml: "\u0308", tilde: "\u0303" };
+      return (l + marks[t]).normalize("NFC");
+    })
+    .replace(/&ccedil;/g, "ç")
+    .replace(/&Ccedil;/g, "Ç")
     .trim();
 }
 
