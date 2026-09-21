@@ -96,18 +96,35 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
-    // Duplicidade por plataforma + ID externo
-    let duplicate: { id: string; name: string } | null = null;
-    if (product.externalId) {
-      const { data } = await supabase
-        .from("products")
-        .select("id, name")
-        .eq("source_platform", product.platform)
-        .eq("external_product_id", product.externalId)
-        .limit(1)
-        .maybeSingle();
-      if (data) duplicate = { id: data.id as string, name: data.name as string };
-    }
+    // Duplicidade:
+// Consideramos duplicado somente quando o mesmo produto de origem
+// foi importado pelo MESMO link de origem.
+// Isso permite cadastrar o mesmo produto de uma plataforma usando
+// outro link de afiliado, sem bloquear o novo cadastro.
+let duplicate: {
+  id: string;
+  name: string;
+  reason: "same_source_link" | "same_external_product";
+} | null = null;
+
+if (product.externalId) {
+  // 1. Primeiro: verifica se o MESMO link de origem já está cadastrado.
+  const { data: sameSource } = await supabase
+    .from("products")
+    .select("id, name")
+    .eq("source_platform", product.platform)
+    .eq("source_url", product.sourceUrl)
+    .limit(1)
+    .maybeSingle();
+
+  if (sameSource) {
+    duplicate = {
+      id: sameSource.id as string,
+      name: sameSource.name as string,
+      reason: "same_source_link",
+    };
+  }
+}
 
     // Espelhar imagens no Storage (falha de uma imagem não interrompe o processo)
     const warnings: string[] = [];
