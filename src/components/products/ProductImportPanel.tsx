@@ -173,30 +173,49 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
       )}
 
       {duplicate && pending && (
-        <div className="space-y-2 rounded-lg bg-muted/40 p-3">
-          <p className="text-xs font-medium">Este produto já está cadastrado.</p>
-          <div className="flex gap-2">
-            {onViewDuplicate && (
-              <Button variant="glass" size="sm" className="flex-1" onClick={() => onViewDuplicate(duplicate.id)}>
-                Ver produto
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => {
-                onImported(pending, link.trim());
-                applyFoundReviews(pending.reviews ?? []);
-                setDuplicate(null);
-                setPending(null);
-              }}
-            >
-              Atualizar informações
-            </Button>
-          </div>
-        </div>
+  <div className="space-y-3 rounded-lg bg-muted/40 p-3">
+    <div>
+      <p className="text-xs font-medium">
+        Este link já está cadastrado.
+      </p>
+
+      <p className="text-xs text-muted-foreground mt-1">
+        O produto encontrado é:
+        <span className="font-medium ml-1">
+          {duplicate.name}
+        </span>
+      </p>
+    </div>
+
+    <div className="flex gap-2">
+      {onViewDuplicate && (
+        <Button
+          variant="glass"
+          size="sm"
+          className="flex-1"
+          onClick={() => onViewDuplicate(duplicate.id)}
+        >
+          Ver produto
+        </Button>
       )}
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex-1"
+        onClick={() => {
+          onImported(pending, link.trim());
+          applyFoundReviews(pending.reviews ?? []);
+          setDuplicate(null);
+          setPending(null);
+        }}
+      >
+        Usar informações
+      </Button>
+    </div>
+  </div>
+)}
+      
 
       {notice.length > 0 && (
         <div className="space-y-1">
