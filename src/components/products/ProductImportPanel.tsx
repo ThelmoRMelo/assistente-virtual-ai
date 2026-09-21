@@ -3,15 +3,17 @@ import { useState } from 'react';
 import { Link2, Search, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { IMPORT_PLATFORMS, useProductImport, type ImportedProductData } from '@/hooks/useProductImport';
+import { IMPORT_PLATFORMS, useProductImport, type ImportedProductData, type ImportedReview } from '@/hooks/useProductImport';
+import { ImportedReviewsPicker } from './ImportedReviewsPicker';
 import { toast } from 'sonner';
 
 interface Props {
   onImported: (data: ImportedProductData, affiliateUrl: string) => void;
   onViewDuplicate?: (productId: string) => void;
+  onReviewsChange?: (reviews: ImportedReview[]) => void;
 }
 
-export function ProductImportPanel({ onImported, onViewDuplicate }: Props) {
+export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChange }: Props) {
   const { importFromLink, importing, step } = useProductImport();
   const [link, setLink] = useState('');
   const [manualPlatform, setManualPlatform] = useState<string | null>(null);
