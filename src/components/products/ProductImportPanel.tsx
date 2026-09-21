@@ -22,6 +22,40 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
   const [notice, setNotice] = useState<string[]>([]);
   const [duplicate, setDuplicate] = useState<{ id: string; name: string } | null>(null);
   const [pending, setPending] = useState<ImportedProductData | null>(null);
+  const [foundReviews, setFoundReviews] = useState<ImportedReview[]>([]);
+  const [selected, setSelected] = useState<boolean[]>([]);
+  const [showReviews, setShowReviews] = useState(false);
+
+  const emitReviews = (reviews: ImportedReview[], flags: boolean[]) => {
+    onReviewsChange?.(reviews.filter((_, i) => flags[i]));
+  };
+
+  const applyFoundReviews = (reviews: ImportedReview[]) => {
+    const list = reviews.slice(0, 5);
+    const flags = list.map(() => true);
+    setFoundReviews(list);
+    setSelected(flags);
+    setShowReviews(true);
+    emitReviews(list, flags);
+  };
+
+  const toggle = (index: number) => {
+    const flags = selected.map((v, i) => (i === index ? !v : v));
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
+
+  const selectAll = () => {
+    const flags = foundReviews.map(() => true);
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
+
+  const clearAll = () => {
+    const flags = foundReviews.map(() => false);
+    setSelected(flags);
+    emitReviews(foundReviews, flags);
+  };
 
   const run = async (platform?: string | null) => {
     const url = link.trim();
@@ -29,6 +63,10 @@ export function ProductImportPanel({ onImported, onViewDuplicate, onReviewsChang
     setNotice([]);
     setDuplicate(null);
     setPending(null);
+    setShowReviews(false);
+    setFoundReviews([]);
+    setSelected([]);
+    onReviewsChange?.([]);
 
     if (!/^https?:\/\/\S+\.\S+/i.test(url)) {
       setErrorMsg('Esse link não parece ser válido.');
