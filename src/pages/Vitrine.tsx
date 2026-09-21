@@ -210,7 +210,7 @@ export default function Vitrine() {
   // Featured products (Destaques) — independent from "Nossos Produtos"
   // Hero product (is_hero) is placed first; fallback to first featured when none is set.
   const heroProducts = useMemo(
-    () => visibleProducts.filter(p => p.is_hero && p.is_featured).slice(0, 5),
+    () => visibleProducts.filter(p => p.is_hero && p.is_featured).slice(0, 105),
     [visibleProducts]
   );
 
