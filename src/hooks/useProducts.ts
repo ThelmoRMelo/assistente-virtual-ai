@@ -124,7 +124,7 @@ function toSupabaseProduct(p: Partial<Product>): Partial<SupabaseProduct> {
   return result;
 }
 
-export const MAX_HERO_PRODUCTS = 5;
+export const MAX_HERO_PRODUCTS = 105;
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
