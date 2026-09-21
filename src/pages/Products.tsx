@@ -13,7 +13,7 @@ import { useProductImageUpload } from '@/hooks/useProductImageUpload';
 import { useProductGallery } from '@/hooks/useProductGallery';
 import { ProductGalleryUpload } from '@/components/ProductGalleryUpload';
 import { ProductImportPanel } from '@/components/products/ProductImportPanel';
-import type { ImportedProductData } from '@/hooks/useProductImport';
+import type { ImportedProductData, ImportedReview } from '@/hooks/useProductImport';
 import { toast } from 'sonner';
 
 const categories = [
