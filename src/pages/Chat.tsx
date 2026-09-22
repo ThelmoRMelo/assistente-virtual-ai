@@ -1,3 +1,484 @@
+// Chat.tsx - Página PÚBLICA de chat para clientes finais
+// Suporta vitrine com slug + tenant_id
+
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Send, MessageCircle, Loader2, ArrowLeft, ShoppingBag, Trash2, Mic, Square, X, Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { MarkdownMessage } from '@/components/MarkdownMessage';
+import { useApp } from '@/contexts/AppContext';
+import { useConversation } from '@/hooks/useConversation';
+import { useBusinessConfig } from '@/hooks/useBusinessConfig';
+import { supabase } from '@/integrations/supabase/client';
+import { usePWABlocker } from '@/hooks/usePWABlocker';
+import { toast } from 'sonner';
+import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
+import { CatalogCards } from '@/components/chat/CatalogCards';
+import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
+import { SpeakButton, playMessageSpeech, stopMessageSpeech, cleanTextForSpeech } from '@/components/chat/SpeakButton';
+
+// Chave estável da preferência de áudio automático (padrão: ativado)
+const AUTO_SPEAK_KEY = 'ania_auto_speak_enabled';
+
+
+const CATALOG_MARKER = '__CATALOG__';
+const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
+
+
+interface SupabaseProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: string | null;
+  short_description: string | null;
+  long_description: string | null;
+  min_price_allowed: number | null;
+  payment_methods: string[] | null;
+  delivery_info: string | null;
+  image_url: string | null;
+  payment_link: string | null;
+  active: boolean;
+  tenant_id: string | null;
+  has_gallery: boolean;
+}
+
+interface StorefrontData {
+  tenant_id: string;
+  slug: string;
+}
+
+export default function Chat() {
+  // Block PWA install prompts on this public route
+  usePWABlocker();
+  
+  const { productId, slug } = useParams<{ productId?: string; slug?: string }>();
+  const { business } = useApp();
+  const [storefront, setStorefront] = useState<StorefrontData | null>(null);
+  const { config } = useBusinessConfig(storefront?.tenant_id ?? (slug ? null : undefined));
+  
+  const {
+    conversationId,
+    messages,
+    negotiation,
+    closing,
+    loading: conversationLoading,
+    lastBotResponse,
+    addMessage,
+    updateNegotiation,
+    updateClosing,
+    clearConversation
+  } = useConversation(productId, false);
+  
+  const [isClearing, setIsClearing] = useState(false);
+  
+  const [supabaseProducts, setSupabaseProducts] = useState<SupabaseProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Tracks which conversationId has already been initialized (welcome + catalog inserted).
+  // Using a ref + per-conversation key prevents duplicate inserts caused by
+  // re-renders, async timing of addMessage, or multiple effect runs after clearing.
+  const initializedConvRef = useRef<string | null>(null);
+  const isInitializingRef = useRef(false);
+
+  // Áudio automático da última resposta da ANIA (padrão: ativado; preferência persistida)
+  const [autoSpeakEnabled, setAutoSpeakEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(AUTO_SPEAK_KEY);
+      return saved === null ? true : saved === 'true';
+    } catch {
+      return true;
+    }
+  });
+  // ID da última mensagem de bot que já recebeu reprodução automática (anti-duplicidade)
+  const lastAutoSpokenMessageIdRef = useRef<string | null>(null);
+
+  const handleToggleAutoSpeak = () => {
+    setAutoSpeakEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(AUTO_SPEAK_KEY, String(next));
+      } catch {
+        // localStorage indisponível — mantém apenas em memória
+      }
+      if (!next) stopMessageSpeech();
+      return next;
+    });
+  };
+
+  // Reproduz automaticamente APENAS a última mensagem válida do bot,
+  // uma única vez por mensagem. Ignora catálogo e textos vazios após limpeza.
+  useEffect(() => {
+    if (!autoSpeakEnabled) return;
+
+    const lastBotMessage = [...messages]
+      .reverse()
+      .find((m) => m.sender === 'bot' && m.content !== CATALOG_MARKER);
+
+    if (!lastBotMessage) return;
+    if (lastAutoSpokenMessageIdRef.current === lastBotMessage.id) return;
+    if (!cleanTextForSpeech(lastBotMessage.content)) return;
+
+    // Marca ANTES de falar para que re-renderizações não disparem de novo
+    lastAutoSpokenMessageIdRef.current = lastBotMessage.id;
+    void playMessageSpeech(lastBotMessage.id, lastBotMessage.content, {
+      voice: config?.assistant_voice,
+      instructions: config?.assistant_voice_style,
+      speed: config?.assistant_voice_speed,
+    });
+  }, [messages, autoSpeakEnabled, config?.assistant_voice, config?.assistant_voice_style, config?.assistant_voice_speed]);
+
+  // Gravação de voz -> transcrição preenche o campo de texto (usuário revisa e envia)
+  const voice = useVoiceRecorder({
+    onTranscript: (text) => {
+      setInputValue((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+      inputRef.current?.focus();
+    },
+    onError: (message) => toast.error(message),
+  });
+  const formatTimer = (total: number) =>
+    `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+
+  const [tenantConfig, setTenantConfig] = useState<{ business_name?: string; business_category?: string } | null>(null);
+  
+  // Gallery state
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
+
+  // Buscar produtos do Supabase com suporte a tenant
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        let tenantId: string | null = null;
+
+        // Se tem slug, buscar o tenant_id pelo storefront
+        if (slug) {
+          const { data: sfData } = await supabase
+            .from('storefronts')
+            .select('tenant_id, slug')
+            .eq('slug', slug)
+            .eq('is_active', true)
+            .single();
+          
+          if (sfData) {
+            setStorefront(sfData);
+            tenantId = sfData.tenant_id;
+
+            // Buscar config do tenant
+            const { data: configData } = await supabase
+              .from('business_config')
+              .select('business_name, business_category')
+              .eq('tenant_id', tenantId)
+              .single();
+            
+            if (configData) {
+              setTenantConfig(configData);
+            }
+          }
+        }
+
+        // Buscar produtos
+        let query = supabase
+          .from('products')
+          .select('*')
+          .eq('active', true)
+          .order('created_at', { ascending: false });
+        
+        if (tenantId) {
+          query = query.eq('tenant_id', tenantId);
+        }
+
+        const { data } = await query;
+        setSupabaseProducts(data || []);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchProducts();
+  }, [slug]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const contextProduct = productId 
+    ? supabaseProducts.find(p => p.id === productId)
+    : null;
+
+  // Buscar imagens da galeria quando o produto tem galeria
+  useEffect(() => {
+    const fetchGalleryImages = async () => {
+      if (!contextProduct?.has_gallery || !productId) {
+        setGalleryImages([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('product_images')
+        .select('image_url')
+        .eq('product_id', productId)
+        .order('display_order', { ascending: true });
+
+      setGalleryImages(data?.map(img => img.image_url) || []);
+    };
+
+    fetchGalleryImages();
+  }, [contextProduct?.has_gallery, productId]);
+
+  // Handler para abrir galeria
+  const handleOpenGallery = (index: number) => {
+    setGalleryInitialIndex(index);
+    setGalleryOpen(true);
+  };
+
+  // Gerar mensagem de boas-vindas baseada no contexto
+  const getWelcomeMessage = useCallback((isNewSession: boolean = false) => {
+    if (contextProduct) {
+      const price = Number(contextProduct.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (isNewSession) {
+        return `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Agora estou focada em te ajudar com o **${contextProduct.name}**! O valor é ${price}. Em que posso ajudar?`;
+      }
+      return `Olá! 👋 Você está interessado no **${contextProduct.name}**! O valor é ${price}. Posso te ajudar?`;
+    } else if (supabaseProducts.length > 0) {
+      if (isNewSession) {
+        return `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Bem-vindo${business.nome ? ` à ${business.nome}` : ''}! Temos ${supabaseProducts.length} produto(s) disponíveis. Como posso ajudar?`;
+      }
+      return `Olá! 👋 Bem-vindo${business.nome ? ` à ${business.nome}` : ''}! Temos ${supabaseProducts.length} produto(s). Como posso ajudar?`;
+    }
+    return isNewSession 
+      ? `✨ **Novo atendimento iniciado!**\n\nOlá! 👋 Como posso te ajudar hoje?`
+      : `Olá! 👋 Como posso te ajudar hoje?`;
+  }, [contextProduct, supabaseProducts, business.nome]);
+
+  // Mensagem inicial — protegida contra duplicidade via ref por conversationId
+  useEffect(() => {
+    if (conversationLoading || loadingProducts) return;
+    if (!conversationId) return;
+    if (initializedConvRef.current === conversationId) return;
+    if (isInitializingRef.current) return;
+
+    // Se já existem mensagens nessa conversa, apenas marca como inicializada.
+    if (messages.length > 0) {
+      initializedConvRef.current = conversationId;
+      return;
+    }
+
+    isInitializingRef.current = true;
+    const convAtStart = conversationId;
+    (async () => {
+      try {
+        await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
+        if (!contextProduct && supabaseProducts.length > 0) {
+          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+        }
+        initializedConvRef.current = convAtStart;
+      } finally {
+        isInitializingRef.current = false;
+      }
+    })();
+  }, [conversationId, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
+
+  // Handler para limpar conversa e iniciar novo atendimento.
+  // A inserção da boas-vindas + catálogo é feita pelo useEffect acima
+  // assim que o novo conversationId for emitido — evita duplicação.
+  const handleClearConversation = async () => {
+    if (isClearing) return;
+
+    setIsClearing(true);
+    try {
+      // Interrompe qualquer áudio em reprodução e reseta o controle de auto-fala,
+      // permitindo que a nova mensagem de boas-vindas seja tratada como nova resposta
+      stopMessageSpeech();
+      lastAutoSpokenMessageIdRef.current = null;
+      // Invalida o guard atual para permitir nova inicialização
+      initializedConvRef.current = null;
+      await clearConversation();
+      toast.success('Novo atendimento iniciado!');
+    } catch (err) {
+      console.error('[Chat] Error clearing conversation:', err);
+      toast.error('Erro ao iniciar novo atendimento');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleSend = async () => {
+    const trimmedInput = inputValue.trim();
+    if (!trimmedInput || isTyping) return;
+
+    setInputValue('');
+    setIsTyping(true);
+    await addMessage(trimmedInput, 'user');
+
+    // Vitrine mode: intercept catalog questions and reply with cards (no AI call needed)
+    if (!contextProduct && CATALOG_REGEX.test(trimmedInput) && supabaseProducts.length > 0) {
+      const intro = supabaseProducts.length === 1
+        ? 'Temos atualmente este produto disponível. Toque abaixo para ver os detalhes 👇'
+        : `Veja os ${supabaseProducts.length} produtos disponíveis. Toque em "Saber mais" para conversar sobre um deles 👇`;
+      await addMessage(intro, 'bot', 'Catálogo');
+      await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+      setIsTyping(false);
+      inputRef.current?.focus();
+      return;
+    }
+
+    try {
+      const productsList = supabaseProducts.map(p => ({
+        id: p.id,
+        nome: p.name,
+        preco: Number(p.price),
+        descricao: p.short_description || p.long_description || '',
+        precoMinimo: p.min_price_allowed,
+        formasPagamento: p.payment_methods || [],
+        infoEntrega: p.delivery_info || ''
+      }));
+
+      const productContext = contextProduct ? {
+        id: contextProduct.id,
+        nome: contextProduct.name,
+        preco: contextProduct.price,
+        descricao: contextProduct.long_description || contextProduct.short_description || '',
+        categoria: contextProduct.category || '',
+        precoMinimo: contextProduct.min_price_allowed,
+        formasPagamento: contextProduct.payment_methods || [],
+        infoEntrega: contextProduct.delivery_info || '',
+        linkPagamento: contextProduct.payment_link || ''
+      } : null;
+
+      const recentHistory = messages.slice(-6).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.content
+      }));
+
+      const { data, error } = await supabase.functions.invoke('ai-fallback', {
+        body: {
+          message: trimmedInput,
+          businessName: tenantConfig?.business_name || config?.business_name || business.nome || 'Loja',
+          businessCategory: tenantConfig?.business_category || config?.business_category || business.categoria || 'varejo',
+          products: productsList,
+          productContext,
+          productId: contextProduct?.id || null,
+          negotiationState: negotiation,
+          conversationHistory: recentHistory,
+          lastBotResponse,
+          closingState: closing,
+          paymentLink: config?.payment_link,
+          whatsappNumber: config?.whatsapp_number,
+          saleMode: config?.sale_mode || 'vendedora',
+          tenantId: storefront?.tenant_id || null,
+          mode: contextProduct ? 'product' : 'vitrine'
+        }
+      });
+
+      if (error) {
+        await addMessage('Hmm, tive um problema. Pode repetir?', 'bot', 'Erro');
+      } else {
+        const response = data?.response || 'Como posso ajudar?';
+        await addMessage(response, 'bot', data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA');
+
+        if (data?.showCatalog && supabaseProducts.length > 0) {
+          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
+        }
+
+        if (data?.negotiationUpdate) await updateNegotiation(data.negotiationUpdate);
+        if (data?.closingUpdate) await updateClosing(data.closingUpdate);
+      }
+
+    } catch (err) {
+      await addMessage('Desculpe, tive um problema. Pode repetir?', 'bot', 'Erro');
+    } finally {
+      setIsTyping(false);
+      inputRef.current?.focus();
+    }
+  };
+
+  if (loadingProducts || conversationLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="mt-2 text-muted-foreground text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  const storeName = tenantConfig?.business_name || config?.business_name || business.nome || 'Assistente';
+  const vitrineLink = slug ? `/loja/${slug}` : '/vitrine';
+
+  // Chat appearance from business_config
+  const chatHeaderColor = config?.chat_header_color || undefined;
+  const chatInputBg = config?.chat_input_bg_color || undefined;
+  const chatSendColor = config?.chat_send_button_color || 'hsl(270 70% 60%)';
+  const chatAniaBubble = config?.chat_ania_bubble_color || undefined;
+  const chatUserBubble = config?.chat_user_bubble_color || '#005c4b';
+  const chatIconColor = config?.chat_icon_color || undefined;
+  const chatCatalogCard = config?.chat_catalog_card_color || undefined;
+  const chatLinkColor = config?.chat_link_color || undefined;
+
+  const wallpaperUrl = config?.chat_wallpaper_url || '';
+  const wallpaperOpacity = (config?.chat_wallpaper_opacity ?? 100) / 100;
+  const wallpaperBlurMap = { none: '0px', light: '3px', medium: '6px', strong: '12px' } as const;
+  const wallpaperBlur = wallpaperBlurMap[(config?.chat_wallpaper_blur as keyof typeof wallpaperBlurMap) || 'none'];
+  const wallpaperDim = config?.chat_wallpaper_dim ?? false;
+  const wallpaperFit = config?.chat_wallpaper_fit || 'cover';
+  const bgSize = wallpaperFit === 'contain' ? 'contain' : wallpaperFit === 'center' ? 'auto' : wallpaperFit === 'repeat' ? 'auto' : 'cover';
+  const bgRepeat = wallpaperFit === 'repeat' ? 'repeat' : 'no-repeat';
+  const bgPosition = 'center';
+
+  return (
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={{ background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(230 30% 12%) 100%)', ['--chat-link' as any]: chatLinkColor }}
+    >
+      {wallpaperUrl && (
+        <>
+          <div
+            className="fixed inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `url(${wallpaperUrl})`,
+              backgroundSize: bgSize,
+              backgroundRepeat: bgRepeat,
+              backgroundPosition: bgPosition,
+              opacity: wallpaperOpacity,
+              filter: wallpaperBlur !== '0px' ? `blur(${wallpaperBlur})` : undefined,
+              zIndex: 0,
+            }}
+          />
+          {wallpaperDim && (
+            <div className="fixed inset-0 pointer-events-none bg-black/40" style={{ zIndex: 0 }} />
+          )}
+        </>
+      )}
+      <div className="relative z-[1] flex-1 flex flex-col min-h-screen">
+      {/* Header - mantido igual, apenas ajuste de cor */}
+      <header
+        className="bg-card/95 backdrop-blur-md border-b border-border/30 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm"
+        style={chatHeaderColor ? { backgroundColor: chatHeaderColor } : undefined}
+      >
+        {/* Botão voltar para vitrine */}
+        <Link to={vitrineLink} className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        
+        {contextProduct?.image_url ? (
+          <img src={contextProduct.image_url} alt={contextProduct.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-primary" />
+          </div>
+        )}
+        <div className="flex-1">
+          <h1 className="font-semibold text-foreground">{contextProduct?.name || storeName}</h1>
+          <p className="text-xs text-muted-foreground">{isTyping ? 'Digitando...' : 'Online'}</p>
+        </div>
+
 {/* Botão limpar conversa */}
         <Button
           variant="ghost"
