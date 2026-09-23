@@ -387,17 +387,92 @@ export default function Chat() {
       });
 
       if (error) {
-        await addMessage('Hmm, tive um problema. Pode repetir?', 'bot', 'Erro');
-      } else {
-        const response = data?.response || 'Como posso ajudar?';
-        await addMessage(response, 'bot', data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA');
+  await addMessage(
+    'Hmm, tive um problema. Pode repetir?',
+    'bot',
+    'Erro'
+  );
+} else {
+  const response = data?.response || 'Como posso ajudar?';
 
-        if (data?.showCatalog && supabaseProducts.length > 0) {
-          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
-        }
+  // Criamos o ID ANTES da mensagem existir no banco.
+  // Assim podemos preparar o áudio usando exatamente o mesmo ID.
+  const botMessageId = crypto.randomUUID();
 
-        if (data?.negotiationUpdate) await updateNegotiation(data.negotiationUpdate);
-        if (data?.closingUpdate) await updateClosing(data.closingUpdate);
+  const speechConfig = {
+    voice: config?.assistant_voice,
+    instructions: config?.assistant_voice_style,
+    speed: config?.assistant_voice_speed,
+  };
+
+  let audioPrepared = false;
+
+  /*
+   * IMPORTANTE:
+   *
+   * Enquanto este await estiver acontecendo, isTyping continua true.
+   * Portanto a ANIA permanece mostrando "Digitando..."
+   * enquanto o áudio está sendo preparado.
+   *
+   * A mensagem ainda NÃO foi adicionada ao chat.
+   */
+  if (autoSpeakEnabled && cleanTextForSpeech(response)) {
+    try {
+      await prepareMessageSpeech(
+        botMessageId,
+        response,
+        speechConfig
+      );
+
+      audioPrepared = true;
+    } catch (speechError) {
+      console.error(
+        '[Chat] Não foi possível preparar o áudio antecipadamente:',
+        speechError
+      );
+    }
+  }
+
+  /*
+   * SOMENTE DEPOIS que o áudio estiver pronto,
+   * colocamos a mensagem no chat.
+   */
+  const savedMessage = await addMessage(
+    response,
+    'bot',
+    data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA',
+    botMessageId
+  );
+
+  /*
+   * Se o áudio foi preparado com sucesso, reproduzimos
+   * imediatamente depois da mensagem entrar no chat.
+   */
+  if (audioPrepared && savedMessage) {
+    requestAnimationFrame(() => {
+      void playPreparedMessageSpeech(
+        botMessageId,
+        response,
+        speechConfig
+      );
+    });
+  }
+
+  if (data?.showCatalog && supabaseProducts.length > 0) {
+    await addMessage(
+      CATALOG_MARKER,
+      'bot',
+      'Catálogo'
+    );
+  }
+
+  if (data?.negotiationUpdate) {
+    await updateNegotiation(data.negotiationUpdate);
+  }
+
+  if (data?.closingUpdate) {
+    await updateClosing(data.closingUpdate);
+  }
       }
 
     } catch (err) {
