@@ -16,7 +16,15 @@ import { toast } from 'sonner';
 import { ProductGalleryViewer, ProductGalleryPreview } from '@/components/ProductGalleryViewer';
 import { CatalogCards } from '@/components/chat/CatalogCards';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
-import { SpeakButton, playMessageSpeech, stopMessageSpeech, cleanTextForSpeech } from '@/components/chat/SpeakButton';
+//import { SpeakButton, playMessageSpeech, stopMessageSpeech, cleanTextForSpeech } from '@/components/chat/SpeakButton';
+import {
+  SpeakButton,
+  playMessageSpeech,
+  playPreparedMessageSpeech,
+  prepareMessageSpeech,
+  stopMessageSpeech,
+  cleanTextForSpeech
+} from '@/components/chat/SpeakButton';
 
 // Chave estável da preferência de áudio automático (padrão: ativado)
 const AUTO_SPEAK_KEY = 'ania_auto_speak_enabled';
