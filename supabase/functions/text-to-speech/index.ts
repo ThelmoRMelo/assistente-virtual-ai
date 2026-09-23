@@ -1,17 +1,21 @@
 // Edge Function: text-to-speech
-// Recebe { text } e devolve { audio: base64 mp3, mimeType }
+// Recebe { text } e devolve diretamente o áudio MP3.
 // A chave da API nunca sai do servidor.
+
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 // ---- 🎙️ CONFIGURAÇÃO DE VOZ PADRÃO DA ANIA ----
 const TTS_MODEL = 'openai/gpt-4o-mini-tts';
-const DEFAULT_VOICE = 'coral'; // Voz feminina, calorosa e suave
+
+const DEFAULT_VOICE = 'coral';
+
 const DEFAULT_INSTRUCTIONS =
   'Fale em português do Brasil com uma voz feminina, suave, calorosa e acolhedora. Tom jovem-adulto, sereno e expressivo. Fale de forma natural, conversacional, com ritmo calmo e agradável, como uma assistente amigável conversando de verdade. Use entonação leve, pausas naturais e variação de tom. Não soe robótica, nem muito rápida, nem infantil. Seja clara, simpática e atenciosa em cada frase.';
+
 const DEFAULT_SPEED = 1;
+
 const TTS_FORMAT = 'mp3';
 
-// Vozes realmente suportadas pelo modelo acima
 const ALLOWED_VOICES = new Set([
   'alloy',
   'ash',
@@ -29,40 +33,43 @@ const ALLOWED_VOICES = new Set([
 const SPEED_MIN = 0.5;
 const SPEED_MAX = 2;
 const MAX_INSTRUCTIONS_CHARS = 1500;
-// ------------------------------------------------
-
 const MAX_CHARS = 1200;
 
+// ------------------------------------------------
 
-function base64Encode(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const CHUNK = 0x8000;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  return btoa(binary);
-}
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+function jsonError(message: string, status = 500) {
+  return new Response(
+    JSON.stringify({ error: message }),
+    {
+      status,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', {
+      headers: corsHeaders,
+    });
   }
+
   if (req.method !== 'POST') {
-    return json({ error: 'Método não permitido' }, 405);
+    return jsonError('Método não permitido', 405);
   }
 
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
+
   if (!apiKey) {
     console.error('[text-to-speech] LOVABLE_API_KEY ausente');
-    return json({ error: 'Serviço de voz não configurado.' }, 500);
+
+    return jsonError(
+      'Serviço de voz não configurado.',
+      500,
+    );
   }
 
   let text = '';
@@ -72,74 +79,151 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    text = typeof body?.text === 'string' ? body.text.trim() : '';
 
-    // Parâmetros opcionais — chamadas antigas (somente { text }) continuam válidas
+    text =
+      typeof body?.text === 'string'
+        ? body.text.trim()
+        : '';
+
     if (typeof body?.voice === 'string') {
       const v = body.voice.trim().toLowerCase();
+
       if (!ALLOWED_VOICES.has(v)) {
-        return json({ error: 'Voz não suportada.' }, 400);
+        return jsonError(
+          'Voz não suportada.',
+          400,
+        );
       }
+
       voice = v;
     }
 
-    if (typeof body?.instructions === 'string' && body.instructions.trim()) {
-      instructions = body.instructions.trim().slice(0, MAX_INSTRUCTIONS_CHARS);
+    if (
+      typeof body?.instructions === 'string' &&
+      body.instructions.trim()
+    ) {
+      instructions = body.instructions
+        .trim()
+        .slice(0, MAX_INSTRUCTIONS_CHARS);
     }
 
-    if (body?.speed !== undefined && body?.speed !== null) {
+    if (
+      body?.speed !== undefined &&
+      body?.speed !== null
+    ) {
       const s = Number(body.speed);
+
       if (!Number.isFinite(s)) {
-        return json({ error: 'Velocidade inválida.' }, 400);
+        return jsonError(
+          'Velocidade inválida.',
+          400,
+        );
       }
-      speed = Math.min(SPEED_MAX, Math.max(SPEED_MIN, s));
+
+      speed = Math.min(
+        SPEED_MAX,
+        Math.max(SPEED_MIN, s),
+      );
     }
   } catch {
-    return json({ error: 'Corpo da requisição inválido.' }, 400);
+    return jsonError(
+      'Corpo da requisição inválido.',
+      400,
+    );
   }
 
-  if (!text) return json({ error: 'Nenhum texto para falar.' }, 400);
-  if (text.length > MAX_CHARS) text = text.slice(0, MAX_CHARS);
+  if (!text) {
+    return jsonError(
+      'Nenhum texto para falar.',
+      400,
+    );
+  }
+
+  if (text.length > MAX_CHARS) {
+    text = text.slice(0, MAX_CHARS);
+  }
 
   try {
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: TTS_MODEL,
-        input: text,
-        voice,
-        instructions,
-        speed,
-        response_format: TTS_FORMAT,
-        stream_format: 'audio',
-      }),
-    });
+    const res = await fetch(
+      'https://ai.gateway.lovable.dev/v1/audio/speech',
+      {
+        method: 'POST',
 
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+          model: TTS_MODEL,
+          input: text,
+          voice,
+          instructions,
+          speed,
+          response_format: TTS_FORMAT,
+          stream_format: 'audio',
+        }),
+      },
+    );
 
     if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      console.error('[text-to-speech] upstream', res.status, detail.slice(0, 400));
+      const detail = await res
+        .text()
+        .catch(() => '');
+
+      console.error(
+        '[text-to-speech] upstream',
+        res.status,
+        detail.slice(0, 400),
+      );
+
       if (res.status === 429) {
-        return json({ error: 'Muitos áudios em sequência. Aguarde alguns segundos.' }, 429);
+        return jsonError(
+          'Muitos áudios em sequência. Aguarde alguns segundos.',
+          429,
+        );
       }
-      if (res.status === 402 || res.status === 403) {
-        return json({ error: 'Áudio indisponível no momento.' }, res.status);
+
+      if (
+        res.status === 402 ||
+        res.status === 403
+      ) {
+        return jsonError(
+          'Áudio indisponível no momento.',
+          res.status,
+        );
       }
-      return json({ error: 'Não consegui gerar o áudio. Tente novamente.' }, 502);
+
+      return jsonError(
+        'Não consegui gerar o áudio. Tente novamente.',
+        502,
+      );
     }
 
-    const buffer = await res.arrayBuffer();
-    if (!buffer.byteLength) {
-      return json({ error: 'Não consegui gerar o áudio. Tente novamente.' }, 502);
+    if (!res.body) {
+      return jsonError(
+        'Não consegui gerar o áudio. Tente novamente.',
+        502,
+      );
     }
 
-    return json({ audio: base64Encode(buffer), mimeType: 'audio/mpeg' });
+    return new Response(res.body, {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'audio/mpeg',
+        'Cache-Control': 'no-store',
+      },
+    });
   } catch (err) {
-    console.error('[text-to-speech] error:', err);
-    return json({ error: 'Não consegui gerar o áudio. Tente novamente.' }, 500);
+    console.error(
+      '[text-to-speech] error:',
+      err,
+    );
+
+    return jsonError(
+      'Não consegui gerar o áudio. Tente novamente.',
+      500,
+    );
   }
 });
