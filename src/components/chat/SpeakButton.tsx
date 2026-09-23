@@ -3,9 +3,11 @@
 // para sincronizar texto + voz.
 //
 // Fluxo automático:
-// 1. prepareMessageSpeech() gera/cacheia o áudio enquanto a ANIA "digita";
-// 2. Chat.tsx adiciona a mensagem somente quando o áudio está pronto;
-// 3. playPreparedMessageSpeech() inicia a reprodução imediatamente.
+// 1. prepareMessageSpeech() solicita o áudio enquanto a ANIA "digita";
+// 2. A Edge Function devolve diretamente o áudio MP3;
+// 3. O navegador transforma o Blob em Object URL;
+// 4. Chat.tsx adiciona a mensagem somente quando o áudio está pronto;
+// 5. playPreparedMessageSpeech() inicia a reprodução imediatamente.
 //
 // O botão manual "Ouvir" continua funcionando normalmente.
 
@@ -13,7 +15,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Volume2, Loader2, Pause, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-type State = 'idle' | 'loading' | 'playing' | 'paused' | 'ended' | 'error';
+type State =
+  | 'idle'
+  | 'loading'
+  | 'playing'
+  | 'paused'
+  | 'ended'
+  | 'error';
 
 interface SpeechConfig {
   voice?: string | null;
@@ -25,6 +33,7 @@ interface SpeechConfig {
 let currentAudio: HTMLAudioElement | null = null;
 
 // Cache do áudio por mensagem durante a sessão.
+// Agora armazena Object URLs, e não Base64.
 const audioCache = new Map<string, string>();
 
 // Mensagens que já tiveram reprodução automática iniciada.
@@ -34,7 +43,10 @@ const playedMessageIds = new Set<string>();
 // Promessas em andamento.
 // Se duas partes da interface pedirem o mesmo áudio ao mesmo tempo,
 // apenas uma requisição será feita.
-const speechInFlight = new Map<string, Promise<string>>();
+const speechInFlight = new Map<
+  string,
+  Promise<string>
+>();
 
 // Versão limpa do texto apenas para leitura em voz alta.
 export function cleanTextForSpeech(raw: string): string {
@@ -42,15 +54,24 @@ export function cleanTextForSpeech(raw: string): string {
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1')
-    .replace(/https?:\/\/\S+/g, 'link disponível na conversa')
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+      '$1',
+    )
+    .replace(
+      /https?:\/\/\S+/g,
+      'link disponível na conversa',
+    )
     .replace(/[*_~#>|]/g, ' ')
     .replace(/^\s*[-•]\s*/gm, ' ')
     .replace(/\s{2,}/g, ' ')
     .trim();
 }
 
-function buildCacheKey(messageId: string, cfg: SpeechConfig): string {
+function buildCacheKey(
+  messageId: string,
+  cfg: SpeechConfig,
+): string {
   return JSON.stringify([
     messageId,
     cfg.voice || 'coral',
@@ -59,7 +80,7 @@ function buildCacheKey(messageId: string, cfg: SpeechConfig): string {
   ]);
 }
 
-// Busca ou gera o src do áudio.
+// Busca ou gera o Object URL do áudio.
 async function getSpeechSrc(
   messageId: string,
   text: string,
@@ -68,42 +89,77 @@ async function getSpeechSrc(
   const cacheKey = buildCacheKey(messageId, cfg);
 
   const cached = audioCache.get(cacheKey);
-  if (cached) return cached;
 
-  const existingRequest = speechInFlight.get(cacheKey);
-  if (existingRequest) return existingRequest;
+  if (cached) {
+    return cached;
+  }
+
+  const existingRequest =
+    speechInFlight.get(cacheKey);
+
+  if (existingRequest) {
+    return existingRequest;
+  }
 
   const spoken = cleanTextForSpeech(text);
 
   if (!spoken) {
-    throw new Error('texto vazio após limpeza');
+    throw new Error(
+      'texto vazio após limpeza',
+    );
   }
 
   const request = (async () => {
     try {
-      const { data, error } = await supabase.functions.invoke(
-        'text-to-speech',
-        {
-          body: {
-            text: spoken,
-            ...(cfg.voice ? { voice: cfg.voice } : {}),
-            ...(cfg.instructions
-              ? { instructions: cfg.instructions }
-              : {}),
-            ...(cfg.speed ? { speed: cfg.speed } : {}),
+      const { data, error } =
+        await supabase.functions.invoke(
+          'text-to-speech',
+          {
+            body: {
+              text: spoken,
+
+              ...(cfg.voice
+                ? { voice: cfg.voice }
+                : {}),
+
+              ...(cfg.instructions
+                ? {
+                    instructions:
+                      cfg.instructions,
+                  }
+                : {}),
+
+              ...(cfg.speed
+                ? { speed: cfg.speed }
+                : {}),
+            },
+
+            // A Edge Function agora devolve
+            // diretamente o áudio.
+            responseType: 'blob',
           },
-        },
-      );
+        );
 
-      if (error) throw error;
-
-      const base64 = (data as { audio?: string })?.audio;
-
-      if (!base64) {
-        throw new Error('sem áudio');
+      if (error) {
+        throw error;
       }
 
-      const src = `data:audio/mpeg;base64,${base64}`;
+      if (!(data instanceof Blob)) {
+        throw new Error(
+          'resposta de áudio inválida',
+        );
+      }
+
+      if (!data.size) {
+        throw new Error(
+          'áudio vazio',
+        );
+      }
+
+      // Cria uma URL local para o Blob.
+      // Isso elimina a conversão Base64.
+      const src =
+        URL.createObjectURL(data);
 
       audioCache.set(cacheKey, src);
 
@@ -113,7 +169,10 @@ async function getSpeechSrc(
     }
   })();
 
-  speechInFlight.set(cacheKey, request);
+  speechInFlight.set(
+    cacheKey,
+    request,
+  );
 
   return request;
 }
@@ -129,18 +188,32 @@ export async function prepareMessageSpeech(
   text: string,
   cfg: SpeechConfig,
 ): Promise<void> {
-  await getSpeechSrc(messageId, text, cfg);
+  await getSpeechSrc(
+    messageId,
+    text,
+    cfg,
+  );
 }
 
 /**
- * Verifica se uma mensagem já iniciou reprodução automática.
+ * Verifica se uma mensagem já iniciou
+ * reprodução automática.
  */
-export function hasMessageSpeechPlayed(messageId: string): boolean {
-  return playedMessageIds.has(messageId);
+export function hasMessageSpeechPlayed(
+  messageId: string,
+): boolean {
+  return playedMessageIds.has(
+    messageId,
+  );
 }
 
-function playExclusive(audio: HTMLAudioElement): Promise<void> {
-  if (currentAudio && currentAudio !== audio) {
+function playExclusive(
+  audio: HTMLAudioElement,
+): Promise<void> {
+  if (
+    currentAudio &&
+    currentAudio !== audio
+  ) {
     currentAudio.pause();
   }
 
@@ -152,7 +225,8 @@ function playExclusive(audio: HTMLAudioElement): Promise<void> {
 /**
  * Reproduz um áudio que já foi preparado/cacheado.
  *
- * Essa é a função usada pelo novo fluxo sincronizado do Chat.tsx.
+ * Essa é a função usada pelo fluxo
+ * sincronizado do Chat.tsx.
  */
 export async function playPreparedMessageSpeech(
   messageId: string,
@@ -160,21 +234,35 @@ export async function playPreparedMessageSpeech(
   cfg: SpeechConfig,
 ): Promise<void> {
   try {
-    const src = await getSpeechSrc(messageId, text, cfg);
+    const src =
+      await getSpeechSrc(
+        messageId,
+        text,
+        cfg,
+      );
 
-    const audio = new Audio(src);
+    const audio =
+      new Audio(src);
+
     audio.preload = 'auto';
 
     audio.onended = () => {
-      if (currentAudio === audio) {
+      if (
+        currentAudio === audio
+      ) {
         currentAudio = null;
       }
     };
 
-    // Marca antes da reprodução para impedir duplicidade.
-    playedMessageIds.add(messageId);
+    // Marca antes da reprodução para
+    // impedir duplicidade.
+    playedMessageIds.add(
+      messageId,
+    );
 
-    await playExclusive(audio);
+    await playExclusive(
+      audio,
+    );
   } catch (err) {
     console.error(
       '[AutoSpeak] erro ao reproduzir resposta:',
@@ -193,13 +281,24 @@ export async function playMessageSpeech(
   text: string,
   cfg: SpeechConfig,
 ): Promise<void> {
-  if (playedMessageIds.has(messageId)) return;
+  if (
+    playedMessageIds.has(
+      messageId,
+    )
+  ) {
+    return;
+  }
 
-  await playPreparedMessageSpeech(messageId, text, cfg);
+  await playPreparedMessageSpeech(
+    messageId,
+    text,
+    cfg,
+  );
 }
 
 /**
- * Interrompe imediatamente qualquer áudio em reprodução.
+ * Interrompe imediatamente
+ * qualquer áudio em reprodução.
  */
 export function stopMessageSpeech(): void {
   if (currentAudio) {
@@ -227,33 +326,47 @@ export function SpeakButton({
   instructions,
   speed,
 }: SpeakButtonProps) {
-  const [state, setState] = useState<State>('idle');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [state, setState] =
+    useState<State>('idle');
+
+  const audioRef =
+    useRef<HTMLAudioElement | null>(
+      null,
+    );
 
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
 
-        if (currentAudio === audioRef.current) {
+        if (
+          currentAudio ===
+          audioRef.current
+        ) {
           currentAudio = null;
         }
       }
     };
   }, []);
 
-  const attach = (audio: HTMLAudioElement) => {
+  const attach = (
+    audio: HTMLAudioElement,
+  ) => {
     audio.onended = () => {
       setState('ended');
 
-      if (currentAudio === audio) {
+      if (
+        currentAudio === audio
+      ) {
         currentAudio = null;
       }
     };
 
     audio.onpause = () => {
       setState((s) =>
-        s === 'playing' ? 'paused' : s,
+        s === 'playing'
+          ? 'paused'
+          : s,
       );
     };
 
@@ -266,9 +379,14 @@ export function SpeakButton({
     };
   };
 
-  const play = async (audio: HTMLAudioElement) => {
+  const play = async (
+    audio: HTMLAudioElement,
+  ) => {
     try {
-      await playExclusive(audio);
+      await playExclusive(
+        audio,
+      );
+
       setState('playing');
     } catch {
       setState('error');
@@ -276,9 +394,13 @@ export function SpeakButton({
   };
 
   const handleClick = async () => {
-    const existing = audioRef.current;
+    const existing =
+      audioRef.current;
 
-    if (state === 'playing' && existing) {
+    if (
+      state === 'playing' &&
+      existing
+    ) {
       existing.pause();
       setState('paused');
       return;
@@ -286,9 +408,14 @@ export function SpeakButton({
 
     if (
       existing &&
-      (state === 'paused' || state === 'ended')
+      (
+        state === 'paused' ||
+        state === 'ended'
+      )
     ) {
-      if (state === 'ended') {
+      if (
+        state === 'ended'
+      ) {
         existing.currentTime = 0;
       }
 
@@ -296,27 +423,36 @@ export function SpeakButton({
       return;
     }
 
-    const spoken = cleanTextForSpeech(text);
+    const spoken =
+      cleanTextForSpeech(
+        text,
+      );
 
-    if (!spoken) return;
+    if (!spoken) {
+      return;
+    }
 
     setState('loading');
 
     try {
-      const src = await getSpeechSrc(
-        messageId,
-        text,
-        {
-          voice,
-          instructions,
-          speed,
-        },
-      );
+      const src =
+        await getSpeechSrc(
+          messageId,
+          text,
+          {
+            voice,
+            instructions,
+            speed,
+          },
+        );
 
-      const audio = new Audio(src);
+      const audio =
+        new Audio(src);
 
       audio.preload = 'auto';
-      audioRef.current = audio;
+
+      audioRef.current =
+        audio;
 
       attach(audio);
 
@@ -357,7 +493,9 @@ export function SpeakButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={state === 'loading'}
+      disabled={
+        state === 'loading'
+      }
       aria-label={label}
       className="mt-1.5 inline-flex items-center gap-1.5 min-h-[36px] px-2.5 py-1.5 rounded-full text-[12px] font-medium text-muted-foreground bg-foreground/5 hover:bg-foreground/10 active:scale-[0.97] transition disabled:opacity-70"
     >
