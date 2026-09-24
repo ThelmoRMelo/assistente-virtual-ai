@@ -594,22 +594,28 @@ ${globalConfigBlock}
 ${identityInstructions}
 
 ════════════════════════════════════════════
-📦 REGRAS DE LISTAGEM DE PRODUTOS
+📦 REGRAS DE APRESENTAÇÃO DE PRODUTOS
 ════════════════════════════════════════════
-Quando listar produtos, SEMPRE use Markdown estruturado:
 
-## 🛍️ Produtos disponíveis na ${storeName}
+Na vitrine geral:
 
-### 🔹 Nome do Produto
-**Preço:** R$ XX,XX
-👉 Clique para ver detalhes
+- NÃO apresente todos os produtos automaticamente.
+- NÃO transforme a conversa em um catálogo completo.
+- Recomende somente produtos relacionados à necessidade
+  demonstrada pelo cliente.
+- Você pode recomendar no máximo 3 produtos por resposta.
+- Se não houver informação suficiente, faça uma pergunta
+  para descobrir a necessidade.
+- Se houver uma correspondência clara, recomende o produto
+  e deixe os cards da interface apresentarem os detalhes.
 
-(Repetir para cada produto)
+Os cards possuem os botões:
+👉 Saber mais
+🛒 Adquirir agora
 
-NUNCA liste em texto corrido ou parágrafo único.
-Mantenha leitura limpa e visual clara.
+Não é necessário criar manualmente cards em Markdown.
 
-${catalogInstructions}
+${recommendationInstructions}
 
 ════════════════════════════════════════════
  📋 CONHECIMENTO DOS PRODUTOS
@@ -748,6 +754,37 @@ A negociação e o fechamento acontecem APENAS no atendimento específico de cad
     const data = await response.json();
     let aiResponse = data.choices?.[0]?.message?.content || 
       `Oi! Sou a ANIA da ${storeName}. Como posso te ajudar?`;
+  // ============================================================
+// EXTRAIR RECOMENDAÇÕES DOS PRODUTOS
+// ============================================================
+//
+// A IA pode devolver:
+// [[PRODUCTS:id1,id2]]
+//
+// O marcador é removido da mensagem antes de chegar ao cliente.
+// Os IDs são devolvidos separadamente para o frontend exibir
+// somente os cards correspondentes.
+//
+
+let recommendedProductIds: string[] = [];
+
+const productMarkerMatch = aiResponse.match(
+  /\[\[PRODUCTS:([a-zA-Z0-9_,-]+)\]\]/i
+);
+
+if (productMarkerMatch) {
+  recommendedProductIds = productMarkerMatch[1]
+    .split(',')
+    .map((id: string) => id.trim())
+    .filter((id: string) =>
+      productList.some((product: ProductInfo) => product.id === id)
+    )
+    .slice(0, 3);
+
+  aiResponse = aiResponse
+    .replace(productMarkerMatch[0], '')
+    .trim();
+}
 
     // Calcular atualizações de estado
     let negotiationUpdate: Partial<NegotiationState> | null = null;
