@@ -659,7 +659,19 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
 
         {messages.map((message, index) => {
           const isCatalog = message.content === CATALOG_MARKER;
+const isFilteredCatalog = message.content.startsWith(FILTERED_CATALOG_PREFIX);
 
+const filteredProductIds = isFilteredCatalog
+  ? message.content
+      .replace(FILTERED_CATALOG_PREFIX, '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean)
+  : [];
+
+const catalogProducts = isFilteredCatalog
+  ? supabaseProducts.filter(p => filteredProductIds.includes(p.id))
+  : supabaseProducts;
           if (isCatalog) {
             return (
               <div
