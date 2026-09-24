@@ -478,24 +478,9 @@ Se nenhum produto for relevante, NÃO use o marcador.
 O marcador é interno e será removido antes de chegar ao cliente.
 
 ════════════════════════════════════════════════════════════
-//`
-  //: '';
-   //   catalogInstructions = `
-//════════════════════════════════════════════
-//📦 CLIENTE PEDIU CATÁLOGO - USE MARKDOWN!
-//════════════════════════════════════════════
-//FORMATO OBRIGATÓRIO:
-
-//## 🛍️ Produtos disponíveis na ${storeName}
-
-//${catalogMarkdown}
-
-//REGRAS:
-//- Cada produto em bloco separado
-//- Nome em **negrito**
-//- Preço destacado
-//- NUNCA listar em texto corrido
-//════════════════════════════════════════════`;
+`
+  : '';
+   
     }
 
     // Instruções de identidade
