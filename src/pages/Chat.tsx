@@ -486,13 +486,27 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
     });
   }
 
-  if (data?.showCatalog && supabaseProducts.length > 0) {
+  //if (data?.showCatalog && supabaseProducts.length > 0) {
+    //await addMessage(
+      //CATALOG_MARKER,
+      //'bot',
+      //'Catálogo'
+    //);
+  //}
+
+  if (data?.recommendedProductIds?.length) {
+  const validIds = data.recommendedProductIds.filter((id: string) =>
+    supabaseProducts.some(p => p.id === id)
+  );
+
+  if (validIds.length > 0) {
     await addMessage(
-      CATALOG_MARKER,
+      `${FILTERED_CATALOG_PREFIX}${validIds.join(',')}`,
       'bot',
-      'Catálogo'
+      'Produtos recomendados'
     );
   }
+} 
 
   if (data?.negotiationUpdate) {
     await updateNegotiation(data.negotiationUpdate);
