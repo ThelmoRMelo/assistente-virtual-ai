@@ -481,7 +481,6 @@ O marcador é interno e será removido antes de chegar ao cliente.
 `
   : '';
    
-    }
 
     // Instruções de identidade
     let identityInstructions = "";
