@@ -128,9 +128,14 @@ export default function Chat() {
     if (!autoSpeakEnabled) return;
 
     const lastBotMessage = [...messages]
-      .reverse()
-      .find((m) => m.sender === 'bot' && m.content !== CATALOG_MARKER);
-
+  .reverse()
+  .find(
+    (m) =>
+      m.sender === 'bot' &&
+      m.content !== CATALOG_MARKER &&
+      !m.content.startsWith(FILTERED_CATALOG_PREFIX)
+  );
+    
     if (!lastBotMessage) return;
     if (lastAutoSpokenMessageIdRef.current === lastBotMessage.id) return;
     if (!cleanTextForSpeech(lastBotMessage.content)) return;
