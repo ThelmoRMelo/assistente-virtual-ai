@@ -372,16 +372,22 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
 }));
 
       const productContext = contextProduct ? {
-        id: contextProduct.id,
-        nome: contextProduct.name,
-        preco: contextProduct.price,
-        descricao: contextProduct.long_description || contextProduct.short_description || '',
-        categoria: contextProduct.category || '',
-        precoMinimo: contextProduct.min_price_allowed,
-        formasPagamento: contextProduct.payment_methods || [],
-        infoEntrega: contextProduct.delivery_info || '',
-        linkPagamento: contextProduct.payment_link || ''
-      } : null;
+  id: contextProduct.id,
+  nome: contextProduct.name,
+  preco: contextProduct.price,
+
+  // Descrição pública
+  descricao: contextProduct.short_description || '',
+
+  // Conhecimento completo da ANIA sobre este produto
+  conhecimentoIA: contextProduct.long_description || '',
+
+  categoria: contextProduct.category || '',
+  precoMinimo: contextProduct.min_price_allowed,
+  formasPagamento: contextProduct.payment_methods || [],
+  infoEntrega: contextProduct.delivery_info || '',
+  linkPagamento: contextProduct.payment_link || ''
+} : null;
 
       const recentHistory = messages.slice(-6).map(m => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
