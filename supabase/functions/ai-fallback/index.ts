@@ -213,18 +213,7 @@ ${p.infoEntrega || '(não cadastrada)'}
 `;
 }).join('\n');
 
-    // Formatar catálogo simples para contexto interno
-    const catalogText = productList.map((p: ProductInfo) => {
-      const price = Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      const minPrice = p.precoMinimo 
-        ? Number(p.precoMinimo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-        : null;
-      let line = `• ${p.nome}: ${price}`;
-      if (minPrice) line += ` (mínimo: ${minPrice})`;
-      if (p.descricao) line += ` - ${p.descricao.substring(0, 80)}`;
-      return line;
-    }).join('\n');
-
+    
     // Contexto de produto específico
     let focusedProductText = "";
     let focusedProduct: ProductContext | null = null;
