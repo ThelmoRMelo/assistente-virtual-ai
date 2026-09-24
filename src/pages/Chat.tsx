@@ -352,14 +352,24 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
 
     try {
       const productsList = supabaseProducts.map(p => ({
-        id: p.id,
-        nome: p.name,
-        preco: Number(p.price),
-        descricao: p.short_description || p.long_description || '',
-        precoMinimo: p.min_price_allowed,
-        formasPagamento: p.payment_methods || [],
-        infoEntrega: p.delivery_info || ''
-      }));
+  id: p.id,
+  nome: p.name,
+  preco: Number(p.price),
+
+  // Texto público usado nos cards
+  descricao: p.short_description || '',
+
+  // Conhecimento interno da ANIA para entender
+  // quando este produto é relevante para o cliente.
+  conhecimentoIA: p.long_description || '',
+
+  categoria: p.category || '',
+
+  precoMinimo: p.min_price_allowed,
+  formasPagamento: p.payment_methods || [],
+  infoEntrega: p.delivery_info || '',
+  linkPagamento: p.payment_link || ''
+}));
 
       const productContext = contextProduct ? {
         id: contextProduct.id,
