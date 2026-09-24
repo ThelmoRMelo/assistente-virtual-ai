@@ -691,7 +691,7 @@ const catalogProducts = isFilteredCatalog
                     🛍️ Catálogo
                   </div>
                   <CatalogCards
-                    products={supabaseProducts.map(p => ({
+                  products={catalogProducts.map(p => ({
                       id: p.id,
                       name: p.name,
                       price: Number(p.price),
