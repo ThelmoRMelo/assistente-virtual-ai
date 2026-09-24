@@ -285,18 +285,20 @@ export default function Chat() {
     }
 
     isInitializingRef.current = true;
-    const convAtStart = conversationId;
-    (async () => {
-      try {
-        await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
-        if (!contextProduct && supabaseProducts.length > 0) {
-          await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
-        }
-        initializedConvRef.current = convAtStart;
-      } finally {
-        isInitializingRef.current = false;
-      }
-    })();
+const convAtStart = conversationId;
+
+(async () => {
+  try {
+    // A abertura do atendimento mostra somente a saudação.
+    // O catálogo nunca é exibido automaticamente.
+    await addMessage(getWelcomeMessage(false), 'bot', 'Boas-vindas');
+
+    initializedConvRef.current = convAtStart;
+  } finally {
+    isInitializingRef.current = false;
+  }
+})();
+    
   }, [conversationId, conversationLoading, loadingProducts, messages.length, getWelcomeMessage, addMessage, contextProduct, supabaseProducts.length]);
 
   // Handler para limpar conversa e iniciar novo atendimento.
