@@ -333,17 +333,22 @@ const convAtStart = conversationId;
     setIsTyping(true);
     await addMessage(trimmedInput, 'user');
 
-    // Vitrine mode: intercept catalog questions and reply with cards (no AI call needed)
-    if (!contextProduct && CATALOG_REGEX.test(trimmedInput) && supabaseProducts.length > 0) {
-      const intro = supabaseProducts.length === 1
-        ? 'Temos atualmente este produto disponível. Toque abaixo para ver os detalhes 👇'
-        : `Veja os ${supabaseProducts.length} produtos disponíveis. Toque em "Saber mais" para conversar sobre um deles 👇`;
-      await addMessage(intro, 'bot', 'Catálogo');
-      await addMessage(CATALOG_MARKER, 'bot', 'Catálogo');
-      setIsTyping(false);
-      inputRef.current?.focus();
-      return;
-    }
+    // Pedido explícito do catálogo completo.
+// Não mostramos todos os produtos dentro do chat.
+// Levamos o cliente para a vitrine, onde o catálogo completo já existe.
+if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
+  const catalogLink = vitrineLink;
+
+  await addMessage(
+    `Claro! 🛍️ Você pode ver todos os nossos produtos diretamente na vitrine.\n\n👉 [Ver todos os produtos](${catalogLink})`,
+    'bot',
+    'Catálogo'
+  );
+
+  setIsTyping(false);
+  inputRef.current?.focus();
+  return;
+}
 
     try {
       const productsList = supabaseProducts.map(p => ({
