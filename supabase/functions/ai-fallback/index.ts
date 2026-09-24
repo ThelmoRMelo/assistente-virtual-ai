@@ -233,7 +233,6 @@ IMPORTANTE: O cliente JÁ ESCOLHEU este produto. Foque apenas nele. NÃO liste o
     const isAskingIdentity = /\b(quem (é|e) você|quem (és|es) tu|você (é|e) quem|qual (é|e) seu nome|me apresent|se apresent)\b/.test(msgLower);
     
     // Detectar se cliente quer ver catálogo/produtos
-    const isAskingCatalog = /\b(catálogo|catalogo|produtos|opções|opcoes|o que (vocês|voces) (vende|tem|oferecem)|me mostra|quero ver|lista|cardápio|cardapio)\b/.test(msgLower);
     
     // Detectar se cliente está pedindo link de pagamento
     const isAskingPaymentLink = /\b(pix|link|pagar|pagamento|como (eu )?(pago|faco|faço)|me (manda|passa|envia) o link|quero (pagar|comprar)|finalizar|fechar pedido)\b/.test(msgLower);
