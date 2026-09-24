@@ -612,9 +612,9 @@ Mantenha leitura limpa e visual clara.
 ${catalogInstructions}
 
 ════════════════════════════════════════════
-📋 CATÁLOGO INTERNO
+ 📋 CONHECIMENTO DOS PRODUTOS
 ════════════════════════════════════════════
-${catalogText}
+${productKnowledgeText}
 ${focusedProductText}
 
 ${negotiationInfo}
