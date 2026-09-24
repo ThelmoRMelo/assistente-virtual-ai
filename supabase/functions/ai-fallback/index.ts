@@ -426,9 +426,71 @@ PRIORIDADE: Responda diretamente ao pedido do cliente.`;
       ? `\n⚠️ SUA ÚLTIMA RESPOSTA: "${lastBotResponse.substring(0, 80)}..."\nNÃO repita. Avance a conversa.`
       : '';
 
-    // Instruções de catálogo em Markdown
-    let catalogInstructions = "";
-    if (isAskingCatalog && !focusedProduct) {
+    // ============================================================
+// RECOMENDAÇÃO INTELIGENTE DE PRODUTOS
+// ============================================================
+
+const recommendationInstructions = chatMode === 'vitrine' && !focusedProduct
+  ? `
+════════════════════════════════════════════════════════════
+🎯 RECOMENDAÇÃO INTELIGENTE DE PRODUTOS
+════════════════════════════════════════════════════════════
+
+Você está atendendo na vitrine geral.
+
+NÃO apresente automaticamente todos os produtos.
+
+Use o bloco "CONHECIMENTO DA ANIA" de cada produto para
+entender a necessidade do cliente.
+
+Seu trabalho é agir como uma vendedora:
+
+1. Entenda o que o cliente está procurando.
+2. Compare a necessidade dele com o conhecimento cadastrado
+   dos produtos.
+3. Se houver correspondência clara, recomende somente os
+   produtos relevantes.
+4. Se houver várias opções realmente pertinentes, selecione
+   no máximo 3.
+5. Se a necessidade ainda estiver vaga, faça uma pergunta
+   curta para entender melhor antes de recomendar.
+6. Se nenhum produto cadastrado atender claramente à
+   necessidade, não invente uma solução.
+7. Nunca recomende um produto apenas porque ele existe.
+8. Nunca invente benefícios, indicações, resultados,
+   contraindicações ou características.
+9. À medida que o cliente fornecer mais informações, refine
+   a recomendação.
+
+QUANDO RECOMENDAR PRODUTOS:
+
+Ao final da resposta, acrescente uma linha técnica neste formato:
+
+[[PRODUCTS:ID1,ID2]]
+
+Use somente os IDs dos produtos que realmente são relevantes.
+
+Exemplo:
+
+"Para o que você está procurando, encontrei uma opção que
+pode fazer sentido para você. Dá uma olhada abaixo 👇
+
+[[PRODUCTS:ID_DO_PRODUTO]]"
+
+Se houver duas opções:
+
+[[PRODUCTS:ID1,ID2]]
+
+Se ainda não houver informação suficiente para recomendar,
+NÃO use o marcador.
+
+Se nenhum produto for relevante, NÃO use o marcador.
+
+O marcador é interno e será removido antes de chegar ao cliente.
+
+════════════════════════════════════════════════════════════
+`
+  : '';
       catalogInstructions = `
 ════════════════════════════════════════════
 📦 CLIENTE PEDIU CATÁLOGO - USE MARKDOWN!
