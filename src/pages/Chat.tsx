@@ -30,8 +30,13 @@ import {
 const AUTO_SPEAK_KEY = 'ania_auto_speak_enabled';
 
 
+//const CATALOG_MARKER = '__CATALOG__';
+//const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
 const CATALOG_MARKER = '__CATALOG__';
-const CATALOG_REGEX = /\b(catálogo|catalogo|produtos?|opções|opcoes|cardápio|cardapio|o que (vocês|voces|tu) (vende|tem|oferec|têm|tens)|me mostra|quero ver|mostrar (os )?produtos|lista de produtos|disponíveis|disponiveis|o que tem (para|pra) vender)\b/i;
+const FILTERED_CATALOG_PREFIX = '__CATALOG_FILTERED__:';
+
+const FULL_CATALOG_REGEX = /\b(catálogo completo|catalogo completo|catálogo inteiro|catalogo inteiro|todos os produtos|toda a loja|ver tudo|quero ver tudo|quero ver todos|mostrar todos|mostre todos|lista completa|todos vocês produtos|todos os produtos que vocês têm|todos os produtos que voces tem)\b/i;
+
 
 
 interface SupabaseProduct {
