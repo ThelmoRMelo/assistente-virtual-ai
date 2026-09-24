@@ -170,14 +170,48 @@ serve(async (req) => {
     // Verificar se já houve mensagens (não é primeira interação)
     const isFirstMessage = history.length === 0;
 
-    // Formatar catálogo em MARKDOWN ESTRUTURADO para a IA
-    const catalogMarkdown = productList.map((p: ProductInfo) => {
-      const price = Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      return `### 🔹 ${p.nome}
-**Preço:** ${price}
-${p.descricao ? `📝 ${p.descricao.substring(0, 100)}` : ''}
-👉 Clique para ver detalhes`;
-    }).join('\n\n');
+    // ============================================================
+// CONHECIMENTO DOS PRODUTOS PARA A ANIA
+// ============================================================
+//
+// A descrição curta é apenas informação pública.
+// O conhecimentoIA é o material que permite à ANIA
+// entender para quem o produto é relevante e em quais
+// necessidades ele pode ser recomendado.
+//
+// IMPORTANTE:
+// A IA nunca deve inventar informações que não estejam
+// cadastradas nesses campos.
+//
+
+const productKnowledgeText = productList.map((p: ProductInfo) => {
+  const price = Number(p.preco).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+
+  return `
+═══════════════════════════════════════════
+PRODUTO
+ID: ${p.id}
+NOME: ${p.nome}
+CATEGORIA: ${p.categoria || '(não cadastrada)'}
+PREÇO: ${price}
+
+DESCRIÇÃO PÚBLICA:
+${p.descricao || '(não cadastrada)'}
+
+CONHECIMENTO DA ANIA:
+${p.conhecimentoIA || '(não cadastrado)'}
+
+PAGAMENTO:
+${p.formasPagamento?.length ? p.formasPagamento.join(', ') : '(não cadastrado)'}
+
+ENTREGA:
+${p.infoEntrega || '(não cadastrada)'}
+═══════════════════════════════════════════
+`;
+}).join('\n');
 
     // Formatar catálogo simples para contexto interno
     const catalogText = productList.map((p: ProductInfo) => {
