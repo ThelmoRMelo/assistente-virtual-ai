@@ -672,7 +672,7 @@ const filteredProductIds = isFilteredCatalog
 const catalogProducts = isFilteredCatalog
   ? supabaseProducts.filter(p => filteredProductIds.includes(p.id))
   : supabaseProducts;
-          if (isCatalog) {
+          if (isCatalog || isFilteredCatalog) {
             return (
               <div
                 key={message.id}
