@@ -688,8 +688,8 @@ const catalogProducts = isFilteredCatalog
                     style={chatCatalogCard ? { backgroundColor: chatCatalogCard, clipPath: 'polygon(100% 0, 100% 100%, 0 0)' } : { clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
                   />
                   <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
-                    🛍️ Catálogo
-                  </div>
+  {isFilteredCatalog ? '🎯 Encontrei estas opções para você' : '🛍️ Catálogo'}
+</div>>
                   <CatalogCards
                   products={catalogProducts.map(p => ({
                       id: p.id,
