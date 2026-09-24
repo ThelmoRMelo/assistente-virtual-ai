@@ -839,13 +839,14 @@ if (productMarkerMatch) {
     }
 
     return new Response(
-      JSON.stringify({ 
-        response: aiResponse,
-        negotiationUpdate,
-        closingUpdate
-      }), 
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+  JSON.stringify({
+    response: aiResponse,
+    recommendedProductIds,
+    negotiationUpdate,
+    closingUpdate,
+  }),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+);
 
   } catch (error) {
     console.error("ai-fallback error:", error);
