@@ -10,7 +10,18 @@ interface ProductInfo {
   id: string;
   nome: string;
   preco: number;
+
+  // Descrição curta/publicada do produto
   descricao?: string;
+
+  // Conhecimento interno da ANIA sobre o produto.
+  // Usado para entender necessidades, perfil do cliente,
+  // características, benefícios, diferenciais, cuidados,
+  // restrições e situações em que o produto é relevante.
+  conhecimentoIA?: string;
+
+  categoria?: string;
+
   precoMinimo?: number | null;
   formasPagamento?: string[];
   infoEntrega?: string;
