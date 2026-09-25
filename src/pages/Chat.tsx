@@ -36,8 +36,7 @@ const CATALOG_MARKER = '__CATALOG__';
 const FILTERED_CATALOG_PREFIX = '__CATALOG_FILTERED__:';
 
 const FULL_CATALOG_REGEX = /\b(catálogo completo|catalogo completo|catálogo inteiro|catalogo inteiro|quero ver o catálogo|quero ver o catalogo|me mostra o catálogo|me mostra o catalogo|me mostre o catálogo|me mostre o catalogo|todos os produtos|toda a loja|ver tudo|quero ver tudo|quero ver todos|mostrar todos|mostre todos|lista completa|todos vocês produtos|todos os produtos que vocês têm|todos os produtos que voces tem)\b/i;
-
-const FILTERED_CATALOG_REQUEST_REGEX = /\b(catálogo|catalogo)\s+(desses|dos)\s+produtos\b|\b(quero ver|me mostra|me mostre)\s+(esses|os)\s+produtos\b/i;
+const FILTERED_CATALOG_REQUEST_REGEX = /\b(?:o\s+)?(catálogo|catalogo)\s+(desses|dos)\s+produtos\b|\b(quero ver|me mostra|me mostre)\s+(esses|os)\s+produtos\b/i;
 
 interface SupabaseProduct {
   id: string;
