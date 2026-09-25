@@ -346,3 +346,204 @@ export default function Chat() {
       inputRef.current?.focus();
     }
   };
+
+    if (loadingProducts || conversationLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="mt-2 text-muted-foreground text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  const storeName = tenantConfig?.business_name || config?.business_name || business.nome || 'Assistente';
+  const vitrineLink = slug ? `/loja/${slug}` : '/vitrine';
+
+  // Chat appearance from business_config
+  const chatHeaderColor = config?.chat_header_color || undefined;
+  const chatInputBg = config?.chat_input_bg_color || undefined;
+  const chatSendColor = config?.chat_send_button_color || 'hsl(270 70% 60%)';
+  const chatAniaBubble = config?.chat_ania_bubble_color || undefined;
+  const chatUserBubble = config?.chat_user_bubble_color || '#005c4b';
+  const chatIconColor = config?.chat_icon_color || undefined;
+  const chatCatalogCard = config?.chat_catalog_card_color || undefined;
+  const chatLinkColor = config?.chat_link_color || undefined;
+
+  const wallpaperUrl = config?.chat_wallpaper_url || '';
+  const wallpaperOpacity = (config?.chat_wallpaper_opacity ?? 100) / 100;
+  const wallpaperBlurMap = { none: '0px', light: '3px', medium: '6px', strong: '12px' } as const;
+  const wallpaperBlur = wallpaperBlurMap[(config?.chat_wallpaper_blur as keyof typeof wallpaperBlurMap) || 'none'];
+  const wallpaperDim = config?.chat_wallpaper_dim ?? false;
+  const wallpaperFit = config?.chat_wallpaper_fit || 'cover';
+  const bgSize = wallpaperFit === 'contain' ? 'contain' : wallpaperFit === 'center' ? 'auto' : wallpaperFit === 'repeat' ? 'auto' : 'cover';
+  const bgRepeat = wallpaperFit === 'repeat' ? 'repeat' : 'no-repeat';
+  const bgPosition = 'center';
+
+  return (
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={{ background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(230 30% 12%) 100%)', ['--chat-link' as any]: chatLinkColor }}
+    >
+      {wallpaperUrl && (
+        <>
+          <div
+            className="fixed inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `url(${wallpaperUrl})`,
+              backgroundSize: bgSize,
+              backgroundRepeat: bgRepeat,
+              backgroundPosition: bgPosition,
+              opacity: wallpaperOpacity,
+              filter: wallpaperBlur !== '0px' ? `blur(${wallpaperBlur})` : undefined,
+              zIndex: 0,
+            }}
+          />
+          {wallpaperDim && (
+            <div className="fixed inset-0 pointer-events-none bg-black/40" style={{ zIndex: 0 }} />
+          )}
+        </>
+      )}
+      <div className="relative z-[1] flex-1 flex flex-col min-h-screen">
+      {/* Header - mantido igual, apenas ajuste de cor */}
+      <header
+        className="bg-card/95 backdrop-blur-md border-b border-border/30 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm"
+        style={chatHeaderColor ? { backgroundColor: chatHeaderColor } : undefined}
+      >
+        {/* Botão voltar para vitrine */}
+        <Link to={vitrineLink} className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        
+        {contextProduct?.image_url ? (
+          <img src={contextProduct.image_url} alt={contextProduct.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-primary" />
+          </div>
+        )}
+        <div className="flex-1">
+          <h1 className="font-semibold text-foreground">{contextProduct?.name || storeName}</h1>
+          <p className="text-xs text-muted-foreground">{isTyping ? 'Digitando...' : 'Online'}</p>
+        </div>
+        
+        {/* Botão limpar conversa */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClearConversation}
+          disabled={isClearing || isTyping}
+          className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+          title="Iniciar novo atendimento"
+        >
+          {isClearing ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Trash2 className="w-5 h-5" />
+          )}
+        </Button>
+        
+        {/* Link para ver produtos */}
+        <Link to={vitrineLink} className="p-2 hover:bg-muted/50 rounded-full transition-colors">
+          <ShoppingBag className="w-5 h-5 text-muted-foreground" />
+        </Link>
+      </header>
+
+      {/* Chat area - estilo WhatsApp */}
+      <main className="flex-1 overflow-y-auto px-3 py-4 space-y-3">
+        {/* Galeria de imagens do produto - exibida quando há galeria */}
+        {contextProduct?.image_url && (contextProduct.has_gallery && galleryImages.length > 0) && (
+          <div className="mb-4">
+            <ProductGalleryPreview
+              coverImage={contextProduct.image_url}
+              galleryImages={galleryImages}
+              productName={contextProduct.name}
+              onOpenGallery={handleOpenGallery}
+            />
+          </div>
+        )}
+
+        {messages.map((message, index) => {
+          const isCatalog = message.content === CATALOG_MARKER;
+
+          if (isCatalog) {
+            return (
+              <div
+                key={message.id}
+                className="flex justify-start animate-slide-up"
+                style={{ animationDelay: `${index * 20}ms` }}
+              >
+                <div
+                  className="max-w-[92%] w-full text-foreground rounded-2xl rounded-tl-md border border-border/20 p-2.5 shadow-sm relative bg-card"
+                  style={chatCatalogCard ? { backgroundColor: chatCatalogCard } : undefined}
+                >
+                  <div
+                    className="absolute top-0 -left-1.5 w-3 h-3 border-l border-t border-border/20 bg-card"
+                    style={chatCatalogCard ? { backgroundColor: chatCatalogCard, clipPath: 'polygon(100% 0, 100% 100%, 0 0)' } : { clipPath: 'polygon(100% 0, 100% 100%, 0 0)' }}
+                  />
+                  <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
+                    🛍️ Catálogo
+                  </div>
+                  <CatalogCards
+                    products={supabaseProducts.map(p => ({
+                      id: p.id,
+                      name: p.name,
+                      price: Number(p.price),
+                      image_url: p.image_url,
+                      short_description: p.short_description,
+                      payment_link: p.payment_link,
+                      tenant_id: p.tenant_id,
+                    }))}
+                    slug={slug}
+                  />
+                  <span className="text-[10px] mt-1 block text-right text-muted-foreground">
+                    {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={message.id}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
+              style={{ animationDelay: `${index * 20}ms` }}
+            >
+              <div
+                className={`max-w-[80%] relative px-3 py-2 shadow-sm ${
+                  message.sender === 'user'
+                    ? 'text-white rounded-2xl rounded-tr-md'
+                    : 'text-foreground rounded-2xl rounded-tl-md border border-border/20'
+                }`}
+                style={
+                  message.sender === 'user'
+                    ? { backgroundColor: chatUserBubble }
+                    : chatAniaBubble ? { backgroundColor: chatAniaBubble } : undefined
+                }
+              >
+                <div
+                  className={`absolute top-0 w-3 h-3 ${
+                    message.sender === 'user' ? '-right-1.5' : '-left-1.5 border-l border-t border-border/20'
+                  }`}
+                  style={{
+                    backgroundColor:
+                      message.sender === 'user' ? chatUserBubble : (chatAniaBubble || undefined),
+                    clipPath: message.sender === 'user'
+                      ? 'polygon(0 0, 100% 0, 0 100%)'
+                      : 'polygon(100% 0, 100% 100%, 0 0)',
+                  }}
+                />
+
+                <div className="text-[15px] leading-relaxed [&_a]:text-[var(--chat-link,inherit)]">
+                  <MarkdownMessage content={message.content} />
+                </div>
+                {message.sender === 'bot' && (
+                  <SpeakButton
+                    messageId={message.id}
+                    text={message.content}
+                    voice={config?.assistant_voice}
+                    instructions={config?.assistant_voice_style}
+                    speed={config?.assistant_voice_speed}
+                  />
+                )}
+        
