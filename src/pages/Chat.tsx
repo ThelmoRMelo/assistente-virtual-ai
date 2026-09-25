@@ -444,11 +444,15 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
       });
 
       if (error) {
+  console.error('[Chat] Erro ao chamar ai-fallback:', error);
+  console.error('[Chat] Dados retornados pela função:', data);
+
   await addMessage(
-    'Hmm, tive um problema. Pode repetir?',
+    `⚠️ Erro ao processar sua mensagem.\n\nDetalhes técnicos: ${error.message || 'erro desconhecido'}`,
     'bot',
     'Erro'
   );
+}
 } else {
   const response = data?.response || 'Como posso ajudar?';
 
