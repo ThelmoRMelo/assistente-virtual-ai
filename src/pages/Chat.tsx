@@ -896,5 +896,7 @@ const catalogProducts = isFilteredCatalog
           initialIndex={galleryInitialIndex}
         />
       )}
-      </div>
+            </div>
     </div>
+  );
+}
