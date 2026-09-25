@@ -354,11 +354,6 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
   return;
 }
 
-    setIsTyping(false);
-  inputRef.current?.focus();
-  return;
-}
-
     try {
       const productsList = supabaseProducts.map(p => ({
   id: p.id,
