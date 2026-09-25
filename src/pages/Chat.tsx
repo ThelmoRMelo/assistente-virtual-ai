@@ -337,34 +337,9 @@ const convAtStart = conversationId;
     setIsTyping(true);
     await addMessage(trimmedInput, 'user');
 
-// Pedido para ver os produtos que a ANIA acabou de recomendar.
-// Reutiliza os IDs do último catálogo filtrado para mostrar
-// novamente os cards reais com "Saber mais" e "Adquirir agora".
-if (!contextProduct && FILTERED_CATALOG_REQUEST_REGEX.test(trimmedInput)) {
-  const latestFilteredCatalog = [...messages]
-    .reverse()
-    .find(
-      (m) =>
-        m.sender === 'bot' &&
-        m.content.startsWith(FILTERED_CATALOG_PREFIX)
-    );
-
-  if (latestFilteredCatalog) {
-    await addMessage(
-      latestFilteredCatalog.content,
-      'bot',
-      'Produtos recomendados'
-    );
-
-    setIsTyping(false);
-    inputRef.current?.focus();
-    return;
-  }
-}
-
 // Pedido explícito do catálogo completo.
-// Se não houver produtos recomendados anteriormente,
-// continua levando o cliente para a vitrine completa.
+// Não mostramos todos os produtos dentro do chat.
+// Levamos o cliente para a vitrine, onde o catálogo completo já existe.
 if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
   const catalogLink = vitrineLink;
 
