@@ -692,7 +692,7 @@ const catalogProducts = isFilteredCatalog
                   />
                   <div className="text-xs text-muted-foreground px-1 pb-1 font-medium">
   {isFilteredCatalog ? '🎯 Encontrei estas opções para você' : '🛍️ Catálogo'}
-</div>>
+</div>
                   <CatalogCards
                   products={catalogProducts.map(p => ({
                       id: p.id,
