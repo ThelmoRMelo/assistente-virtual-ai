@@ -859,4 +859,31 @@ const catalogProducts = isFilteredCatalog
                 title={voice.status === 'recording' ? 'Parar gravação' : 'Gravar mensagem de voz'}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 disabled:opacity-50"
                 style={{
-                  background: voi
+                  background: voice.status === 'recording' ? 'hsl(0 80% 55% / 0.2)' : 'transparent',
+                  color: voice.status === 'recording' ? 'hsl(0 85% 65%)' : undefined,
+                }}
+              >
+                {voice.status === 'transcribing' ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                ) : voice.status === 'recording' ? (
+                  <Square className="w-4 h-4 fill-current" />
+                ) : (
+                  <Mic className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            )}
+          </div>
+          <Button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isTyping}
+            size="icon"
+            className="w-14 h-14 rounded-full text-white shadow-lg transition-all duration-200 active:scale-90 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 border-0 shrink-0"
+            style={{
+              background: chatSendColor.includes('gradient')
+                ? chatSendColor
+                : `linear-gradient(135deg, ${chatSendColor} 0%, ${chatSendColor} 100%)`,
+              boxShadow: `0 0 24px ${chatSendColor}80, 0 4px 16px ${chatSendColor}55, inset 0 1px 0 hsl(0 0% 100% / 0.2)`,
+            }}
+          >
+            <Send className="w-6 h-6 -ml-0.5" />
+          </
