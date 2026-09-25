@@ -37,6 +37,8 @@ const FILTERED_CATALOG_PREFIX = '__CATALOG_FILTERED__:';
 
 const FULL_CATALOG_REGEX = /\b(catálogo completo|catalogo completo|catálogo inteiro|catalogo inteiro|quero ver o catálogo|quero ver o catalogo|me mostra o catálogo|me mostra o catalogo|me mostre o catálogo|me mostre o catalogo|todos os produtos|toda a loja|ver tudo|quero ver tudo|quero ver todos|mostrar todos|mostre todos|lista completa|todos vocês produtos|todos os produtos que vocês têm|todos os produtos que voces tem)\b/i;
 
+const FILTERED_CATALOG_REQUEST_REGEX = /\b(catálogo|catalogo)\s+(desses|dos)\s+produtos\b|\b(quero ver|me mostra|me mostre)\s+(esses|os)\s+produtos\b/i;
+
 interface SupabaseProduct {
   id: string;
   name: string;
@@ -336,9 +338,34 @@ const convAtStart = conversationId;
     setIsTyping(true);
     await addMessage(trimmedInput, 'user');
 
-    // Pedido explícito do catálogo completo.
-// Não mostramos todos os produtos dentro do chat.
-// Levamos o cliente para a vitrine, onde o catálogo completo já existe.
+// Pedido para ver os produtos que a ANIA acabou de recomendar.
+// Reutiliza os IDs do último catálogo filtrado para mostrar
+// novamente os cards reais com "Saber mais" e "Adquirir agora".
+if (!contextProduct && FILTERED_CATALOG_REQUEST_REGEX.test(trimmedInput)) {
+  const latestFilteredCatalog = [...messages]
+    .reverse()
+    .find(
+      (m) =>
+        m.sender === 'bot' &&
+        m.content.startsWith(FILTERED_CATALOG_PREFIX)
+    );
+
+  if (latestFilteredCatalog) {
+    await addMessage(
+      latestFilteredCatalog.content,
+      'bot',
+      'Produtos recomendados'
+    );
+
+    setIsTyping(false);
+    inputRef.current?.focus();
+    return;
+  }
+}
+
+// Pedido explícito do catálogo completo.
+// Se não houver produtos recomendados anteriormente,
+// continua levando o cliente para a vitrine completa.
 if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
   const catalogLink = vitrineLink;
 
