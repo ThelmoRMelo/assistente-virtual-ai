@@ -452,7 +452,6 @@ if (!contextProduct && FULL_CATALOG_REGEX.test(trimmedInput)) {
     'bot',
     'Erro'
   );
-}
 } else {
   const response = data?.response || 'Como posso ajudar?';
 
