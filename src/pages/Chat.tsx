@@ -881,4 +881,20 @@ const catalogProducts = isFilteredCatalog
             }}
           >
             <Send className="w-6 h-6 -ml-0.5" />
-          </
+          </Button>
+        </div>
+      </footer>
+
+      {/* Modal da galeria de imagens */}
+      {contextProduct?.image_url && (
+        <ProductGalleryViewer
+          coverImage={contextProduct.image_url}
+          galleryImages={galleryImages}
+          productName={contextProduct.name}
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          initialIndex={galleryInitialIndex}
+        />
+      )}
+      </div>
+    </div>
