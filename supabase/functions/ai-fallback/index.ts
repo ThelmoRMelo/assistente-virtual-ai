@@ -296,7 +296,6 @@ ESTADO DA NEGOCIAÇÃO:
 - Link de pagamento oferecido? ${closing.hasOfferedPaymentLink ? 'SIM' : 'NÃO'}
 - Produto tem link? ${productHasPaymentLink ? 'SIM' : 'NÃO'}
 ═══════════════════════════════════════════`;
-
     // Lógica de desconto progressivo
     let discountGuidance = "";
     if (isAskingDiscount && focusedProduct && !isInClosingMode) {
@@ -604,8 +603,7 @@ REGRAS:
 - Nunca assumir método de pagamento sem confirmação
 - NUNCA inventar links
 - NUNCA usar placeholders como [LINK AQUI]
-
-════════════════════════════════════════════
+  ════════════════════════════════════════════
 🎯 FOCO NO PRODUTO SELECIONADO
 ════════════════════════════════════════════
 Quando o cliente demonstrar interesse em um produto:
