@@ -434,65 +434,12 @@ const { data, error } = await supabase.functions.invoke('ai-fallback', {
   // Assim podemos preparar o áudio usando exatamente o mesmo ID.
   const botMessageId = crypto.randomUUID();
 
-  const speechConfig = {
-    voice: config?.assistant_voice,
-    instructions: config?.assistant_voice_style,
-    speed: config?.assistant_voice_speed,
-  };
-
-  let audioPrepared = false;
-
-  /*
-   * IMPORTANTE:
-   *
-   * Enquanto este await estiver acontecendo, isTyping continua true.
-   * Portanto a ANIA permanece mostrando "Digitando..."
-   * enquanto o áudio está sendo preparado.
-   *
-   * A mensagem ainda NÃO foi adicionada ao chat.
-   */
-  if (autoSpeakEnabled && cleanTextForSpeech(response)) {
-    try {
-      await prepareMessageSpeech(
-        botMessageId,
-        response,
-        speechConfig
-      );
-
-      audioPrepared = true;
-    } catch (speechError) {
-      console.error(
-        '[Chat] Não foi possível preparar o áudio antecipadamente:',
-        speechError
-      );
-    }
-  }
-
-  /*
-   * SOMENTE DEPOIS que o áudio estiver pronto,
-   * colocamos a mensagem no chat.
-   */
-  const savedMessage = await addMessage(
-    response,
-    'bot',
-    data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA',
-    botMessageId
-  );
-
-  /*
-   * Se o áudio foi preparado com sucesso, reproduzimos
-   * imediatamente depois da mensagem entrar no chat.
-   */
-  if (audioPrepared && savedMessage) {
-    requestAnimationFrame(() => {
-      void playPreparedMessageSpeech(
-        botMessageId,
-        response,
-        speechConfig
-      );
-    });
-  }
-
+await addMessage(
+  response,
+  'bot',
+  data?.closingUpdate?.isClosing ? 'Fechamento' : 'IA',
+  botMessageId
+);
   //if (data?.showCatalog && supabaseProducts.length > 0) {
     //await addMessage(
       //CATALOG_MARKER,
