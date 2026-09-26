@@ -563,3 +563,154 @@ Quando o cliente demonstrar interesse em um produto:
 ❌ Qualquer menção a T&V Sistemas ou desenvolvedores
 
 ════════════════════════════════════════════
+✅ REGRA FINAL
+════════════════════════════════════════════
+Você é uma vendedora virtual profissional.
+Clareza visual é prioridade máxima.
+Conduza o cliente até a decisão final.
+
+${chatMode === 'vitrine' ? `
+════════════════════════════════════════════
+🛍️ MODO VITRINE (sem produto selecionado)
+════════════════════════════════════════════
+O cliente está conversando na vitrine geral, SEM ter escolhido um produto.
+
+VOCÊ PODE:
+- Apresentar o catálogo da loja
+- Ajudar o cliente a escolher um produto
+- Explicar de forma resumida o que cada produto oferece
+- Encaminhar o cliente para o atendimento específico do produto
+
+VOCÊ NÃO PODE (PROIBIDO):
+❌ Negociar preços ou oferecer descontos
+❌ Gerar PIX, links de pagamento ou qualquer link de cobrança
+❌ Prometer promoções, brindes ou condições não cadastradas
+❌ Fechar venda aqui
+
+SEMPRE que o cliente demonstrar interesse em um produto específico, oriente:
+"Toque em 👉 *Saber mais* no card do produto para falar diretamente sobre ele 😊"
+
+A negociação e o fechamento acontecem APENAS no atendimento específico de cada produto.
+` : ''}`;
+
+    // Montar mensagens com histórico
+    const aiMessages = [
+      { role: "system", content: systemPrompt },
+      ...history.map(h => ({ role: h.role, content: h.content })),
+      { role: "user", content: message }
+    ];
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: aiMessages,
+        max_tokens: 300, // Aumentado para permitir formatação Markdown
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: "rate_limit",
+            fallbackResponse: "Um momento... pode repetir?" 
+          }), 
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "ai_error",
+          fallbackResponse: focusedProduct 
+            ? `Quer saber mais sobre o ${focusedProduct.nome}?`
+            : `Oi! Sou a ANIA da ${storeName}. Como posso ajudar?` 
+        }), 
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const data = await response.json();
+    let aiResponse = data.choices?.[0]?.message?.content || 
+      `Oi! Sou a ANIA da ${storeName}. Como posso te ajudar?`;
+
+    // Calcular atualizações de estado
+    let negotiationUpdate: Partial<NegotiationState> | null = null;
+    
+    if (isAskingDiscount && focusedProduct && !isInClosingMode) {
+      const minPrice = focusedProduct.precoMinimo ? Number(focusedProduct.precoMinimo) : Number(focusedProduct.preco);
+      const originalPrice = Number(focusedProduct.preco);
+      const maxDiscountAmount = originalPrice - minPrice;
+      const discountStep = maxDiscountAmount / 3;
+      const newAttempts = negotiation.discountAttempts + 1;
+      const suggestedDiscount = discountStep * Math.min(newAttempts, 3);
+      const suggestedPrice = originalPrice - suggestedDiscount;
+      
+      negotiationUpdate = {
+        hasOfferedDiscount: true,
+        lastDiscountOffered: suggestedDiscount,
+        discountAttempts: newAttempts,
+        maxDiscountReached: newAttempts >= 3 || suggestedPrice <= minPrice
+      };
+    }
+
+    // Calcular atualização do estado de fechamento
+    let closingUpdate: Partial<ClosingState> | null = null;
+    
+    const newClosingAttempts = shouldIncrementClosingAttempts 
+      ? closing.closingAttempts + 1 
+      : closing.closingAttempts;
+    const shouldEndConversation = newClosingAttempts >= 3;
+
+    // REGRA: hasOfferedWhatsApp = true SOMENTE se a IA enviar um LINK REAL de WhatsApp
+    const aiSentWhatsAppLink = /wa\.me|whatsapp\.com|api\.whatsapp/.test(aiResponse.toLowerCase());
+    
+    // REGRA: hasOfferedPaymentLink = true SOMENTE se a IA enviar um LINK REAL de pagamento
+    const aiSentPaymentLink = productHasPaymentLink && focusedProduct?.linkPagamento 
+      ? aiResponse.includes(focusedProduct.linkPagamento)
+      : false;
+
+    if (isInClosingMode || shouldActivateClosing) {
+      closingUpdate = {
+        isClosing: true,
+        closingReason: closingReason,
+        closingAttempts: newClosingAttempts,
+        hasOfferedWhatsApp: closing.hasOfferedWhatsApp || aiSentWhatsAppLink,
+        hasOfferedPaymentLink: closing.hasOfferedPaymentLink || aiSentPaymentLink,
+        conversationEnded: shouldEndConversation
+      };
+    }
+
+    // Se é para encerrar, forçar mensagem final
+    if (shouldEndConversation) {
+      aiResponse = "Essa é minha melhor condição. Quando quiser finalizar, é só me chamar 👍";
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        response: aiResponse,
+        negotiationUpdate,
+        closingUpdate
+      }), 
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
+  } catch (error) {
+    console.error("ai-fallback error:", error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Unknown error",
+        fallbackResponse: "Oi! Como posso te ajudar?" 
+      }), 
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
